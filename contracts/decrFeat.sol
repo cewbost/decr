@@ -20,7 +20,7 @@ abstract contract decrOwned {
 contract decrFeat is decrOwned {
 
   string featName;
-  mapping(address => bool) receivers;
+  mapping(address => bool) public receivers;
 
   constructor(string memory name) {
     featName = name;
