@@ -3,7 +3,7 @@ pragma solidity >=0.4.22 <0.9.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract decrFeat is Ownable {
+contract DecrFeat is Ownable {
 
   string featName;
   mapping(address => bool) public receivers;
