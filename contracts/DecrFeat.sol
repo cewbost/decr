@@ -5,14 +5,27 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract DecrFeat is Ownable {
 
-  string featName;
-  mapping(address => bool) public receivers;
+  string public featName;
+  mapping(address => bool) proposals;
+  mapping(address => bool) public recipients;
 
   constructor(string memory name) {
     featName = name;
   }
 
   function award(address recipient) public onlyOwner {
-    receivers[recipient] = true;
+    require(!proposals[recipient] && !recipients[recipient]);
+    proposals[recipient] = true;
+  }
+
+  function accept() public {
+    require(proposals[msg.sender]);
+    recipients[msg.sender] = true;
+    delete proposals[msg.sender];
+  }
+
+  function reject() public {
+    require(proposals[msg.sender]);
+    delete proposals[msg.sender];
   }
 }
