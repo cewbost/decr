@@ -15,8 +15,8 @@ class NumberMatcher extends Matcher {
       return [];
     } else {
       return [
-        ["expected", "0x" + this.#value.toFixed(16)],
-        ["to equal", "0x" + num.toFixed(16)],
+        ["expected", "0x" + this.#value.toString(16)],
+        ["to equal", "0x" + num.toString(16)],
       ];
     }
   }
