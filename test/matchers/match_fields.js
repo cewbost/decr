@@ -23,7 +23,7 @@ class FieldsMatcher extends Matcher {
       if(!(key in obj)) {
         messages.push([`expected to have property ${key}`]);
       } else {
-        let match = matcher.match.match(obj[key]);
+        let match = matcher.match(obj[key]);
         if(match.length > 0) {
           messages.push([`on property ${key}:`, match]);
         }
