@@ -1,9 +1,11 @@
 const { Matcher } = require('./matcher.js');
+const { equal } = require('./equal.js');
 
 class FieldsMatcher extends Matcher {
   #matchers
 
   constructor(fields) {
+    super();
     let matchers = {};
     for(let [key, matcher] of Object.entries(fields)) {
       if(matcher instanceof Matcher) {
@@ -35,4 +37,12 @@ class FieldsMatcher extends Matcher {
     }
     return [];
   }
+}
+
+function matchFields(obj) {
+  return new FieldsMatcher(obj);
+}
+
+module.exports = {
+  matchFields: matchFields,
 }

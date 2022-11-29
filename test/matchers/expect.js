@@ -1,4 +1,5 @@
 const { Matcher } = require("./matcher.js");
+const { AssertionFailed } = require("./error.js");
 
 class Expectation {
   #obj;
@@ -7,7 +8,7 @@ class Expectation {
   }
   to(matcher) {
     if(!(matcher instanceof Matcher)) {
-      throw new InvalidAssertion("Argument to 'to' must be a matcher");
+      throw Error("Argument to 'to' must be a matcher");
     }
     let res = matcher.match(this.#obj);
     if(res.length > 0) {

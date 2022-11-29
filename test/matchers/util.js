@@ -15,13 +15,13 @@ function textify(list) {
       if(Array.isArray(subentry)) {
         subentry = textify(subentry);
       }
-      entries.push(indent(subentry));
+      entries.push(indent(2, subentry));
     }
   }
   return entries.join("\n");
 }
 
 module.exports = {
-  indent:  indent,
   textify: textify,
+  indent: indent,
 }

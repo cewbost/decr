@@ -5,6 +5,7 @@ class EqualMatcher extends Matcher {
   #value;
 
   constructor(value) {
+    super();
     this.#value = value;
   }
 
