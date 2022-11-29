@@ -21,6 +21,7 @@ contract DecrFeat is Ownable {
   }
 
   function propose(address recipient, string calldata link, bytes32 hash, bytes32 dets) public onlyOwner {
+    require(dets != 0);
     require(proposals[recipient].details == 0 && recipients[recipient].details == 0);
     proposals[recipient] = Content({
       granterLink:    link,

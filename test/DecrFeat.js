@@ -1,6 +1,6 @@
 const DecrFeat = artifacts.require("DecrFeat")
 const { BigNumber } = require("bignumber.js")
-const { expect, equal, matchFields, beNumber, beInstanceOf } = require("./matchers/matchers.js")
+const { expect, equal, matchFields, beNumber, beInstanceOf, contain } = require("./matchers/matchers.js")
 const { asEthWord } = require("./utils/numbers.js")
 
 contract("DecrFeat", accounts => {
@@ -15,6 +15,9 @@ contract("DecrFeat", accounts => {
     "contentHash": beNumber(0),
     "details": beNumber(0),
   })
+  const beVMException = beInstanceOf(Error).and(matchFields({
+    "message": contain("VM Exception")
+  }))
 
   let testFeat
 
@@ -29,7 +32,6 @@ contract("DecrFeat", accounts => {
     })
   })
   describe("propose", () => {
-
     it("should record proposals", async () => {
       await testFeat.propose(accounts[2], testUrls[0], asEthWord(testHash), asEthWord(testDets))
       expect(await testFeat.proposals(accounts[2])).to(matchFields({
@@ -43,22 +45,37 @@ contract("DecrFeat", accounts => {
     it("should not allow anyone other than owner to make proposals", async () => {
       let err = null
       try {
-        await testFeat.propose(accounts[0], { from: accounts[1] })
+        await testFeat.propose(
+          accounts[0],
+          testUrls[0],
+          asEthWord(testHash),
+          asEthWord(testDets),
+          { from: accounts[1] }
+        )
       } catch (e) {
         err = e
       }
-      expect(err).to(beInstanceOf(Error))
+      expect(err).to(beVMException)
       expect(await testFeat.recipients(accounts[0])).to(matchEmptyContent)
     })
     it("should not allow making multiple proposals to accounts", async () => {
       let err = null
       try {
-        await testFeat.propose(accounts[3])
-        await testFeat.propose(accounts[3])
+        await testFeat.propose(accounts[3], testUrls[0], asEthWord(testHash), asEthWord(testDets))
+        await testFeat.propose(accounts[3], testUrls[0], asEthWord(testHash), asEthWord(testDets))
       } catch(e) {
         err = e
       }
-      expect(err).to(beInstanceOf(Error))
+      expect(err).to(beVMException)
+    })
+    it("should not allow proposing feats with zero details", async () => {
+      let err = null
+      try {
+        await testFeat.propose(accounts[3], testUrls[0], asEthWord(testHash), asEthWord(0))
+      } catch(e) {
+        err = e
+      }
+      expect(err).to(beVMException)
     })
   })
   describe("accept", () => {
@@ -78,11 +95,11 @@ contract("DecrFeat", accounts => {
     it("should fail if no proposal has been made", async () => {
       let err = null
       try {
-        await testFeat.accept({ from: accounts[5] })
+        await testFeat.accept(testUrls[1], { from: accounts[5] })
       } catch(e) {
         err = e
       }
-      expect(err).to(beInstanceOf(Error))
+      expect(err).to(beVMException)
     })
   })
   describe("reject", () => {
@@ -100,7 +117,7 @@ contract("DecrFeat", accounts => {
       } catch(e) {
         err = e
       }
-      expect(err).to(beInstanceOf(Error))
+      expect(err).to(beVMException)
     })
   })
 })
