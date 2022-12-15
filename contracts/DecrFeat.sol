@@ -42,4 +42,9 @@ contract DecrFeat is Ownable {
     require(proposals[msg.sender].details != 0);
     delete proposals[msg.sender];
   }
+  
+  function setRecipientLink(string calldata link) public {
+    require(recipients[msg.sender].details != 0);
+    recipients[msg.sender].recipientLink = link;
+  }
 }

@@ -5,9 +5,9 @@ const { asEthWord } = require("./utils/numbers.js")
 
 contract("DecrFeat", accounts => {
 
-  const testUrls = ['http://example.io/1', 'http://example.io/2']
-    const testDets = 1
-    const testHash = 2
+  const testUrls = ['http://example.io/1', 'http://example.io/2', 'http://example.io/3']
+  const testDets = 1
+  const testHash = 2
 
   const matchEmptyContent = matchFields({
     "granterLink": "",
@@ -114,6 +114,28 @@ contract("DecrFeat", accounts => {
       let err = null
       try {
         await testFeat.reject({ from: accounts[7] })
+      } catch(e) {
+        err = e
+      }
+      expect(err).to(beVMException)
+    })
+  })
+  describe("setRecipientLink", () => {
+    before(async () => {
+      await testFeat.propose(accounts[1], testUrls[0], asEthWord(testHash), asEthWord(testDets))
+      await testFeat.accept(testUrls[1], { from: accounts[1] })
+    })
+    it("should modify the recipient link", async () => {
+      await testFeat.setRecipientLink(testUrls[2], { from: accounts[1] })
+
+      expect(await testFeat.recipients(accounts[1])).to(matchFields({
+        "recipientLink": testUrls[2],
+      }))
+    })
+    it("should fail when user has not recieved feat", async () => {
+      let err = null
+      try {
+        await testFeat.setRecipientLink(testUrls[2], { from: accounts[2] })
       } catch(e) {
         err = e
       }
