@@ -1,20 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.4.22 <0.9.0;
 
-import {DecrDecisionPolicy} from "./DecisionPolicy.sol";
+import "../../../contracts/DecisionPolicy.sol";
 
-contract DecrTresholdPolicy is DecrDecisionPolicy {
-  
+contract DecisionPolicy is DecrDecisionPolicy {
+
   address[] members;
-  uint immutable tres_dividend;
-  uint immutable tres_divisor;
-  
-  constructor(address[] memory membs, uint dividend, uint divisor) {
-    members = membs;
-    tres_dividend = dividend;
-    tres_divisor = divisor;
+
+  constructor(address[] memory membrs) {
+    members = membrs;
   }
-  
+
   function approveClaim(
     uint128,
     address[] calldata approvers
@@ -30,6 +26,6 @@ contract DecrTresholdPolicy is DecrDecisionPolicy {
         }
       }
     }
-    return count * tres_divisor > members.length * tres_divisor;
+    return count == members.length;
   }
 }

@@ -2,8 +2,8 @@
 pragma solidity >=0.4.22 <0.9.0;
 
 interface DecrDecisionPolicy {
-  function approveAction(
-    bytes16 actionId,
+  function approveClaim(
+    uint128            actionId,
     address[] calldata approvers
   ) external view returns (bool);
 }
