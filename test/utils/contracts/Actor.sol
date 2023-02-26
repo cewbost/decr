@@ -22,11 +22,11 @@ contract Actor {
     return recver.initiate(action_id, signing_time, claiming_start, claiming_time);
   }
 
-  function sign(address receiver, uint128 issue_id, uint slot) external {
-    facilitator.sign(receiver, issue_id, slot);
+  function sign(uint slot) external {
+    facilitator.sign(slot);
   }
 
-  function claim(address receiver, uint128 issue_id, uint slot) external returns (bool) {
-    return facilitator.claim(receiver, issue_id, slot);
+  function claim(uint slot) external returns (bool) {
+    return facilitator.claim(slot);
   }
 }

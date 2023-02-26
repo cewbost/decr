@@ -25,6 +25,7 @@ contract DecrFacilitator {
   uint         private  linkedSlot;
 
   uint         constant deadline_max = 365 days;
+  uint         constant cleanup_rate = 3;
   
   constructor() {
     unusedSlot = 0;
@@ -41,12 +42,10 @@ contract DecrFacilitator {
     uint               claiming_time,
     DecrDecisionPolicy decision_policy
   ) external returns (uint) {
-    require(
-      claiming_start < claiming_time &&
-      signing_time <= claiming_time &&
-      claiming_time <= deadline_max
-    );
-    clean(5);
+    require(claiming_start < claiming_time, "Claiming must begin before claiming deadline.");
+    require(claiming_time <= deadline_max,  "Claiming time too long.");
+
+    clean(cleanup_rate);
     uint slot = linkSlot();
     ActionSlot storage action = actions[slot];
     action.requester         = requester;                        
@@ -61,31 +60,31 @@ contract DecrFacilitator {
     return slot;
   }
   
-  function sign(address receiver, uint128 issue_id, uint slot) external {
+  function sign(uint slot) external {
+    require(slot < actions.length, "Action does not exist.");
     ActionSlot storage action = actions[slot];
     require(
-      action.prev != type(uint).max &&
-      block.timestamp <= action.signing_deadline &&
-      address(action.receiver) == receiver &&
-      action.issue_id == issue_id
+      action.prev != type(uint).max && block.timestamp <= action.signing_deadline,
+      "Action does not exist."
     );
-    clean(5);
+
+    clean(cleanup_rate);
     address[] storage signatures = action.signatures;
     for (uint i = 0; i < signatures.length; i++) {
-      require(msg.sender != signatures[i]);
+      require(msg.sender != signatures[i], "Action already signed.");
     }
     signatures.push() = msg.sender;
   }
 
-  function claim(address receiver, uint128 issue_id, uint slot) external returns (bool) {
+  function claim(uint slot) external returns (bool) {
+    require(slot < actions.length, "Action does not exist.");
     ActionSlot storage action = actions[slot];
     require(
-      action.prev != type(uint).max &&
-      block.timestamp <= action.claiming_deadline &&
-      address(action.receiver) == receiver &&
-      action.issue_id == issue_id
+      action.prev != type(uint).max && block.timestamp <= action.claiming_deadline,
+      "Action does not exist."
     );
-    clean(5);
+
+    clean(cleanup_rate);
     if (action.decision_policy.approveClaim(action.action_id, action.signatures)) {
       action.receiver.receiveClaim(action.requester, action.action_id, action.issue_id);
       unlinkSlot(slot);
