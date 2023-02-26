@@ -20,9 +20,9 @@ contract DecrFacilitator {
     address[]          signatures;
   }
 
-  ActionSlot[] private  actions;
-  uint         private  unusedSlot;
-  uint         private  linkedSlot;
+  ActionSlot[] internal actions;
+  uint         internal unusedSlot;
+  uint         internal linkedSlot;
 
   uint         constant deadline_max = 365 days;
   uint         constant cleanup_rate = 3;
@@ -94,7 +94,7 @@ contract DecrFacilitator {
     }
   }
   
-  function linkSlot() private returns (uint) {
+  function linkSlot() internal returns (uint) {
     uint slot = unusedSlot;
     unusedSlot = actions[unusedSlot].next;
     if (unusedSlot == type(uint).max) {
@@ -117,7 +117,7 @@ contract DecrFacilitator {
     return slot;
   }
   
-  function unlinkSlot(uint slot) private {
+  function unlinkSlot(uint slot) internal {
     ActionSlot storage action = actions[slot];
     if (action.next == slot) {
       linkedSlot = type(uint).max;

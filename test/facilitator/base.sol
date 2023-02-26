@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.4.22 <0.9.0;
 
-import "truffle/Assert.sol";
-import "truffle/DeployedAddresses.sol";
 import "../utils/contracts/Actor.sol";
 import "../utils/contracts/Receiver.sol";
 import "../utils/contracts/DecisionPolicy.sol";
