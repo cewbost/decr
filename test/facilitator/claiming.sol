@@ -16,8 +16,7 @@ contract TestFacilitatorClaiming is BaseTestFacilitator {
 
     Assert.equal(receiver.issues_claimed(), 1, "One claim should have been received");
     Assert.equal(receiver.claimed_issues(0), issue_id, "The claim received should have the correct issue_id");
-    (address requester, uint128 claim_action_id) = receiver.claimed_data(issue_id);
-    Assert.equal(requester, address(initiator), "The claim received should be for the initiator");
+    uint128 claim_action_id = receiver.claimed_data(issue_id);
     Assert.equal(claim_action_id, action_id, "The claim received should have the correct action id");
   }
 

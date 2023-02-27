@@ -5,11 +5,6 @@ import "../../../contracts/Facilitator.sol";
 import "../../../contracts/ClaimReceiver.sol";
 import "../../../contracts/DecisionPolicy.sol";
 
-struct ReceivedData {
-  address requester;
-  uint128 action_id;
-}
-
 contract Receiver is DecrClaimReceiver {
 
   DecrFacilitator    immutable facilitator;
@@ -17,8 +12,8 @@ contract Receiver is DecrClaimReceiver {
 
   uint128 last_issue_id = 0;
 
-  uint128[]                        public claimed_issues;
-  mapping(uint128 => ReceivedData) public claimed_data;
+  uint128[]                   public claimed_issues;
+  mapping(uint128 => uint128) public claimed_data;
 
   function issues_claimed() public view returns (uint) {
     return claimed_issues.length;
@@ -48,11 +43,8 @@ contract Receiver is DecrClaimReceiver {
     return (last_issue_id, slot);
   }
 
-  function receiveClaim(address requester, uint128 action_id, uint128 issue_id) external override {
+  function receiveClaim(uint128 action_id, uint128 issue_id) external override {
     claimed_issues.push() = issue_id;
-    claimed_data[issue_id] = ReceivedData({
-      requester: requester,
-      action_id: action_id
-    });
+    claimed_data[issue_id] = action_id;
   }
 }
