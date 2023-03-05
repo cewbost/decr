@@ -1,9 +1,9 @@
-const DecrFeat = artifacts.require("DecrFeat")
+const OldDecrFeat = artifacts.require("OldDecrFeat")
 const { BigNumber } = require("bignumber.js")
 const { expect, equal, matchFields, beNumber, beInstanceOf, contain } = require("./matchers/matchers.js")
 const { asEthWord } = require("./utils/numbers.js")
 
-contract("DecrFeat", accounts => {
+contract("OldDecrFeat", accounts => {
 
   const testUrls = ['http://example.io/1', 'http://example.io/2', 'http://example.io/3']
   const testDets = 1
@@ -22,7 +22,7 @@ contract("DecrFeat", accounts => {
   let testFeat
 
   before(async () => {
-    testFeat = await DecrFeat.new("testDecr", { from: accounts[0] })
+    testFeat = await OldDecrFeat.new("testDecr", { from: accounts[0] })
   })
 
   describe("initial state", () => {

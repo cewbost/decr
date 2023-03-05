@@ -3,16 +3,17 @@ pragma solidity >=0.4.22 <0.9.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-struct Content {
-  string granterLink;
-  string recipientLink;
-  bytes32 contentHash;
-  bytes32 details;
-}
+contract OldDecrFeat is Ownable {
 
-contract DecrFeat is Ownable {
+  struct Content {
+    string granterLink;
+    string recipientLink;
+    bytes32 contentHash;
+    bytes32 details;
+  }
 
-  string public featName;
+  string featName;
+
   mapping(address => Content) public proposals;
   mapping(address => Content) public recipients;
 
