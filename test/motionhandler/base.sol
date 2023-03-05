@@ -8,21 +8,30 @@ import "../../contracts/MotionHandler.sol";
 contract ExposedMotionHandler is MotionHandler {
 
   function addMotion(
-    uint         issue,
     address      requester,
     uint128      action_id,
     uint128      issue_id,
     address      decider,
     uint         deadline,
     MotionSender sendr
-  ) external {
-    Motion storage motion = motions[issue];
+  ) public returns(uint) {
+    last_issue++;
+    Motion storage motion = motions[last_issue];
     motion.requester          = requester;
     motion.action_id          = action_id;
     motion.issue_id           = issue_id;
     motion.decider            = decider;
     motion.resolving_deadline = deadline;
     motion.sendr              = sendr;
+    return last_issue;
+  }
+
+  function removeMotion(uint issue) public {
+    dropMotion(issue);
+  }
+
+  function getFirstIssue() public view returns(uint) {
+    return first_issue;
   }
 }
 

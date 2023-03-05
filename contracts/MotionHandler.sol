@@ -19,7 +19,7 @@ contract MotionHandler is MotionRecver {
   mapping(uint => Motion)    motions;
   mapping(uint => address[]) signers;
 
-  uint first_issue = 0;
+  uint first_issue = 1;
   uint last_issue  = 0;
 
   uint constant max_time = 365 days;

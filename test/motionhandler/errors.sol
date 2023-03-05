@@ -66,9 +66,7 @@ contract TestMotionHandlerErrors is BaseTestMotionHandler {
   }
 
   function testSigningAndResolvingShouldFailAfterDeadline() external {
-    uint issue = 1;
-    handler.addMotion(
-      issue,
+    uint issue = handler.addMotion(
       address(requester),
       action_id,
       issue_id,
