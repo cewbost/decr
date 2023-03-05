@@ -62,7 +62,7 @@ contract MotionHandler is MotionRecver {
 
     if (isApproved(issue, motion)) {
       motion.sendr.handleResolved(motion.issue_id);
-      delete motions[issue];
+      dropMotion(issue);
       return true;
     } else return false;
   }
