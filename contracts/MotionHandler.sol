@@ -33,7 +33,7 @@ contract MotionHandler is MotionRecver {
     address decider,
     uint    resolving_time
   ) external override returns(uint) {
-    require(resolving_time <= max_time);
+    require(resolving_time <= max_time, "Resolving time too long.");
 
     clean();
     last_issue++;
@@ -51,17 +51,18 @@ contract MotionHandler is MotionRecver {
 
   function sign(uint issue) external {
     Motion storage motion = motions[issue];
-    require(motion.resolving_deadline >= block.timestamp);
+    require(motion.resolving_deadline >= block.timestamp, "Motion does not exist.");
     signers[issue].push(msg.sender);
   }
 
   function resolve(uint issue) external returns(bool) {
     Motion storage motion = motions[issue];
-    require(motion.resolving_deadline >= block.timestamp);
-    require(motion.requester == msg.sender);
+    require(motion.resolving_deadline >= block.timestamp, "Motion does not exist.");
+    require(motion.requester == msg.sender, "Unauthorized.");
 
     if (isApproved(issue, motion)) {
       motion.sendr.handleResolved(motion.issue_id);
+      delete motions[issue];
       return true;
     } else return false;
   }
