@@ -25,7 +25,9 @@ contract TestMotionHandlerResolving is BaseTestMotionHandler {
   function testResolving() external {
     actors[0].callSign(handler, issue);
 
-    Assert.isTrue(requester.callResolve(handler, issue), "resolve should succeed");
+    (address sendr, uint128 sendr_id) = requester.callResolve(handler, issue);
+    Assert.equal(sendr, address(motion_sender),             "resolve should return the sender contract");
+    Assert.equal(sendr_id, issue_id,                        "resolve should return the senders issue id");
     Assert.equal(motion_sender.numHandleResolvedCalls(), 1, "handleResolved should be called once");
     Assert.equal(
       motion_sender.handleResolvedCalls(0),
@@ -39,7 +41,9 @@ contract TestMotionHandlerResolving is BaseTestMotionHandler {
     actors[0].callSign(handler, issue);
     actors[1].callSign(handler, issue);
 
-    Assert.isTrue(requester.callResolve(handler, issue), "resolve should succeed");
+    (address sendr, uint128 sendr_id) = requester.callResolve(handler, issue);
+    Assert.equal(sendr, address(motion_sender),             "resolve should return the sender contract");
+    Assert.equal(sendr_id, issue_id,                        "resolve should return the senders issue id");
     Assert.equal(motion_sender.numHandleResolvedCalls(), 1, "handleResolved should be called once");
     Assert.equal(
       motion_sender.handleResolvedCalls(0),
@@ -52,12 +56,16 @@ contract TestMotionHandlerResolving is BaseTestMotionHandler {
     actors[1].callSign(handler, issue);
     actors[2].callSign(handler, issue);
 
-    Assert.isFalse(requester.callResolve(handler, issue), "resolve should fail");
+    (address sendr, uint128 sendr_id) = requester.callResolve(handler, issue);
+    Assert.equal(sendr, address(uint160(0)),                "resolve should return the null contract");
+    Assert.equal(sendr_id, 0,                               "resolve should return 0");
     Assert.equal(motion_sender.numHandleResolvedCalls(), 0, "handleResolved should not be called");
   }
 
   function testNotResolvingWithNoSignatures() external {
-    Assert.isFalse(requester.callResolve(handler, issue), "resolve should fail");
+    (address sendr, uint128 sendr_id) = requester.callResolve(handler, issue);
+    Assert.equal(sendr, address(uint160(0)),                "resolve should return the null contract");
+    Assert.equal(sendr_id, 0,                               "resolve should return 0");
     Assert.equal(motion_sender.numHandleResolvedCalls(), 0, "handleResolved should not be called");
   }
 }

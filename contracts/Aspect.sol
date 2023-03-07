@@ -5,6 +5,8 @@ import "./MotionSender.sol";
 import "./MotionRecver.sol";
 import "./Decider.sol";
 
+uint128 constant NEW_ASPECT = 0xDEC2A52E800000000000000000000001;
+
 contract Aspect is MotionSender {
 
   struct AwardedAspect {
@@ -14,21 +16,24 @@ contract Aspect is MotionSender {
     uint    timestamp;
   }
 
-  MotionRecver motionRecver;
+  MotionRecver motion_recver;
   address      decider;
 
-  string name;
   uint resolving_time;
 
   uint128 first_issue = 0;
   uint128 last_issue  = 0;
 
-  mapping(uint128 => AwardedAspect) pending_aspects;
-  mapping(uint128 => AwardedAspect) awarded_aspects;
-
-  uint128 constant NEW_ASPECT = 0xDEC2A52E800000000000000000000001;
+  mapping(uint128 => AwardedAspect)        pending_aspects;
+  mapping(uint128 => AwardedAspect) public awarded_aspects;
 
   uint128 constant cleaning_rate = 3;
+
+  constructor(MotionRecver recver, address decdr, uint res_time) {
+    motion_recver  = recver;
+    decider        = decdr;
+    resolving_time = res_time;
+  }
 
   function request(bytes32 dets, bytes32 hash) external returns(address, uint) {
     require(dets != 0);
@@ -40,18 +45,18 @@ contract Aspect is MotionSender {
     pending_aspects[last_issue].hash      = hash;
     pending_aspects[last_issue].timestamp = block.timestamp + resolving_time;
 
-    uint recverIssue = motionRecver.request(
+    uint recverIssue = motion_recver.request(
       msg.sender,
       NEW_ASPECT,
       last_issue,
       decider,
       resolving_time
     );
-    return (address(motionRecver), recverIssue);
+    return (address(motion_recver), recverIssue);
   }
 
   function handleResolved(uint128 issue_id) external override {
-    require(msg.sender == address(motionRecver));
+    require(msg.sender == address(motion_recver));
     AwardedAspect storage aspect = pending_aspects[issue_id];
     require(aspect.timestamp >= block.timestamp);
 

@@ -55,16 +55,18 @@ contract MotionHandler is MotionRecver {
     signers[issue].push(msg.sender);
   }
 
-  function resolve(uint issue) external returns(bool) {
+  function resolve(uint issue) external returns(address, uint128) {
     Motion storage motion = motions[issue];
     require(motion.resolving_deadline >= block.timestamp, "Motion does not exist.");
     require(motion.requester == msg.sender, "Unauthorized.");
 
     if (isApproved(issue, motion)) {
-      motion.sendr.handleResolved(motion.issue_id);
+      MotionSender sendr    = motion.sendr;
+      uint128      issue_id = motion.issue_id;
+      sendr.handleResolved(issue_id);
       dropMotion(issue);
-      return true;
-    } else return false;
+      return (address(sendr), issue_id);
+    } else return (address(uint160(0)), 0);
   }
 
   function isApproved(uint issue, Motion storage motion) internal view returns(bool) {

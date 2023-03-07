@@ -41,7 +41,7 @@ contract TestMotionHandlerErrors is BaseTestMotionHandler {
     } catch Error(string memory reason) {
       Assert.equal(reason, "Motion does not exist.", "wrong error");
     }
-    try requester.callResolve(handler, issue) returns(bool) {
+    try requester.callResolve(handler, issue) returns(address, uint128) {
       Assert.fail("resolve should fail");
     } catch Error(string memory reason) {
       Assert.equal(reason, "Motion does not exist.", "wrong error");
@@ -58,7 +58,7 @@ contract TestMotionHandlerErrors is BaseTestMotionHandler {
       1 days
     );
 
-    try actors[0].callResolve(handler, issue) returns(bool) {
+    try actors[0].callResolve(handler, issue) returns(address, uint128) {
       Assert.fail("resolve should fail");
     } catch Error(string memory reason) {
       Assert.equal(reason, "Unauthorized.", "wrong error");
@@ -80,7 +80,7 @@ contract TestMotionHandlerErrors is BaseTestMotionHandler {
     } catch Error(string memory reason) {
       Assert.equal(reason, "Motion does not exist.", "wrong error");
     }
-    try requester.callResolve(handler, issue) returns(bool) {
+    try requester.callResolve(handler, issue) returns(address, uint128) {
       Assert.fail("resolve should fail");
     } catch Error(string memory reason) {
       Assert.equal(reason, "Motion does not exist.", "wrong error");

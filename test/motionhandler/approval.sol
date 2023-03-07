@@ -29,14 +29,14 @@ contract TestMotionHandlerApproval is BaseTestMotionHandler {
     decider.addApproveMotionCall(action_id + 1, issue_id, address(requester), new address[](0));
     decider.addApproveMotionCall(action_id, issue_id + 1, address(requester), new address[](0));
 
-    Assert.isFalse(requester.callResolve(handler, issue), "resolve should fail");
+    Assert.isFalse(requester.callResolveSucceeds(handler, issue), "resolve should fail");
     Assert.equal(motion_sender.numHandleResolvedCalls(), 0, "handleResolved should not be called");
   }
 
   function testApproval() external {
     decider.addApproveMotionCall(action_id, issue_id, address(requester), new address[](0));
 
-    Assert.isTrue(requester.callResolve(handler, issue), "resolve should succeed");
+    Assert.isTrue(requester.callResolveSucceeds(handler, issue), "resolve should succeed");
     Assert.equal(motion_sender.numHandleResolvedCalls(), 1, "handleResolved should be called once");
   }
 
@@ -46,11 +46,11 @@ contract TestMotionHandlerApproval is BaseTestMotionHandler {
     signers[1] = address(actors[1]);
     decider.addApproveMotionCall(action_id, issue_id, address(requester), signers);
 
-    Assert.isFalse(requester.callResolve(handler, issue), "resolve should fail");
+    Assert.isFalse(requester.callResolveSucceeds(handler, issue), "resolve should fail");
     actors[0].callSign(handler, issue);
-    Assert.isFalse(requester.callResolve(handler, issue), "resolve should fail");
+    Assert.isFalse(requester.callResolveSucceeds(handler, issue), "resolve should fail");
     actors[1].callSign(handler, issue);
-    Assert.isTrue(requester.callResolve(handler, issue), "resolve should succeed");
+    Assert.isTrue(requester.callResolveSucceeds(handler, issue), "resolve should succeed");
 
     Assert.equal(motion_sender.numHandleResolvedCalls(), 1, "handleResolved should be called once");
   }
@@ -65,7 +65,7 @@ contract TestMotionHandlerApproval is BaseTestMotionHandler {
     actors[1].callSign(handler, issue);
     actors[0].callSign(handler, issue);
 
-    Assert.isTrue(requester.callResolve(handler, issue), "resolve should succeed");
+    Assert.isTrue(requester.callResolveSucceeds(handler, issue), "resolve should succeed");
     Assert.equal(motion_sender.numHandleResolvedCalls(), 1, "handleResolved should be called once");
   }
 }
