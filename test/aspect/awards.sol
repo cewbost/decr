@@ -31,24 +31,25 @@ contract TestAspectAwards {
     uint    recver_issue = 201;
     bytes32 dets         = bytes32(uint(101));
     bytes32 hash         = bytes32(uint(102));
-    motion_recver.addRequestReturn(recver_issue);
+    motion_recver.addOpenMotionReturn(recver_issue);
 
-    (address recver, uint issue) = requester.callRequest(aspect, dets, hash);
+    (address recver, uint issue) = requester.callRequestAspect(aspect, dets, hash);
     Assert.equal(recver, address(motion_recver), "should return motion receiver");
     Assert.equal(recver_issue, issue,            "should return the correct issue id");
 
+    Assert.equal(motion_recver.numOpenMotionCalls(), 1, "openMotion should be called once");
     ( address reqstr,
       uint128 action_id,
       uint128 sender_issue,
       address decdr,
       uint res_time
-    ) = motion_recver.request_calls(0);
-    Assert.equal(reqstr, address(requester), "should call request with the original requester");
-    Assert.equal(action_id, NEW_ASPECT,      "should call request with correct action id");
-    Assert.equal(decdr, address(decider),    "should call request with correct decider");
-    Assert.equal(res_time, resolving_time,   "should call request with correct resolving time");
+    ) = motion_recver.openMotionCalls(0);
+    Assert.equal(reqstr, address(requester), "should call requestAspect with the original requester");
+    Assert.equal(action_id, NEW_ASPECT,      "should call requestAspect with correct action id");
+    Assert.equal(decdr, address(decider),    "should call requestAspect with correct decider");
+    Assert.equal(res_time, resolving_time,   "should call requestAspect with correct resolving time");
 
-    motion_recver.callHandleResolved(aspect, sender_issue);
+    motion_recver.callHandleResolvedMotion(aspect, sender_issue);
 
     ( address recipient,
       bytes32 rec_dets,

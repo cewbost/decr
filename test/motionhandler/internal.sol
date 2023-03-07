@@ -39,7 +39,7 @@ contract TestMotionHandlerInternals is BaseTestMotionHandler {
   }
 
   function callRequest(uint128 issue_id) internal {
-    motion_sender.callRequest(
+    motion_sender.callOpenMotion(
       handler,
       address(requester),
       action_id,

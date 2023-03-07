@@ -26,7 +26,7 @@ contract MotionHandler is MotionRecver {
 
   uint constant cleaning_rate = 3;
 
-  function request(
+  function openMotion(
     address requester,
     uint128 action_id,
     uint128 issue_id,
@@ -63,7 +63,7 @@ contract MotionHandler is MotionRecver {
     if (isApproved(issue, motion)) {
       MotionSender sendr    = motion.sendr;
       uint128      issue_id = motion.issue_id;
-      sendr.handleResolved(issue_id);
+      sendr.handleResolvedMotion(issue_id);
       dropMotion(issue);
       return (address(sendr), issue_id);
     } else return (address(uint160(0)), 0);

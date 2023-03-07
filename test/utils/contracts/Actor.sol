@@ -19,7 +19,7 @@ contract Actor {
     return issue_id != 0;
   }
 
-  function callRequest(Aspect aspect, bytes32 dets, bytes32 hash) public returns(address, uint) {
-    return aspect.request(dets, hash);
+  function callRequestAspect(Aspect aspect, bytes32 dets, bytes32 hash) public returns(address, uint) {
+    return aspect.requestAspect(dets, hash);
   }
 }

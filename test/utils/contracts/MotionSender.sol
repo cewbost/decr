@@ -6,17 +6,17 @@ import "../../../contracts/MotionRecver.sol";
 
 contract MockMotionSender is MotionSender {
 
-  uint128[] public handleResolvedCalls;
+  uint128[] public handleResolvedMotionCalls;
 
-  function numHandleResolvedCalls() public view returns(uint) {
-    return handleResolvedCalls.length;
+  function numHandleResolvedMotionCalls() public view returns(uint) {
+    return handleResolvedMotionCalls.length;
   }
 
-  function handleResolved(uint128 issue_id) external override {
-    handleResolvedCalls.push(issue_id);
+  function handleResolvedMotion(uint128 issue_id) external override {
+    handleResolvedMotionCalls.push(issue_id);
   }
 
-  function callRequest(
+  function callOpenMotion(
     MotionRecver recver,
     address      requester,
     uint128      action_id,
@@ -24,6 +24,6 @@ contract MockMotionSender is MotionSender {
     address      decider,
     uint         resolving_time
   ) external returns(uint) {
-    return recver.request(requester, action_id, issue_id, decider, resolving_time);
+    return recver.openMotion(requester, action_id, issue_id, decider, resolving_time);
   }
 }

@@ -15,7 +15,7 @@ contract TestMotionHandlerApproval is BaseTestMotionHandler {
 
   function beforeEach() external {
     decider = new MockDecider();
-    issue = motion_sender.callRequest(
+    issue = motion_sender.callOpenMotion(
       handler,
       address(requester),
       action_id,
@@ -30,14 +30,22 @@ contract TestMotionHandlerApproval is BaseTestMotionHandler {
     decider.addApproveMotionCall(action_id, issue_id + 1, address(requester), new address[](0));
 
     Assert.isFalse(requester.callResolveSucceeds(handler, issue), "resolve should fail");
-    Assert.equal(motion_sender.numHandleResolvedCalls(), 0, "handleResolved should not be called");
+    Assert.equal(
+      motion_sender.numHandleResolvedMotionCalls(),
+      0,
+      "handleResolved should not be called"
+    );
   }
 
   function testApproval() external {
     decider.addApproveMotionCall(action_id, issue_id, address(requester), new address[](0));
 
     Assert.isTrue(requester.callResolveSucceeds(handler, issue), "resolve should succeed");
-    Assert.equal(motion_sender.numHandleResolvedCalls(), 1, "handleResolved should be called once");
+    Assert.equal(
+      motion_sender.numHandleResolvedMotionCalls(),
+      1,
+      "handleResolvedMotion should be called once"
+    );
   }
 
   function testApprovalSigners() external {
@@ -52,7 +60,11 @@ contract TestMotionHandlerApproval is BaseTestMotionHandler {
     actors[1].callSign(handler, issue);
     Assert.isTrue(requester.callResolveSucceeds(handler, issue), "resolve should succeed");
 
-    Assert.equal(motion_sender.numHandleResolvedCalls(), 1, "handleResolved should be called once");
+    Assert.equal(
+      motion_sender.numHandleResolvedMotionCalls(),
+      1,
+      "handleResolvedMotion should be called once"
+    );
   }
 
   function testApprovalUniqueSigners() external {
@@ -66,6 +78,10 @@ contract TestMotionHandlerApproval is BaseTestMotionHandler {
     actors[0].callSign(handler, issue);
 
     Assert.isTrue(requester.callResolveSucceeds(handler, issue), "resolve should succeed");
-    Assert.equal(motion_sender.numHandleResolvedCalls(), 1, "handleResolved should be called once");
+    Assert.equal(
+      motion_sender.numHandleResolvedMotionCalls(),
+      1,
+      "handleResolvedMotion should be called once"
+    );
   }
 }

@@ -10,7 +10,7 @@ contract TestMotionHandlerErrors is BaseTestMotionHandler {
   uint128 constant issue_id  = 0x100;
 
   function testRequestingFailsWhenTimeInvalid() external {
-    try motion_sender.callRequest(
+    try motion_sender.callOpenMotion(
       handler,
       address(requester),
       action_id,
@@ -18,14 +18,14 @@ contract TestMotionHandlerErrors is BaseTestMotionHandler {
       address(actors[0]),
       366 days
     ) returns(uint) {
-      Assert.fail("request should fail");
+      Assert.fail("openMotion should fail");
     } catch Error(string memory reason) {
       Assert.equal(reason, "Resolving time too long.", "wrong error");
     }
   }
 
   function testSigningAndResolvingShouldFailAfterResolve() external {
-    uint issue = motion_sender.callRequest(
+    uint issue = motion_sender.callOpenMotion(
       handler,
       address(requester),
       action_id,
@@ -49,7 +49,7 @@ contract TestMotionHandlerErrors is BaseTestMotionHandler {
   }
 
   function testOnlyRequesterCanResolve() external {
-    uint issue = motion_sender.callRequest(
+    uint issue = motion_sender.callOpenMotion(
       handler,
       address(requester),
       action_id,

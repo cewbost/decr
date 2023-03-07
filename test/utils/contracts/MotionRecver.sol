@@ -14,41 +14,41 @@ contract MockMotionRecver is MotionRecver {
     uint    resolving_time;
   }
 
-  RequestCall[] public request_calls;
-  uint[]               request_returns;
+  RequestCall[] public openMotionCalls;
+  uint[]               open_motion_returns;
 
-  function numRequestCalls() public view returns(uint) {
-    return request_calls.length;
+  function numOpenMotionCalls() public view returns(uint) {
+    return openMotionCalls.length;
   }
 
-  function request(
+  function openMotion(
     address requester,
     uint128 action_id,
     uint128 issue_id,
     address decider,
     uint    resolving_time
   ) external override returns(uint) {
-    uint current_call = request_calls.length;
-    assert(request_returns.length - current_call > 0);
-    RequestCall storage call = request_calls.push();
+    uint current_call = openMotionCalls.length;
+    assert(open_motion_returns.length - current_call > 0);
+    RequestCall storage call = openMotionCalls.push();
     call.requester      = requester;
     call.action_id      = action_id;
     call.issue_id       = issue_id;
     call.decider        = decider;
     call.resolving_time = resolving_time;
-    return request_returns[current_call];
+    return open_motion_returns[current_call];
   }
 
-  function addRequestReturn(uint value) public {
-    request_returns.push(value);
+  function addOpenMotionReturn(uint value) public {
+    open_motion_returns.push(value);
   }
 
-  function callHandleResolved(MotionSender sendr, uint128 issue_id) public {
-    sendr.handleResolved(issue_id);
+  function callHandleResolvedMotion(MotionSender sendr, uint128 issue_id) public {
+    sendr.handleResolvedMotion(issue_id);
   }
 
   function clear() public {
-    delete request_calls;
-    delete request_returns;
+    delete openMotionCalls;
+    delete open_motion_returns;
   }
 }

@@ -35,7 +35,7 @@ contract Aspect is MotionSender {
     resolving_time = res_time;
   }
 
-  function request(bytes32 dets, bytes32 hash) external returns(address, uint) {
+  function requestAspect(bytes32 dets, bytes32 hash) external returns(address, uint) {
     require(dets != 0);
 
     clean();
@@ -45,7 +45,7 @@ contract Aspect is MotionSender {
     pending_aspects[last_issue].hash      = hash;
     pending_aspects[last_issue].timestamp = block.timestamp + resolving_time;
 
-    uint recverIssue = motion_recver.request(
+    uint recverIssue = motion_recver.openMotion(
       msg.sender,
       NEW_ASPECT,
       last_issue,
@@ -55,7 +55,7 @@ contract Aspect is MotionSender {
     return (address(motion_recver), recverIssue);
   }
 
-  function handleResolved(uint128 issue_id) external override {
+  function handleResolvedMotion(uint128 issue_id) external override {
     require(msg.sender == address(motion_recver));
     AwardedAspect storage aspect = pending_aspects[issue_id];
     require(aspect.timestamp >= block.timestamp);
