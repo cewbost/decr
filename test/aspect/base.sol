@@ -14,13 +14,21 @@ contract ExposedAspect is Aspect {
     bytes32 dets,
     bytes32 hash,
     uint ts
-  ) external returns(uint128) {
+  ) public returns(uint128) {
     last_issue++;
     pending_aspects[last_issue].recipient = rec;
     pending_aspects[last_issue].details   = dets;
     pending_aspects[last_issue].hash      = hash;
     pending_aspects[last_issue].timestamp = ts;
     return last_issue;
+  }
+
+  function removePendingAspect(uint128 issue) public {
+    delete pending_aspects[issue];
+  }
+
+  function getFirstIssue() public view returns(uint128) {
+    return first_issue;
   }
 }
 

@@ -21,7 +21,7 @@ contract Aspect is MotionSender {
 
   uint resolving_time;
 
-  uint128 first_issue = 0;
+  uint128 first_issue = 1;
   uint128 last_issue  = 0;
 
   mapping(uint128 => AwardedAspect)        pending_aspects;
