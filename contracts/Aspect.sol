@@ -11,7 +11,7 @@ contract Aspect is MotionSender {
 
   struct AwardedAspect {
     address recipient;
-    bytes32 dets;
+    bytes32 details;
     bytes32 hash;
     uint    timestamp;
   }
@@ -36,12 +36,12 @@ contract Aspect is MotionSender {
   }
 
   function requestAspect(bytes32 dets, bytes32 hash) external returns(address, uint) {
-    require(dets != 0);
+    require(dets != 0, "Details cannot be zero.");
 
     clean();
     last_issue++;
     pending_aspects[last_issue].recipient = msg.sender;
-    pending_aspects[last_issue].dets      = dets;
+    pending_aspects[last_issue].details   = dets;
     pending_aspects[last_issue].hash      = hash;
     pending_aspects[last_issue].timestamp = block.timestamp + resolving_time;
 
@@ -56,9 +56,9 @@ contract Aspect is MotionSender {
   }
 
   function handleResolvedMotion(uint128 issue_id) external override {
-    require(msg.sender == address(motion_recver));
+    require(msg.sender == address(motion_recver), "Only available to motion handler.");
     AwardedAspect storage aspect = pending_aspects[issue_id];
-    require(aspect.timestamp >= block.timestamp);
+    require(aspect.timestamp >= block.timestamp, "Pending aspect does not exist.");
 
     awarded_aspects[issue_id] = aspect;
     awarded_aspects[issue_id].timestamp = block.timestamp;

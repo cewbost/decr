@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.4.22 <0.9.0;
 
+import "./MotionSenderCaller.sol";
 import "../../../contracts/MotionHandler.sol";
 import "../../../contracts/Aspect.sol";
 
-contract Actor {
+contract Actor is MotionSenderCaller {
 
   function callSign(MotionHandler handler, uint issue) public {
     handler.sign(issue);

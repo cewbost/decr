@@ -2,30 +2,9 @@
 pragma solidity >=0.4.22 <0.9.0;
 
 import "truffle/Assert.sol";
-import "../utils/contracts/MotionRecver.sol";
-import "../utils/contracts/Actor.sol";
-import "../../contracts/Aspect.sol";
+import "./base.sol";
 
-contract TestAspectAwards {
-
-  MockMotionRecver motion_recver;
-  Actor            decider;
-  Actor            requester;
-  Aspect           aspect;
-
-  uint resolving_time;
-
-  function beforeAll() external {
-    resolving_time = 1 days;
-    motion_recver  = new MockMotionRecver();
-    decider        = new Actor();
-    requester      = new Actor();
-    aspect         = new Aspect(motion_recver, address(decider), resolving_time);
-  }
-
-  function beforeEach() external {
-    motion_recver.clear();
-  }
+contract TestAspectAwards is BaseTestAspect {
 
   function testAward() external {
     uint    recver_issue = 201;
