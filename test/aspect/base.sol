@@ -3,11 +3,15 @@ pragma solidity >=0.4.22 <0.9.0;
 
 import "../utils/contracts/MotionRecver.sol";
 import "../utils/contracts/Actor.sol";
-import "../../contracts/Aspect.sol";
+import "../../contracts/OldAspect.sol";
 
-contract ExposedAspect is Aspect {
+contract ExposedAspect is OldAspect {
 
-  constructor(MotionRecver recver, address decdr, uint res_time) Aspect(recver, decdr, res_time) {}
+  constructor(
+    MotionRecver recver,
+    address decdr,
+    uint res_time
+  ) OldAspect(recver, decdr, res_time) {}
 
   function addPendingAspect(
     address rec,
