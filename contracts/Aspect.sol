@@ -1,79 +1,71 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.4.22 <0.9.0;
 
-import "./MotionSender.sol";
-import "./MotionRecver.sol";
-import "./Decider.sol";
+import "./Owned.sol";
+import "./Bitset.sol";
 
-uint128 constant NEW_ASPECT = 0xDEC2A52E800000000000000000000001;
+struct Record {
+  address recipient;
+  uint32  generation;
+  uint64  timestamp;
+  bytes20 details;
+  bytes32 content;
+  bytes   approvers;
+}
 
-contract Aspect is MotionSender {
+contract Aspect is Owned {
 
-  struct AwardedAspect {
-    address recipient;
-    bytes32 details;
-    bytes32 hash;
-    uint    timestamp;
+  mapping(address => Record[]) records;
+  address[]                    approvers;
+  bytes                        approvers_mask;
+
+  uint                         auto_cleaning_deadline = 1 << 63;
+  uint                         first_pending_issue    = 0;
+  uint                         last_pending_issue     = 0;
+
+  mapping(uint => Record)      pending_records;
+  mapping(address => uint[])   pending_records_index;
+
+  function request(uint32 generation, bytes20 details, bytes32 content) external {
+    uint[] storage issues = pending_records_index[msg.sender];
+    uint slot = getIssueSlotForGeneration(issues, generation);
+    uint issue = last_pending_issue;
+    last_pending_issue++;
+    pending_records[issue] = Record({
+      recipient:  msg.sender,
+      generation: generation,
+      timestamp:  uint64(block.timestamp),
+      details:    details,
+      content:    content,
+      approvers:  ""
+    });
+    issues[slot] = issue;
   }
 
-  MotionRecver motion_recver;
-  address      decider;
+  function grant(uint issue) external {}
 
-  uint resolving_time;
+  function reject(uint issue) external {}
 
-  uint128 first_issue = 1;
-  uint128 last_issue  = 0;
+  function grantApprover(address approver) external {}
 
-  mapping(uint128 => AwardedAspect)        pending_aspects;
-  mapping(uint128 => AwardedAspect) public awarded_aspects;
+  function revokeApprover(address approver) external {}
 
-  uint128 constant cleaning_rate = 3;
+  function approve(uint issue) external {}
 
-  constructor(MotionRecver recver, address decdr, uint res_time) {
-    motion_recver  = recver;
-    decider        = decdr;
-    resolving_time = res_time;
+  function setAutoCleaningDeadline(uint deadline) external {
+    auto_cleaning_deadline = deadline;
   }
 
-  function requestAspect(bytes32 dets, bytes32 hash) external returns(address, uint) {
-    require(dets != 0, "Details cannot be zero.");
-
-    clean();
-    last_issue++;
-    pending_aspects[last_issue].recipient = msg.sender;
-    pending_aspects[last_issue].details   = dets;
-    pending_aspects[last_issue].hash      = hash;
-    pending_aspects[last_issue].timestamp = block.timestamp + resolving_time;
-
-    uint recverIssue = motion_recver.openMotion(
-      msg.sender,
-      NEW_ASPECT,
-      last_issue,
-      decider,
-      resolving_time
-    );
-    return (address(motion_recver), recverIssue);
-  }
-
-  function handleResolvedMotion(uint128 issue_id) external override {
-    require(msg.sender == address(motion_recver), "Only available to motion handler.");
-    AwardedAspect storage aspect = pending_aspects[issue_id];
-    require(aspect.timestamp >= block.timestamp, "Pending aspect does not exist.");
-
-    awarded_aspects[issue_id] = aspect;
-    awarded_aspects[issue_id].timestamp = block.timestamp;
-    delete pending_aspects[issue_id];
-  }
-
-  function clean() internal {
-    uint128 issue = first_issue;
-    uint128 next_issue = first_issue + cleaning_rate;
-    if (next_issue >= last_issue) return;
-    for (; issue < next_issue; issue++) {
-      uint deadline = pending_aspects[issue].timestamp;
-      if (deadline < block.timestamp) delete pending_aspects[issue];
-      else if (deadline != 0) break;
+  function getIssueSlotForGeneration(uint[] storage issues, uint32 generation) internal returns(uint) {
+    uint slot;
+    for (slot = 0; slot < issues.length; slot++) {
+      uint issue = issues[slot];
+      if (pending_records[issue].generation == generation) {
+        delete pending_records[issue];
+        return slot;
+      }
     }
-    first_issue = issue;
+    issues.push();
+    return slot;
   }
 }
