@@ -4,6 +4,7 @@ pragma solidity >=0.4.22 <0.9.0;
 import "./MotionSenderCaller.sol";
 import "../../../contracts/MotionHandler.sol";
 import "../../../contracts/OldAspect.sol";
+import "../../../contracts/OldAspect2.sol";
 import "../../../contracts/Aspect.sol";
 
 contract Actor is MotionSenderCaller {
@@ -30,10 +31,10 @@ contract Actor is MotionSenderCaller {
   }
 
   function callAspectRequest(
-    Aspect  aspect,
-    uint32  generation,
-    bytes20 details,
-    bytes32 content
+    OldAspect2 aspect,
+    uint32     generation,
+    bytes20    details,
+    bytes32    content
   ) public {
     aspect.request(generation, details, content);
   }
