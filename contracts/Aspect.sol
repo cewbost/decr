@@ -4,68 +4,78 @@ pragma solidity >=0.4.22 <0.9.0;
 import "./Owned.sol";
 import "./Bitset.sol";
 
+using { getBit, setBit, unsetBit } for bytes;
+
 struct Record {
   address recipient;
   uint32  generation;
   uint64  timestamp;
-  bytes20 details;
+  bytes24 details;
   bytes32 content;
   bytes   approvers;
 }
 
+struct Generation {
+  uint64    begin_timestamp;
+  uint64    end_timestamp;
+  bytes     approvers_mask;
+  bytes32[] pending_records;
+  bytes32[] records;
+}
+
 contract Aspect is Owned {
 
-  mapping(address => Record[]) records;
-  address[]                    approvers;
-  bytes                        approvers_mask;
+  Generation[]                  generations;
+  address[]                     approvers;
+  bytes                         approvers_mask;
+  mapping(bytes32 => Record)    records;
+  mapping(address => bytes32[]) records_by_recipient;
+  mapping(bytes32 => Record)    pending_records;
+  mapping(address => bytes32[]) pending_records_by_recipient;
 
-  uint                         auto_cleaning_deadline = 1 << 63;
-  uint                         first_pending_issue    = 0;
-  uint                         last_pending_issue     = 0;
-
-  mapping(uint => Record)      pending_records;
-  mapping(address => uint[])   pending_records_index;
-
-  function request(uint32 generation, bytes20 details, bytes32 content) external {
-    uint[] storage issues = pending_records_index[msg.sender];
-    uint slot = getIssueSlotForGeneration(issues, generation);
-    uint issue = last_pending_issue;
-    last_pending_issue++;
-    pending_records[issue] = Record({
-      recipient:  msg.sender,
+  function request(
+    uint32 generation,
+    bytes20 details,
+    bytes32 content
+  ) external validGeneration(generation) {
+    Record memory rec = Record({
+      recipient: msg.sender,
       generation: generation,
-      timestamp:  uint64(block.timestamp),
-      details:    details,
-      content:    content,
-      approvers:  ""
+      details: details,
+      content: content,
+      timestamp: uint64(block.timestamp),
+      approvers: ""
     });
-    issues[slot] = issue;
+    bytes32 hash = hashRecord(rec);
+    addPendingRecord(hash, rec);
   }
 
-  function grant(uint issue) external {}
-
-  function reject(uint issue) external {}
-
-  function grantApprover(address approver) external {}
-
-  function revokeApprover(address approver) external {}
-
-  function approve(uint issue) external {}
-
-  function setAutoCleaningDeadline(uint deadline) external {
-    auto_cleaning_deadline = deadline;
+  function addPendingRecord(bytes32 hash, Record memory rec) internal uniqueRecord(hash) {
+    pending_records[hash] = rec;
+    generations[rec.generation].pending_records.push(hash);
+    pending_records_by_recipient[rec.recipient].push(hash);
   }
 
-  function getIssueSlotForGeneration(uint[] storage issues, uint32 generation) internal returns(uint) {
-    uint slot;
-    for (slot = 0; slot < issues.length; slot++) {
-      uint issue = issues[slot];
-      if (pending_records[issue].generation == generation) {
-        delete pending_records[issue];
-        return slot;
-      }
-    }
-    issues.push();
-    return slot;
+  function hashRecord(Record memory rec) internal pure returns(bytes32) {
+    return keccak256(bytes.concat(
+      bytes20(rec.recipient),
+      bytes4(rec.generation),
+      rec.details,
+      rec.content
+    ));
+  }
+
+  modifier validGeneration(uint32 gen) {
+    require(
+      generations.length > gen &&
+      generations[gen].begin_timestamp <= block.timestamp &&
+      generations[gen].end_timestamp > block.timestamp
+    );
+    _;
+  }
+
+  modifier uniqueRecord(bytes32 hash) {
+    require(records[hash].timestamp == 0 && records[hash].timestamp == 0);
+    _;
   }
 }
