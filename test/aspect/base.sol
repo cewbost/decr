@@ -21,6 +21,26 @@ contract AspectTestBase is Aspect {
     }
   }
 
+  function addRecord(
+    address recipient,
+    uint32 generation,
+    bytes20 details,
+    bytes32 content
+  ) internal {
+    Record memory rec = Record({
+      recipient: recipient,
+      generation: generation,
+      details: details,
+      content: content,
+      timestamp: uint64(block.timestamp),
+      approvers: ""
+    });
+    bytes32 hash = hashRecord(rec);
+    records[hash] = rec;
+    generations[generation].records.push(hash);
+    pending_records_by_recipient[recipient].push(hash);
+  }
+
   function purgePendingRecords() internal {
     uint gens = generations.length;
     for (uint g = 0; g < gens; g++) {
@@ -33,9 +53,5 @@ contract AspectTestBase is Aspect {
       }
       delete generations[g].pending_records;
     }
-  }
-
-  function purgeGenerations() internal {
-    while (generations.length > 0) generations.pop();
   }
 }

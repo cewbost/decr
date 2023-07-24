@@ -66,16 +66,18 @@ contract Aspect is Owned {
   }
 
   modifier validGeneration(uint32 gen) {
+    require(generations.length > gen, "Generation does not exist.");
     require(
-      generations.length > gen &&
       generations[gen].begin_timestamp <= block.timestamp &&
-      generations[gen].end_timestamp > block.timestamp
+      generations[gen].end_timestamp > block.timestamp,
+      "Generation inactive."
     );
     _;
   }
 
   modifier uniqueRecord(bytes32 hash) {
-    require(records[hash].timestamp == 0 && records[hash].timestamp == 0);
+    require(pending_records[hash].timestamp == 0 && records[hash].timestamp == 0,
+      "Already exists.");
     _;
   }
 }
