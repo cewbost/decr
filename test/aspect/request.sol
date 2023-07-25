@@ -5,7 +5,7 @@ import "truffle/Assert.sol";
 import "./base.sol";
 import "../utils/contracts/tools.sol";
 
-contract TestAspectRequest is AspectTestBase {
+contract TestAspectRequest is AspectTestBase, ArrayTools {
 
   function beforeAll() external {
     addGenerations(block.timestamp, block.timestamp + 10, 2);

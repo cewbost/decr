@@ -1,12 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.4.22 <0.9.0;
 
-import "truffle/Assert.sol";
 import "./actor.sol";
-import "../utils/contracts/tools.sol";
 import "../../contracts/Aspect.sol";
 
-contract AspectTestBase is Aspect, ArrayTools {
+contract AspectTestBase is Aspect {
 
   function newActors(uint num) internal returns(AspectTestActor[] memory) {
     AspectTestActor[] memory actors = new AspectTestActor[](num);
