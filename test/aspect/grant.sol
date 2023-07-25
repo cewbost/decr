@@ -17,7 +17,7 @@ contract TestAspectGrant is AspectTestBase, ArrayTools {
 
   function testGrant() external {
     AspectTestActor[] memory actors = newActors(2);
-    changeOwner(address(actors[0]));
+    setOwner(address(actors[0]));
     actors[1].request(0, "details", "content");
     bytes32 hash = generations[0].records[0];
 
@@ -40,5 +40,35 @@ contract TestAspectGrant is AspectTestBase, ArrayTools {
       "The record should be associated with the generation.");
     Assert.isTrue(contains(records_by_recipient[address(actors[1])], hash),
       "The record should be associated with the recipient.");
+  }
+
+  function testOnlyOwnerAllowed() external {
+    AspectTestActor[] memory actors = newActors(2);
+    actors[1].request(0, "details", "content");
+    bytes32 hash = generations[0].records[0];
+
+    try actors[0].grant(hash) {
+      Assert.fail("Should revert.");
+    } catch Error(string memory what) {
+      Assert.equal(
+        "Only owner can perform this action.",
+        what,
+        "Should revert with right message."
+      );
+    }
+  }
+
+  function testRecordMustExist() external {
+    AspectTestActor[] memory actors = newActors(2);
+    setOwner(address(actors[0]));
+    actors[1].request(0, "details", "content");
+    bytes32 hash = generations[0].records[0];
+    actors[0].grant(hash);
+
+    try actors[0].grant(hash) {
+      Assert.fail("Should revert.");
+    } catch Error(string memory what) {
+      Assert.equal("Pending record does not exist.", what, "Should revert with right message.");
+    }
   }
 }

@@ -5,8 +5,8 @@ contract Owned {
 
   address owner;
 
-  constructor(address initial_owner) {
-    owner = initial_owner;
+  constructor() {
+    owner = msg.sender;
   }
 
   function authorized() public view {
@@ -18,7 +18,11 @@ contract Owned {
     _;
   }
 
-  function changeOwner(address new_owner) public onlyOwner {
+  function giveOwnership(address new_owner) public onlyOwner {
+    setOwner(new_owner);
+  }
+
+  function setOwner(address new_owner) internal {
     owner = new_owner;
   }
 }

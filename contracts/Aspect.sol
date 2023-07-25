@@ -31,8 +31,6 @@ contract Aspect is Owned {
   mapping(bytes32 => Record)    pending_records;
   mapping(address => bytes32[]) records_by_recipient;
 
-  constructor() Owned(msg.sender) {}
-
   function request(
     uint32 generation,
     bytes20 details,
