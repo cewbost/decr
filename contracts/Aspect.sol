@@ -19,7 +19,6 @@ struct Generation {
   uint64    begin_timestamp;
   uint64    end_timestamp;
   bytes     approvers_mask;
-  bytes32[] pending_records;
   bytes32[] records;
 }
 
@@ -31,7 +30,6 @@ contract Aspect is Owned {
   mapping(bytes32 => Record)    records;
   mapping(address => bytes32[]) records_by_recipient;
   mapping(bytes32 => Record)    pending_records;
-  mapping(address => bytes32[]) pending_records_by_recipient;
 
   function request(
     uint32 generation,
@@ -50,10 +48,15 @@ contract Aspect is Owned {
     addPendingRecord(hash, rec);
   }
 
+  function grant(bytes32 hash) external onlyOwner pendingRecord(hash) {
+    records[hash] = pending_records[hash];
+    delete pending_records[hash];
+  }
+
   function addPendingRecord(bytes32 hash, Record memory rec) internal uniqueRecord(hash) {
     pending_records[hash] = rec;
-    generations[rec.generation].pending_records.push(hash);
-    pending_records_by_recipient[rec.recipient].push(hash);
+    generations[rec.generation].records.push(hash);
+    records_by_recipient[rec.recipient].push(hash);
   }
 
   function hashRecord(Record memory rec) internal pure returns(bytes32) {
@@ -78,6 +81,11 @@ contract Aspect is Owned {
   modifier uniqueRecord(bytes32 hash) {
     require(pending_records[hash].timestamp == 0 && records[hash].timestamp == 0,
       "Already exists.");
+    _;
+  }
+
+  modifier pendingRecord(bytes32 hash) {
+    require(pending_records[hash].timestamp != 0, "Pending record does not exist.");
     _;
   }
 }
