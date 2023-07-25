@@ -14,14 +14,14 @@ contract TestAspectRequest is AspectTestBase, ArrayTools {
   }
 
   function afterEach() external {
-    purgePendingRecords();
+    purgeRecords();
   }
 
   function testAddPendingRecordDetails() external {
     AspectTestActor actor = newActors(1)[0];
     actor.request(0, "details", "content");
 
-    Record[] memory recs = getPendingRecords(generations[0].pending_records);
+    Record[] memory recs = getPendingRecords(generations[0].records);
     Assert.equal(recs.length, 1, "There should be on pending record.");
     Assert.equal(address(recs[0].recipient), address(actor),
       "The pending record should have the correct recipient.");
@@ -46,22 +46,22 @@ contract TestAspectRequest is AspectTestBase, ArrayTools {
     addrs[0] = address(actors[0]); addrs[1] = address(actors[1]);
     bytes32[] memory details = new bytes32[](2);
     details[0] = "1"; details[1] = "3";
-    assertGenerationRecords(getPendingRecords(generations[0].pending_records),
+    assertGenerationRecords(getPendingRecords(generations[0].records),
       0, addrs, details,
       "Generation 0 should have the right records.");
     details[0] = "2"; details[1] = "4";
-    assertGenerationRecords(getPendingRecords(generations[1].pending_records),
+    assertGenerationRecords(getPendingRecords(generations[1].records),
       1, addrs, details,
       "Generation 1 should have the right records.");
 
     uint32[] memory gens = new uint32[](2);
     gens[0] = 0; gens[1] = 1;
     details[0] = "1"; details[1] = "2";
-    assertRecipientRecords(getPendingRecords(pending_records_by_recipient[addrs[0]]),
+    assertRecipientRecords(getPendingRecords(records_by_recipient[addrs[0]]),
       addrs[0], gens, details,
       "Actor 0 should have the right records.");
     details[0] = "3"; details[1] = "4";
-    assertRecipientRecords(getPendingRecords(pending_records_by_recipient[addrs[1]]),
+    assertRecipientRecords(getPendingRecords(records_by_recipient[addrs[1]]),
       addrs[1], gens, details,
       "Actor 1 should have the right records.");
   }

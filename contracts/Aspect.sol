@@ -28,8 +28,8 @@ contract Aspect is Owned {
   address[]                     approvers;
   bytes                         approvers_mask;
   mapping(bytes32 => Record)    records;
-  mapping(address => bytes32[]) records_by_recipient;
   mapping(bytes32 => Record)    pending_records;
+  mapping(address => bytes32[]) records_by_recipient;
 
   function request(
     uint32 generation,
@@ -45,18 +45,16 @@ contract Aspect is Owned {
       approvers: ""
     });
     bytes32 hash = hashRecord(rec);
-    addPendingRecord(hash, rec);
+    require(pending_records[hash].timestamp == 0 && records[hash].timestamp == 0,
+      "Already exists.");
+    pending_records[hash] = rec;
+    generations[rec.generation].records.push(hash);
+    records_by_recipient[rec.recipient].push(hash);
   }
 
   function grant(bytes32 hash) external onlyOwner pendingRecord(hash) {
     records[hash] = pending_records[hash];
     delete pending_records[hash];
-  }
-
-  function addPendingRecord(bytes32 hash, Record memory rec) internal uniqueRecord(hash) {
-    pending_records[hash] = rec;
-    generations[rec.generation].records.push(hash);
-    records_by_recipient[rec.recipient].push(hash);
   }
 
   function hashRecord(Record memory rec) internal pure returns(bytes32) {
@@ -75,12 +73,6 @@ contract Aspect is Owned {
       generations[gen].end_timestamp > block.timestamp,
       "Generation inactive."
     );
-    _;
-  }
-
-  modifier uniqueRecord(bytes32 hash) {
-    require(pending_records[hash].timestamp == 0 && records[hash].timestamp == 0,
-      "Already exists.");
     _;
   }
 

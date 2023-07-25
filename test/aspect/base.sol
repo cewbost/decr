@@ -38,20 +38,21 @@ contract AspectTestBase is Aspect {
     bytes32 hash = hashRecord(rec);
     records[hash] = rec;
     generations[generation].records.push(hash);
-    pending_records_by_recipient[recipient].push(hash);
+    records_by_recipient[recipient].push(hash);
   }
 
-  function purgePendingRecords() internal {
+  function purgeRecords() internal {
     uint gens = generations.length;
     for (uint g = 0; g < gens; g++) {
-      bytes32[] storage hashes = generations[g].pending_records;
+      bytes32[] storage hashes = generations[g].records;
       uint recs = hashes.length;
       for (uint n = 0; n < recs; n++) {
         bytes32 hash = hashes[n];
-        delete pending_records_by_recipient[pending_records[hash].recipient];
+        delete records_by_recipient[records[hash].recipient];
+        delete records[hash];
         delete pending_records[hash];
       }
-      delete generations[g].pending_records;
+      delete generations[g].records;
     }
   }
 }
