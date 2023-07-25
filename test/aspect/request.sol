@@ -5,7 +5,7 @@ import "truffle/Assert.sol";
 import "./base.sol";
 import "../utils/contracts/tools.sol";
 
-contract TestAspectRequest is AspectTestBase, ArrayTools {
+contract TestAspectRequest is AspectTestBase {
 
   function beforeAll() external {
     addGenerations(block.timestamp, block.timestamp + 10, 2);
@@ -21,7 +21,7 @@ contract TestAspectRequest is AspectTestBase, ArrayTools {
     AspectTestActor actor = newActors(1)[0];
     actor.request(0, "details", "content");
 
-    Record[] memory recs = getPendingRecords(generations[0].records);
+    Record[] memory recs = getRecords(generations[0].records, pending_records);
     Assert.equal(recs.length, 1, "There should be on pending record.");
     Assert.equal(address(recs[0].recipient), address(actor),
       "The pending record should have the correct recipient.");
@@ -46,22 +46,22 @@ contract TestAspectRequest is AspectTestBase, ArrayTools {
     addrs[0] = address(actors[0]); addrs[1] = address(actors[1]);
     bytes32[] memory details = new bytes32[](2);
     details[0] = "1"; details[1] = "3";
-    assertGenerationRecords(getPendingRecords(generations[0].records),
+    assertGenerationRecords(getRecords(generations[0].records, pending_records),
       0, addrs, details,
       "Generation 0 should have the right records.");
     details[0] = "2"; details[1] = "4";
-    assertGenerationRecords(getPendingRecords(generations[1].records),
+    assertGenerationRecords(getRecords(generations[1].records, pending_records),
       1, addrs, details,
       "Generation 1 should have the right records.");
 
     uint32[] memory gens = new uint32[](2);
     gens[0] = 0; gens[1] = 1;
     details[0] = "1"; details[1] = "2";
-    assertRecipientRecords(getPendingRecords(records_by_recipient[addrs[0]]),
+    assertRecipientRecords(getRecords(records_by_recipient[addrs[0]], pending_records),
       addrs[0], gens, details,
       "Actor 0 should have the right records.");
     details[0] = "3"; details[1] = "4";
-    assertRecipientRecords(getPendingRecords(records_by_recipient[addrs[1]]),
+    assertRecipientRecords(getRecords(records_by_recipient[addrs[1]], pending_records),
       addrs[1], gens, details,
       "Actor 1 should have the right records.");
   }
@@ -145,14 +145,5 @@ contract TestAspectRequest is AspectTestBase, ArrayTools {
       Assert.isTrue(contains(details, recs[n].details),
         string.concat(message, " Invalid details."));
     }
-  }
-
-  function getPendingRecords(bytes32[] storage hashes) internal view returns(Record[] memory) {
-    uint num = hashes.length;
-    Record[] memory ret = new Record[](num);
-    for (uint n = 0; n < num; n++) {
-      ret[n] = pending_records[hashes[n]];
-    }
-    return ret;
   }
 }

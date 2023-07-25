@@ -14,4 +14,8 @@ contract AspectTestActor {
   function request(uint32 generation, bytes20 details, bytes32 content) public {
     target.request(generation, details, content);
   }
+
+  function grant(bytes32 hash) public {
+    target.grant(hash);
+  }
 }
