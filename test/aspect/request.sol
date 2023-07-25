@@ -7,8 +7,6 @@ import "../utils/contracts/tools.sol";
 
 contract TestAspectRequest is AspectTestBase, ArrayTools {
 
-  event RecordEvent(bytes32 details);
-
   function beforeAll() external {
     addGenerations(block.timestamp, block.timestamp + 10, 2);
     addGenerations(block.timestamp - 10, block.timestamp - 5, 1);
