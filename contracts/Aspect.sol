@@ -67,7 +67,7 @@ contract Aspect is Owned {
     ));
   }
 
-  function newGeneration(uint64 begin, uint64 end) external {
+  function newGeneration(uint64 begin, uint64 end) external onlyOwner {
     require(begin < end, "Ending must be before beginning.");
     Generation storage generation = generations.push();
     generation.begin_timestamp = begin;

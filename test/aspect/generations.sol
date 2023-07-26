@@ -7,10 +7,11 @@ import "./base.sol";
 contract TestAspectGenerations is AspectTestBase {
 
   function testNewGeneration() external {
-    AspectTestActor actors = newActors(1)[0];
+    AspectTestActor actor = newActors(1)[0];
+    setOwner(address(actor));
 
-    actors.newGeneration(uint64(block.timestamp), uint64(block.timestamp + 10));
-    actors.newGeneration(uint64(block.timestamp + 5), uint64(block.timestamp + 15));
+    actor.newGeneration(uint64(block.timestamp), uint64(block.timestamp + 10));
+    actor.newGeneration(uint64(block.timestamp + 5), uint64(block.timestamp + 15));
 
     Assert.equal(2, generations.length, "Two generations should have been added.");
     Assert.equal(block.timestamp, generations[0].begin_timestamp,
@@ -28,12 +29,27 @@ contract TestAspectGenerations is AspectTestBase {
   }
 
   function testNewGenerationValidTimestamps() external {
-    AspectTestActor actors = newActors(1)[0];
+    AspectTestActor actor = newActors(1)[0];
+    setOwner(address(actor));
 
-    try actors.newGeneration(uint64(block.timestamp + 10), uint64(block.timestamp)) {
+    try actor.newGeneration(uint64(block.timestamp + 10), uint64(block.timestamp)) {
       Assert.fail("Should revert.");
     } catch Error(string memory what) {
       Assert.equal("Ending must be before beginning.", what, "Should revert with right message.");
+    }
+  }
+
+  function testNewGenerationOnlyOwner() external {
+    AspectTestActor actor = newActors(1)[0];
+
+    try actor.newGeneration(uint64(block.timestamp + 10), uint64(block.timestamp)) {
+      Assert.fail("Should revert.");
+    } catch Error(string memory what) {
+      Assert.equal(
+        "Only owner can perform this action.",
+        what,
+        "Should revert with right message."
+      );
     }
   }
 }
