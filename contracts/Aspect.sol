@@ -36,7 +36,13 @@ contract Aspect is Owned {
     uint32 generation,
     bytes20 details,
     bytes32 content
-  ) external validGeneration(generation) {
+  ) external {
+    require(generations.length > generation, "Generation does not exist.");
+    require(
+      generations[generation].begin_timestamp <= block.timestamp &&
+      generations[generation].end_timestamp > block.timestamp,
+      "Generation inactive."
+    );
     Record memory rec = Record({
       recipient: msg.sender,
       generation: generation,
@@ -74,14 +80,42 @@ contract Aspect is Owned {
     generation.end_timestamp = end;
   }
 
-  modifier validGeneration(uint32 gen) {
+  function clearGeneration(uint32 gen) external onlyOwner {
     require(generations.length > gen, "Generation does not exist.");
+    Generation storage generation = generations[gen];
     require(
-      generations[gen].begin_timestamp <= block.timestamp &&
-      generations[gen].end_timestamp > block.timestamp,
-      "Generation inactive."
+      generation.begin_timestamp > block.timestamp ||
+      generation.end_timestamp < block.timestamp,
+      "Generation must be inactive."
     );
-    _;
+    uint             len    = generation.records.length;
+    uint[]    memory idxs   = new uint[](len);
+    bytes32[] memory hashes = new bytes32[](len);
+    uint             keep   = 0;
+    uint             clear  = 0;
+    for (uint n = 0; n < len; n++) {
+      bytes32 hash = generation.records[n];
+      if (pending_records[hash].timestamp == 0) {
+        idxs[keep++] = n;
+      } else {
+        hashes[clear++] = hash;
+      }
+    }
+
+    for (uint n = 0; n < keep; n++) generation.records[n] = generation.records[idxs[n]];
+    for (uint n = keep; n < len; n++) generation.records.pop();
+
+    for (uint n = 0; n < clear; n++) {
+      bytes32 hash = hashes[n];
+      address recipient = pending_records[hash].recipient;
+      bytes32[] storage recs = records_by_recipient[recipient];
+      len = records_by_recipient[recipient].length;
+      uint stepper = 0;
+      for (; stepper < len; stepper++) if (recs[stepper] == hash) break;
+      for (len--; stepper < len; stepper++) recs[stepper] = recs[stepper + 1];
+      recs.pop();
+      delete pending_records[hash];
+    }
   }
 
   modifier pendingRecord(bytes32 hash) {
