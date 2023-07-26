@@ -25,11 +25,12 @@ struct Generation {
 contract Aspect is Owned {
 
   Generation[]                  generations;
-  address[]                     approvers;
-  bytes                         approvers_mask;
   mapping(bytes32 => Record)    records;
   mapping(bytes32 => Record)    pending_records;
   mapping(address => bytes32[]) records_by_recipient;
+  address[]                     approvers;
+  mapping(address => uint)      approvers_idx;
+  bytes                         approvers_mask;
 
   function request(
     uint32 generation,
@@ -64,6 +65,13 @@ contract Aspect is Owned {
       rec.details,
       rec.content
     ));
+  }
+
+  function newGeneration(uint64 begin, uint64 end) external {
+    require(begin < end, "Ending must be before beginning.");
+    Generation storage generation = generations.push();
+    generation.begin_timestamp = begin;
+    generation.end_timestamp = end;
   }
 
   modifier validGeneration(uint32 gen) {

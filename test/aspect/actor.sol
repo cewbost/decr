@@ -18,4 +18,8 @@ contract AspectTestActor {
   function grant(bytes32 hash) public {
     target.grant(hash);
   }
+
+  function newGeneration(uint64 begin, uint64 end) public {
+    target.newGeneration(begin, end);
+  }
 }
