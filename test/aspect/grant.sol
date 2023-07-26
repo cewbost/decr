@@ -50,11 +50,8 @@ contract TestAspectGrant is AspectTestBase, ArrayTools {
     try actors[0].grant(hash) {
       Assert.fail("Should revert.");
     } catch Error(string memory what) {
-      Assert.equal(
-        "Only owner can perform this action.",
-        what,
-        "Should revert with right message."
-      );
+      Assert.equal("Only owner can perform this action.", what,
+        "Should revert with right message.");
     }
   }
 

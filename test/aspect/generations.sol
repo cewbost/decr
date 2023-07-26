@@ -31,7 +31,6 @@ contract TestAspectGenerations is AspectTestBase {
   function testNewGenerationValidTimestamps() external {
     AspectTestActor actor = newActors(1)[0];
     setOwner(address(actor));
-
     try actor.newGeneration(uint64(block.timestamp + 10), uint64(block.timestamp)) {
       Assert.fail("Should revert.");
     } catch Error(string memory what) {
@@ -41,15 +40,42 @@ contract TestAspectGenerations is AspectTestBase {
 
   function testNewGenerationOnlyOwner() external {
     AspectTestActor actor = newActors(1)[0];
-
     try actor.newGeneration(uint64(block.timestamp + 10), uint64(block.timestamp)) {
       Assert.fail("Should revert.");
     } catch Error(string memory what) {
-      Assert.equal(
-        "Only owner can perform this action.",
-        what,
-        "Should revert with right message."
-      );
+      Assert.equal("Only owner can perform this action.", what,
+        "Should revert with right message.");
+    }
+  }
+
+  function testClearGenerationOnlyOwner() external {
+    AspectTestActor actor = newActors(1)[0];
+    try actor.clearGeneration(0) {
+      Assert.fail("Should revert.");
+    } catch Error(string memory what) {
+      Assert.equal("Only owner can perform this action.", what,
+        "Should revert with right message.");
+    }
+  }
+
+  function testGenerationMustExist() external {
+    AspectTestActor actor = newActors(1)[0];
+    setOwner(address(actor));
+    try actor.clearGeneration(0) {
+      Assert.fail("Should revert.");
+    } catch Error(string memory what) {
+      Assert.equal("Generation does not exist.", what, "Should revert with right message.");
+    }
+  }
+
+  function testGenerationMustBeInactive() external {
+    AspectTestActor actor = newActors(1)[0];
+    addGenerations(block.timestamp, block.timestamp + 10, 1);
+    setOwner(address(actor));
+    try actor.clearGeneration(0) {
+      Assert.fail("Should revert.");
+    } catch Error(string memory what) {
+      Assert.equal("Generation must be inactive.", what, "Should revert with right message.");
     }
   }
 }

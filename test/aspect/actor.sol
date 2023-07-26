@@ -22,4 +22,8 @@ contract AspectTestActor {
   function newGeneration(uint64 begin, uint64 end) public {
     target.newGeneration(begin, end);
   }
+
+  function clearGeneration(uint32 gen) public {
+    target.clearGeneration(gen);
+  }
 }
