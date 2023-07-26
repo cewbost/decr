@@ -67,4 +67,9 @@ contract AspectTestBase is Aspect {
       delete generations[g].records;
     }
   }
+
+  function purgeGenerations() internal {
+    purgeRecords();
+    while(generations.length > 0) generations.pop();
+  }
 }

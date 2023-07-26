@@ -6,6 +6,10 @@ import "./base.sol";
 
 contract TestAspectGenerations is AspectTestBase {
 
+  function afterEach() external {
+    purgeGenerations();
+  }
+
   function testNewGeneration() external {
     AspectTestActor actor = newActors(1)[0];
     setOwner(address(actor));
@@ -46,6 +50,12 @@ contract TestAspectGenerations is AspectTestBase {
       Assert.equal("Only owner can perform this action.", what,
         "Should revert with right message.");
     }
+  }
+
+  function testClearGeneration() external {
+    AspectTestActor actor = newActors(1)[0];
+    setOwner(address(actor));
+    addGenerations(block.timestamp - 20, block.timestamp - 10, 1);
   }
 
   function testClearGenerationOnlyOwner() external {
