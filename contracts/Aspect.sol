@@ -64,15 +64,6 @@ contract Aspect is Owned {
     delete pending_records[hash];
   }
 
-  function hashRecord(Record memory rec) internal pure returns(bytes32) {
-    return keccak256(bytes.concat(
-      bytes20(rec.recipient),
-      bytes4(rec.generation),
-      rec.details,
-      rec.content
-    ));
-  }
-
   function newGeneration(uint64 begin, uint64 end) external onlyOwner {
     require(begin < end, "Ending must be before beginning.");
     Generation storage generation = generations.push();
@@ -124,6 +115,22 @@ contract Aspect is Owned {
       idx--;
     }
     approvers_mask.setBit(idx);
+  }
+
+  function disableApprover(address approver) external onlyOwner {
+    uint idx = approvers_idx[approver];
+    if (idx == 0) return;
+    idx--;
+    approvers_mask.unsetBit(idx);
+  }
+
+  function hashRecord(Record memory rec) internal pure returns(bytes32) {
+    return keccak256(bytes.concat(
+      bytes20(rec.recipient),
+      bytes4(rec.generation),
+      rec.details,
+      rec.content
+    ));
   }
 
   modifier pendingRecord(bytes32 hash) {
