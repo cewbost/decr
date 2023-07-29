@@ -64,6 +64,17 @@ contract Aspect is Owned {
     delete pending_records[hash];
   }
 
+  function approve(bytes32 hash) external pendingRecord(hash) {
+    Record storage pending_record = pending_records[hash];
+    require(pending_record.timestamp != 0, "Pending record does not exist.");
+    uint approver_idx = approvers_idx[msg.sender];
+    require(approver_idx != 0, "Only approver can perform this action.");
+    approver_idx--;
+    require(generations[pending_record.generation].approvers_mask.getBit(approver_idx),
+      "Only approver can perform this action.");
+    pending_records[hash].approvers.setBit(approver_idx);
+  }
+
   function newGeneration(uint64 begin, uint64 end) external onlyOwner {
     require(begin < end, "Ending must be before beginning.");
     Generation storage generation = generations.push();
