@@ -22,11 +22,12 @@ contract AspectTestBase is Aspect {
   }
 
   function addRecord(
-    address recipient,
-    uint32 generation,
-    bytes20 details,
-    bytes32 content
-  ) internal {
+    mapping(bytes32 => Record) storage map,
+    address                            recipient,
+    uint32                             generation,
+    bytes20                            details,
+    bytes32                            content
+  ) internal returns(bytes32) {
     Record memory rec = Record({
       recipient: recipient,
       generation: generation,
@@ -36,20 +37,25 @@ contract AspectTestBase is Aspect {
       approvers: ""
     });
     bytes32 hash = hashRecord(rec);
-    records[hash] = rec;
+    map[hash] = rec;
     generations[generation].records.push(hash);
     records_by_recipient[recipient].push(hash);
+    return hash;
   }
 
   function getRecords(
     bytes32[]                  storage hashes,
     mapping(bytes32 => Record) storage map
-  ) internal view returns(Record[] memory) {
-    uint num = hashes.length;
-    Record[] memory ret = new Record[](num);
-    for (uint n = 0; n < num; n++) {
-      ret[n] = map[hashes[n]];
+  ) internal returns(Record[] memory) {
+    uint len = hashes.length;
+    uint num = 0;
+    Record[] memory recs = new Record[](len);
+    for (uint n = 0; n < len; n++) {
+      Record storage rec = map[hashes[n]];
+      if (rec.timestamp != 0) recs[num++] = rec;
     }
+    Record[] memory ret = new Record[](num);
+    for (uint n = 0; n < num; n++) ret[n] = recs[n];
     return ret;
   }
 

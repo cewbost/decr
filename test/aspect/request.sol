@@ -105,7 +105,7 @@ contract TestAspectRequest is AspectTestBase, ArrayTools {
 
   function testRerequest() external {
     AspectTestActor actor = newActors(1)[0];
-    addRecord(address(actor), 0, "details", "content");
+    addRecord(records, address(actor), 0, "details", "content");
     try actor.request(0, "details", "content") {
       Assert.fail("Should revert.");
     } catch Error(string memory what) {
