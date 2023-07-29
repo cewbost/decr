@@ -71,35 +71,35 @@ contract TestAspectGenerations is AspectTestBase, ArrayTools {
 
     Assert.isTrue(
       pending_records[hashes[0]].timestamp == 0 &&
-      pending_records[hashes[2]].timestamp == 0
-      , "It should remove the pending records of cleared generation.");
+      pending_records[hashes[2]].timestamp == 0,
+      "It should remove the pending records of cleared generation.");
     Assert.isTrue(
       pending_records[hashes[1]].timestamp != 0 &&
-      pending_records[hashes[3]].timestamp != 0
-      , "It should not remove pending records of other generations.");
+      pending_records[hashes[3]].timestamp != 0,
+      "It should not remove pending records of other generations.");
     Assert.isTrue(
       records[hashes[4]].timestamp != 0 &&
-      records[hashes[6]].timestamp != 0
-      , "It should not remove non-pending records of cleared generation.");
+      records[hashes[6]].timestamp != 0,
+      "It should not remove non-pending records of cleared generation.");
     Assert.isTrue(
       records[hashes[5]].timestamp != 0 &&
-      records[hashes[7]].timestamp != 0
-      , "It should not remove non-pending records of other generations.");
+      records[hashes[7]].timestamp != 0,
+      "It should not remove non-pending records of other generations.");
 
     bytes32[] memory stored = generations[0].records;
     Assert.isTrue(
       stored.length == 2 &&
       contains(stored, hashes[4]) &&
-      contains(stored, hashes[6])
-      , "Cleared generation should only have non-pending records left.");
+      contains(stored, hashes[6]),
+      "Cleared generation should only have non-pending records left.");
     stored = generations[1].records;
     Assert.isTrue(
       stored.length == 4 &&
       contains(stored, hashes[1]) &&
       contains(stored, hashes[3]) &&
       contains(stored, hashes[5]) &&
-      contains(stored, hashes[7])
-      , "Other generations should have all records left.");
+      contains(stored, hashes[7]),
+      "Other generations should have all records left.");
     stored = records_by_recipient[address(actors[1])];
     Assert.isTrue(
       stored.length == 6 &&
@@ -108,8 +108,8 @@ contract TestAspectGenerations is AspectTestBase, ArrayTools {
       contains(stored, hashes[4]) &&
       contains(stored, hashes[5]) &&
       contains(stored, hashes[6]) &&
-      contains(stored, hashes[7])
-      , "Cleared records should be removed from user.");
+      contains(stored, hashes[7]),
+      "Cleared records should be removed from user.");
   }
 
   function testClearGenerationOnlyOwner() external {

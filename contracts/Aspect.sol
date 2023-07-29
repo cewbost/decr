@@ -114,6 +114,18 @@ contract Aspect is Owned {
     }
   }
 
+  function enableApprover(address approver) external onlyOwner {
+    uint idx = approvers_idx[approver];
+    if (idx == 0) {
+      approvers.push(approver);
+      idx = approvers.length - 1;
+      approvers_idx[approver] = idx + 1;
+    } else {
+      idx--;
+    }
+    approvers_mask.setBit(idx);
+  }
+
   modifier pendingRecord(bytes32 hash) {
     require(pending_records[hash].timestamp != 0, "Pending record does not exist.");
     _;

@@ -46,7 +46,7 @@ contract AspectTestBase is Aspect {
   function getRecords(
     bytes32[]                  storage hashes,
     mapping(bytes32 => Record) storage map
-  ) internal returns(Record[] memory) {
+  ) internal view returns(Record[] memory) {
     uint len = hashes.length;
     uint num = 0;
     Record[] memory recs = new Record[](len);
@@ -77,5 +77,12 @@ contract AspectTestBase is Aspect {
   function purgeGenerations() internal {
     purgeRecords();
     while(generations.length > 0) generations.pop();
+  }
+
+  function purgeApprovers() internal {
+    approvers_mask = "";
+    uint len = approvers.length;
+    for (uint n = 0; n < len; n++) delete approvers_idx[approvers[n]];
+    for (uint n = 0; n < len; n++) approvers.pop();
   }
 }

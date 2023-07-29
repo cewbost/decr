@@ -26,4 +26,8 @@ contract AspectTestActor {
   function clearGeneration(uint32 gen) public {
     target.clearGeneration(gen);
   }
+
+  function enableApprover(address approver) public {
+    target.enableApprover(approver);
+  }
 }
