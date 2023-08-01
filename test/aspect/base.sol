@@ -4,6 +4,8 @@ pragma solidity >=0.4.22 <0.9.0;
 import "./actor.sol";
 import "../../contracts/Aspect.sol";
 
+using { setBit, getBit } for bytes;
+
 contract AspectTestBase is Aspect {
 
   function newActors(uint num) internal returns(AspectTestActor[] memory) {
@@ -56,6 +58,45 @@ contract AspectTestBase is Aspect {
     }
     Record[] memory ret = new Record[](num);
     for (uint n = 0; n < num; n++) ret[n] = recs[n];
+    return ret;
+  }
+
+  function setApprovers(AspectTestActor[] memory actors) internal {
+    for (uint n = 0; n < actors.length; n++) {
+      approvers.push(address(actors[n]));
+      approvers_idx[address(actors[n])] = n + 1;
+    }
+  }
+
+  function setApprovers(AspectTestActor[] memory actors, uint generation) internal {
+    setApprovers(actors);
+    for (uint n = 0; n < actors.length; n++) {
+      generations[generation].approvers_mask.setBit(n);
+    }
+  }
+
+  function getApprovals(
+    mapping(bytes32 => Record) storage map,
+    bytes32                            hash
+  ) internal view returns(address[] memory) {
+    uint              len   = approvers.length;
+    Record    storage rec   = map[hash];
+    address[] memory  res   = new address[](len);
+    uint              count = 0;
+    for (uint n = 0; n < len; n++) if (rec.approvers.getBit(n)) res[count++] = approvers[n];
+    address[] memory ret = new address[](count);
+    for (uint n = 0; n < count; n++) ret[n] = res[n];
+    return ret;
+  }
+
+  function getApprovers(uint generation) internal view returns(address[] memory) {
+    uint              len   = approvers.length;
+    Record    storage gen   = generations[generation];
+    address[] memory  res   = new address[](len);
+    uint              count = 0;
+    for (uint n = 0; n < len; n++) if (gen.approvers_mask.getBit(n)) res[count++] = approvers[n];
+    address[] memory ret = new address[](count);
+    for (uint n = 0; n < count; n++) ret[n] = res[n];
     return ret;
   }
 

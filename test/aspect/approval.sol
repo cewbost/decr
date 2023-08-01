@@ -3,12 +3,8 @@ pragma solidity >=0.4.22 <0.9.0;
 
 import "truffle/Assert.sol";
 import "./base.sol";
-import "../utils/contracts/tools.sol";
-import "../../contracts/Bitset.sol";
 
-using { getBit, setBit } for bytes;
-
-contract TestAspectApproval is AspectTestBase, ArrayTools {
+contract TestAspectApproval is AspectTestBase {
 
   function beforeEach() external {
     addGenerations(block.timestamp, block.timestamp + 10, 1);
@@ -28,7 +24,7 @@ contract TestAspectApproval is AspectTestBase, ArrayTools {
     actors[2].approve(hash);
     actors[4].approve(hash);
 
-    address[] memory approvers = getApprovals(hash);
+    address[] memory approvers = getApprovals(pending_records, hash);
     Assert.equal(approvers.length, 3, "There should be two approvals.");
 
     Assert.isTrue(
@@ -75,25 +71,5 @@ contract TestAspectApproval is AspectTestBase, ArrayTools {
       Assert.equal("Only approver can perform this action.", what,
         "Should revert with right message.");
     }
-  }
-
-  function setApprovers(AspectTestActor[] memory actors, uint generation) internal {
-    for (uint n = 0; n < actors.length; n++) {
-      approvers.push(address(actors[n]));
-      approvers_idx[address(actors[n])] = n + 1;
-      generations[generation].approvers_mask.setBit(n);
-    }
-  }
-
-
-  function getApprovals(bytes32 hash) internal view returns(address[] memory) {
-    uint              len   = approvers.length;
-    Record    storage rec   = pending_records[hash];
-    address[] memory  res   = new address[](len);
-    uint              count = 0;
-    for (uint n = 0; n < len; n++) if (rec.approvers.getBit(n)) res[count++] = approvers[n];
-    address[] memory ret = new address[](count);
-    for (uint n = 0; n < count; n++) ret[n] = res[n];
-    return ret;
   }
 }

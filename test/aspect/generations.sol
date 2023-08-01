@@ -3,12 +3,12 @@ pragma solidity >=0.4.22 <0.9.0;
 
 import "truffle/Assert.sol";
 import "./base.sol";
-import "../utils/contracts/tools.sol";
 
-contract TestAspectGenerations is AspectTestBase, ArrayTools {
+contract TestAspectGenerations is AspectTestBase {
 
   function afterEach() external {
     purgeGenerations();
+    purgeApprovers();
   }
 
   function testNewGeneration() external {
