@@ -38,6 +38,45 @@ contract TestAspectApproval is AspectTestBase, ArrayTools {
       "There should be approvals by the correct actors.");
   }
 
+  function testApproveRecordMustBePending() external {
+    AspectTestActor[] memory actors = newActors(1);
+    setApprovers(actors, 0);
+    bytes32 hash = addRecord(records, address(actors[0]), 0, "", "");
+
+    try actors[0].approve(hash) {
+      Assert.fail("Should revert.");
+    } catch Error(string memory what) {
+      Assert.equal("Pending record does not exist.", what,
+        "Should revert with right message.");
+    }
+  }
+
+  function testApproveMustBeApprover() external {
+    AspectTestActor[] memory actors = newActors(1);
+    bytes32 hash = addRecord(pending_records, address(actors[0]), 0, "", "");
+
+    try actors[0].approve(hash) {
+      Assert.fail("Should revert.");
+    } catch Error(string memory what) {
+      Assert.equal("Only approver can perform this action.", what,
+        "Should revert with right message.");
+    }
+  }
+
+  function testApproveApproverMustBeEnabled() external {
+    AspectTestActor[] memory actors = newActors(1);
+    addGenerations(block.timestamp, block.timestamp + 10, 1);
+    setApprovers(actors, 1);
+    bytes32 hash = addRecord(pending_records, address(actors[0]), 0, "", "");
+
+    try actors[0].approve(hash) {
+      Assert.fail("Should revert.");
+    } catch Error(string memory what) {
+      Assert.equal("Only approver can perform this action.", what,
+        "Should revert with right message.");
+    }
+  }
+
   function setApprovers(AspectTestActor[] memory actors, uint generation) internal {
     for (uint n = 0; n < actors.length; n++) {
       approvers.push(address(actors[n]));
