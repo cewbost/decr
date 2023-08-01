@@ -24,6 +24,7 @@ struct Generation {
 
 contract Aspect is Owned {
 
+  string                        name;
   Generation[]                  generations;
   mapping(bytes32 => Record)    records;
   mapping(bytes32 => Record)    pending_records;
@@ -31,6 +32,10 @@ contract Aspect is Owned {
   address[]                     approvers;
   mapping(address => uint)      approvers_idx;
   bytes                         approvers_mask;
+
+  constructor(string memory n) {
+    name = n;
+  }
 
   function request(
     uint32  generation,

@@ -9,6 +9,8 @@ using { setBit, getBit } for bytes;
 
 contract AspectTestBase is Aspect, ArrayTools {
 
+  constructor() Aspect("AspectTest") {}
+
   function newActors(uint num) internal returns(AspectTestActor[] memory) {
     AspectTestActor[] memory actors = new AspectTestActor[](num);
     for (uint n = 0; n < num; n++) actors[n] = new AspectTestActor();
