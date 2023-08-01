@@ -78,7 +78,8 @@ contract Aspect is Owned {
     require(begin < end, "Ending must be before beginning.");
     Generation storage generation = generations.push();
     generation.begin_timestamp = begin;
-    generation.end_timestamp = end;
+    generation.end_timestamp   = end;
+    generation.approvers_mask  = approvers_mask;
   }
 
   function clearGeneration(uint32 gen) external onlyOwner {

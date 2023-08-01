@@ -2,11 +2,12 @@
 pragma solidity >=0.4.22 <0.9.0;
 
 import "./actor.sol";
+import "../utils/contracts/tools.sol";
 import "../../contracts/Aspect.sol";
 
 using { setBit, getBit } for bytes;
 
-contract AspectTestBase is Aspect {
+contract AspectTestBase is Aspect, ArrayTools {
 
   function newActors(uint num) internal returns(AspectTestActor[] memory) {
     AspectTestActor[] memory actors = new AspectTestActor[](num);
@@ -68,11 +69,14 @@ contract AspectTestBase is Aspect {
     }
   }
 
+  function setApprovers(AspectTestActor[] memory actors, bytes memory enabled) internal {
+    setApprovers(actors);
+    for (uint n = 0; n < enabled.length; n++) approvers_mask.setBit(uint(uint8(enabled[n])));
+  }
+
   function setApprovers(AspectTestActor[] memory actors, uint generation) internal {
     setApprovers(actors);
-    for (uint n = 0; n < actors.length; n++) {
-      generations[generation].approvers_mask.setBit(n);
-    }
+    for (uint n = 0; n < actors.length; n++) generations[generation].approvers_mask.setBit(n);
   }
 
   function getApprovals(
@@ -90,10 +94,10 @@ contract AspectTestBase is Aspect {
   }
 
   function getApprovers(uint generation) internal view returns(address[] memory) {
-    uint              len   = approvers.length;
-    Record    storage gen   = generations[generation];
-    address[] memory  res   = new address[](len);
-    uint              count = 0;
+    uint               len   = approvers.length;
+    Generation storage gen   = generations[generation];
+    address[]  memory  res   = new address[](len);
+    uint               count = 0;
     for (uint n = 0; n < len; n++) if (gen.approvers_mask.getBit(n)) res[count++] = approvers[n];
     address[] memory ret = new address[](count);
     for (uint n = 0; n < count; n++) ret[n] = res[n];

@@ -11,7 +11,7 @@ contract TestAspectGenerations is AspectTestBase {
     purgeApprovers();
   }
 
-  function testNewGeneration() external {
+  function testNewGenerations() external {
     AspectTestActor actor = newActors(1)[0];
     setOwner(address(actor));
 
@@ -19,18 +19,38 @@ contract TestAspectGenerations is AspectTestBase {
     actor.newGeneration(uint64(block.timestamp + 5), uint64(block.timestamp + 15));
 
     Assert.equal(2, generations.length, "Two generations should have been added.");
-    Assert.equal(block.timestamp, generations[0].begin_timestamp,
+    Generation storage gen = generations[0];
+    Assert.equal(block.timestamp, gen.begin_timestamp,
       "First generation should have correct begin timestamp.");
-    Assert.equal(block.timestamp + 10, generations[0].end_timestamp,
+    Assert.equal(block.timestamp + 10, gen.end_timestamp,
       "First generation should have correct end timestamp.");
-    Assert.equal(0, generations[0].records.length,
+    Assert.equal(0, gen.records.length,
       "First generation should have no records.");
-    Assert.equal(block.timestamp + 5, generations[1].begin_timestamp,
+    gen = generations[1];
+    Assert.equal(block.timestamp + 5, gen.begin_timestamp,
       "Second generation should have correct begin timestamp.");
-    Assert.equal(block.timestamp + 15, generations[1].end_timestamp,
+    Assert.equal(block.timestamp + 15, gen.end_timestamp,
       "Second generation should have correct end timestamp.");
-    Assert.equal(0, generations[1].records.length,
+    Assert.equal(0, gen.records.length,
       "Second generation should have no records.");
+  }
+
+  function testNewGenerationApprovers() external {
+    AspectTestActor          actor     = newActors(1)[0];
+    AspectTestActor[] memory approvers = newActors(5);
+    setOwner(address(actor));
+    setApprovers(approvers, hex"00_02_04");
+
+    actor.newGeneration(uint64(block.timestamp), uint64(block.timestamp + 10));
+
+    Assert.equal(1, generations.length, "A generation should have been added.");
+    address[] memory approves = getApprovers(0);
+    Assert.isTrue(
+      approves.length == 3 &&
+      contains(approves, address(approvers[0])) &&
+      contains(approves, address(approvers[2])) &&
+      contains(approves, address(approvers[4])),
+      "The generation should have all enabled approvers");
   }
 
   function testNewGenerationValidTimestamps() external {
