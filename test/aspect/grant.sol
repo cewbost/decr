@@ -3,9 +3,11 @@ pragma solidity >=0.4.22 <0.9.0;
 
 import "truffle/Assert.sol";
 import "./base.sol";
-import "../utils/contracts/tools.sol";
+import "../../contracts/Bitset.sol";
 
-contract TestAspectGrant is AspectTestBase, ArrayTools {
+using { setBit } for bytes;
+
+contract TestAspectGrant is AspectTestBase {
 
   function beforeAll() external {
     addGenerations(block.timestamp, block.timestamp + 10, 1);
@@ -17,9 +19,11 @@ contract TestAspectGrant is AspectTestBase, ArrayTools {
 
   function testGrant() external {
     AspectTestActor[] memory actors = newActors(2);
+    AspectTestActor[] memory approvers = newActors(3);
     setOwner(address(actors[0]));
-    actors[1].request(0, "details", "content");
-    bytes32 hash = generations[0].records[0];
+    setApprovers(approvers, 0);
+    bytes32 hash = addRecord(pending_records, address(actors[1]), 0, "details", "content");
+    for (uint n = 0; n < 3; n++) pending_records[hash].approvers.setBit(n);
 
     actors[0].grant(hash);
 
@@ -34,6 +38,13 @@ contract TestAspectGrant is AspectTestBase, ArrayTools {
       "The record should have the correct content.");
     Assert.equal(rec.timestamp, block.timestamp,
       "The record should have the correct timestamp.");
+    address[] memory approves = getApprovals(records, hash);
+    Assert.isTrue(
+      approves.length == 3 &&
+      contains(approves, address(approvers[0])) &&
+      contains(approves, address(approvers[1])) &&
+      contains(approves, address(approvers[2])),
+      "The record should have all approvals");
 
     Assert.equal(pending_records[hash].timestamp, 0, "There should be no pending record.");
     Assert.isTrue(contains(generations[0].records, hash),
