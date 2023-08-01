@@ -57,9 +57,7 @@ contract AspectTestBase is Aspect, ArrayTools {
       Record storage rec = map[hashes[n]];
       if (rec.timestamp != 0) recs[num++] = rec;
     }
-    Record[] memory ret = new Record[](num);
-    for (uint n = 0; n < num; n++) ret[n] = recs[n];
-    return ret;
+    return truncate(recs, num);
   }
 
   function setApprovers(AspectTestActor[] memory actors) internal {
@@ -88,9 +86,7 @@ contract AspectTestBase is Aspect, ArrayTools {
     address[] memory  res   = new address[](len);
     uint              count = 0;
     for (uint n = 0; n < len; n++) if (rec.approvers.getBit(n)) res[count++] = approvers[n];
-    address[] memory ret = new address[](count);
-    for (uint n = 0; n < count; n++) ret[n] = res[n];
-    return ret;
+    return truncate(res, count);
   }
 
   function getApprovers(uint generation) internal view returns(address[] memory) {
@@ -99,9 +95,7 @@ contract AspectTestBase is Aspect, ArrayTools {
     address[]  memory  res   = new address[](len);
     uint               count = 0;
     for (uint n = 0; n < len; n++) if (gen.approvers_mask.getBit(n)) res[count++] = approvers[n];
-    address[] memory ret = new address[](count);
-    for (uint n = 0; n < count; n++) ret[n] = res[n];
-    return ret;
+    return truncate(res, count);
   }
 
   function purgeRecords() internal {
