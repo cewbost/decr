@@ -2,13 +2,13 @@
 pragma solidity >=0.4.22 <0.9.0;
 
 function getBit(bytes storage bts, uint idx) view returns(bool) {
-  return (bts[idx/8] & toBit(idx % 8)) != 0;
+  return bts.length > idx / 8? (bts[idx / 8] & toBit(idx % 8)) != 0 : false;
 }
 
 function setBit(bytes storage bts, uint idx) {
   uint byte_idx = idx / 8;
-  bytes1 bit = toBit(idx % 8);
-  uint len = bts.length;
+  bytes1 bit    = toBit(idx % 8);
+  uint len      = bts.length;
   if (byte_idx < len) {
     bts[byte_idx] = bts[byte_idx] | bit;
   } else {

@@ -36,7 +36,7 @@ contract TestBitset {
     bytes memory data = new bytes(2);
     data[0] = 0x12;
     data[1] = 0x34;
-    set = data;
+    set     = data;
     Assert.isTrue(set.getBit(1), "should get true");
     Assert.isTrue(set.getBit(4), "should get true");
     Assert.isTrue(set.getBit(10), "should get true");

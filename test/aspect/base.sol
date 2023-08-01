@@ -17,7 +17,7 @@ contract AspectTestBase is Aspect {
     for (; n > 0; n--) {
       Generation storage gen = generations.push();
       gen.begin_timestamp = uint64(begin);
-      gen.end_timestamp = uint64(end);
+      gen.end_timestamp   = uint64(end);
     }
   }
 
@@ -29,12 +29,12 @@ contract AspectTestBase is Aspect {
     bytes32                            content
   ) internal returns(bytes32) {
     Record memory rec = Record({
-      recipient: recipient,
+      recipient:  recipient,
       generation: generation,
-      details: details,
-      content: content,
-      timestamp: uint64(block.timestamp),
-      approvers: ""
+      details:    details,
+      content:    content,
+      timestamp:  uint64(block.timestamp),
+      approvers:  ""
     });
     bytes32 hash = hashRecord(rec);
     map[hash] = rec;
@@ -47,8 +47,8 @@ contract AspectTestBase is Aspect {
     bytes32[]                  storage hashes,
     mapping(bytes32 => Record) storage map
   ) internal view returns(Record[] memory) {
-    uint len = hashes.length;
-    uint num = 0;
+    uint            len  = hashes.length;
+    uint            num  = 0;
     Record[] memory recs = new Record[](len);
     for (uint n = 0; n < len; n++) {
       Record storage rec = map[hashes[n]];
@@ -63,7 +63,7 @@ contract AspectTestBase is Aspect {
     uint gens = generations.length;
     for (uint g = 0; g < gens; g++) {
       bytes32[] storage hashes = generations[g].records;
-      uint recs = hashes.length;
+      uint              recs   = hashes.length;
       for (uint n = 0; n < recs; n++) {
         bytes32 hash = hashes[n];
         delete records_by_recipient[records[hash].recipient];
@@ -80,8 +80,8 @@ contract AspectTestBase is Aspect {
   }
 
   function purgeApprovers() internal {
-    approvers_mask = "";
     uint len = approvers.length;
+    approvers_mask = "";
     for (uint n = 0; n < len; n++) delete approvers_idx[approvers[n]];
     for (uint n = 0; n < len; n++) approvers.pop();
   }

@@ -5,7 +5,7 @@ import "truffle/Assert.sol";
 import "./base.sol";
 import "../../contracts/Bitset.sol";
 
-using { getBit, setBit, unsetBit } for bytes;
+using { getBit } for bytes;
 
 contract TestAspectApprovers is AspectTestBase {
 

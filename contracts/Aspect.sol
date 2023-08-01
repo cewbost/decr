@@ -33,7 +33,7 @@ contract Aspect is Owned {
   bytes                         approvers_mask;
 
   function request(
-    uint32 generation,
+    uint32  generation,
     bytes20 details,
     bytes32 content
   ) external {
@@ -44,12 +44,12 @@ contract Aspect is Owned {
       "Generation inactive."
     );
     Record memory rec = Record({
-      recipient: msg.sender,
+      recipient:  msg.sender,
       generation: generation,
-      details: details,
-      content: content,
-      timestamp: uint64(block.timestamp),
-      approvers: ""
+      details:    details,
+      content:    content,
+      timestamp:  uint64(block.timestamp),
+      approvers:  ""
     });
     bytes32 hash = hashRecord(rec);
     require(pending_records[hash].timestamp == 0 && records[hash].timestamp == 0,
@@ -66,7 +66,6 @@ contract Aspect is Owned {
 
   function approve(bytes32 hash) external pendingRecord(hash) {
     Record storage pending_record = pending_records[hash];
-    require(pending_record.timestamp != 0, "Pending record does not exist.");
     uint approver_idx = approvers_idx[msg.sender];
     require(approver_idx != 0, "Only approver can perform this action.");
     approver_idx--;
@@ -104,11 +103,11 @@ contract Aspect is Owned {
     for (uint n = keep; n < len; n++) generation.records.pop();
 
     for (uint n = 0; n < clear; n++) {
-      bytes32 hash = hashes[n];
-      address recipient = pending_records[hash].recipient;
-      bytes32[] storage recs = records_by_recipient[recipient];
+      bytes32           hash      = hashes[n];
+      address           recipient = pending_records[hash].recipient;
+      bytes32[] storage recs      = records_by_recipient[recipient];
+      uint              stepper   = 0;
       len = records_by_recipient[recipient].length;
-      uint stepper = 0;
       for (; stepper < len; stepper++) if (recs[stepper] == hash) break;
       for (len--; stepper < len; stepper++) recs[stepper] = recs[stepper + 1];
       recs.pop();
