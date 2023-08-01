@@ -2,8 +2,8 @@
 pragma solidity >=0.4.22 <0.9.0;
 
 import "./actor.sol";
-import "../utils/contracts/tools.sol";
-import "../../contracts/Aspect.sol";
+import "../utils/tools.sol";
+import "../../../contracts/Aspect.sol";
 
 using { setBit, getBit } for bytes;
 
