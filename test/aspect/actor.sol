@@ -11,22 +11,25 @@ contract AspectTestActor {
     target = Aspect(msg.sender);
   }
 
-  function request(uint32 generation, bytes20 details, bytes32 content) public {
+  function request(uint32 generation, bytes20 details, bytes32 content) external {
     target.request(generation, details, content);
   }
-  function grant(bytes32 hash) public {
+  function grant(bytes32 hash) external {
     target.grant(hash);
   }
-  function newGeneration(uint64 begin, uint64 end) public {
+  function newGeneration(uint64 begin, uint64 end) external {
     target.newGeneration(begin, end);
   }
-  function clearGeneration(uint32 gen) public {
+  function clearGeneration(uint32 gen) external {
     target.clearGeneration(gen);
   }
-  function enableApprover(address approver) public {
+  function enableApprover(address approver) external {
     target.enableApprover(approver);
   }
-  function disableApprover(address approver) public {
+  function disableApprover(address approver) external {
     target.disableApprover(approver);
+  }
+  function approve(bytes32 hash) external {
+    target.approve(hash);
   }
 }
