@@ -11,9 +11,13 @@ contract("Aspect", accounts => {
     testAspect = await Aspect.new("TestAspect", { from: accounts[0] })
   })
 
-  describe("trivial", () => {
-    it("should work", () => {
-      expect(5).to(equal(5))
+  describe("thing", () => {
+    let x
+    before(() => {
+      x = "world"
+    })
+    it("should do a thing", () => {
+      console.log("hello, " + x)
     })
   })
 })

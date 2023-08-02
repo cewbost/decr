@@ -10,7 +10,7 @@ using { setBit } for bytes;
 contract TestAspectGrant is AspectTestBase {
 
   function beforeAll() external {
-    addGenerations(block.timestamp, block.timestamp + 10, 1);
+    addGeneration(block.timestamp, block.timestamp + 10, "1");
   }
 
   function afterEach() external {

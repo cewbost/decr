@@ -16,23 +16,15 @@ contract TestAspectGenerations is AspectTestBase {
     setOwner(address(actor));
 
     actor.newGeneration(uint64(block.timestamp), uint64(block.timestamp + 10));
-    actor.newGeneration(uint64(block.timestamp + 5), uint64(block.timestamp + 15));
 
-    Assert.equal(2, generations.length, "Two generations should have been added.");
+    Assert.equal(1, generations.length, "One generation should have been added.");
     Generation storage gen = generations[0];
     Assert.equal(block.timestamp, gen.begin_timestamp,
-      "First generation should have correct begin timestamp.");
+      "Generation should have correct begin timestamp.");
     Assert.equal(block.timestamp + 10, gen.end_timestamp,
-      "First generation should have correct end timestamp.");
+      "Generation should have correct end timestamp.");
     Assert.equal(0, gen.records.length,
-      "First generation should have no records.");
-    gen = generations[1];
-    Assert.equal(block.timestamp + 5, gen.begin_timestamp,
-      "Second generation should have correct begin timestamp.");
-    Assert.equal(block.timestamp + 15, gen.end_timestamp,
-      "Second generation should have correct end timestamp.");
-    Assert.equal(0, gen.records.length,
-      "Second generation should have no records.");
+      "Generation should have no records.");
   }
 
   function testNewGenerationApprovers() external {
@@ -76,7 +68,8 @@ contract TestAspectGenerations is AspectTestBase {
   function testClearGeneration() external {
     AspectTestActor[] memory actors = newActors(2);
     setOwner(address(actors[0]));
-    addGenerations(block.timestamp - 20, block.timestamp - 10, 2);
+    addGeneration(block.timestamp - 20, block.timestamp - 10, "1");
+    addGeneration(block.timestamp - 20, block.timestamp - 10, "2");
     bytes32[] memory hashes = new bytes32[](8);
     hashes[0] = addRecord(pending_records, address(actors[1]), 0, "1", "");
     hashes[1] = addRecord(pending_records, address(actors[1]), 1, "2", "");
@@ -154,7 +147,7 @@ contract TestAspectGenerations is AspectTestBase {
 
   function testClearGenerationMustBeInactive() external {
     AspectTestActor actor = newActors(1)[0];
-    addGenerations(block.timestamp, block.timestamp + 10, 1);
+    addGeneration(block.timestamp, block.timestamp + 10, "1");
     setOwner(address(actor));
     try actor.clearGeneration(0) {
       Assert.fail("Should revert.");

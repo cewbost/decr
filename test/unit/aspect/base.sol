@@ -17,13 +17,11 @@ contract AspectTestBase is Aspect, ArrayTools {
     return actors;
   }
 
-  function addGenerations(uint begin, uint end, uint n) internal {
-    require((begin >> 64) == 0 && (end >> 64) == 0);
-    for (; n > 0; n--) {
-      Generation storage gen = generations.push();
-      gen.begin_timestamp = uint64(begin);
-      gen.end_timestamp   = uint64(end);
-    }
+  function addGeneration(uint begin, uint end, bytes32 id) internal {
+    generations_idx[id] = generations.length;
+    Generation storage gen = generations.push();
+    gen.begin_timestamp = uint64(begin);
+    gen.end_timestamp   = uint64(end);
   }
 
   function addRecord(

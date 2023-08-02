@@ -24,14 +24,15 @@ struct Generation {
 
 contract Aspect is Owned {
 
-  string                        name;
-  Generation[]                  generations;
-  mapping(bytes32 => Record)    records;
-  mapping(bytes32 => Record)    pending_records;
-  mapping(address => bytes32[]) records_by_recipient;
-  address[]                     approvers;
-  mapping(address => uint)      approvers_idx;
-  bytes                         approvers_mask;
+  string                         name;
+  Generation[]                   generations;
+  mapping(bytes32 => uint)       generations_idx;
+  mapping(bytes32 => Record)     records;
+  mapping(bytes32 => Record)     pending_records;
+  mapping(address => bytes32[])  records_by_recipient;
+  address[]                      approvers;
+  mapping(address => uint)       approvers_idx;
+  bytes                          approvers_mask;
 
   constructor(string memory n) {
     name = n;
@@ -80,11 +81,22 @@ contract Aspect is Owned {
   }
 
   function newGeneration(uint64 begin, uint64 end) external onlyOwner {
-    require(begin < end, "Ending must be before beginning.");
+    require(begin < end,              "Ending must be before beginning.");
     Generation storage generation = generations.push();
     generation.begin_timestamp = begin;
     generation.end_timestamp   = end;
     generation.approvers_mask  = approvers_mask;
+  }
+
+  function newGeneration(bytes32 id, uint64 begin, uint64 end) external onlyOwner {
+    require(id != "",                 "Generation ID must be provided");
+    require(generations_idx[id] == 0, "Generation must not exist");
+    require(begin < end,              "Ending must be before beginning.");
+    Generation storage generation = generations.push();
+    generation.begin_timestamp = begin;
+    generation.end_timestamp   = end;
+    generation.approvers_mask  = approvers_mask;
+    generations_idx[id]        = generations.length;
   }
 
   function clearGeneration(uint32 gen) external onlyOwner {

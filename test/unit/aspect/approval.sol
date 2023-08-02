@@ -7,7 +7,7 @@ import "./base.sol";
 contract TestAspectApproval is AspectTestBase {
 
   function beforeEach() external {
-    addGenerations(block.timestamp, block.timestamp + 10, 1);
+    addGeneration(block.timestamp, block.timestamp + 10, "1");
   }
 
   function afterEach() external {
@@ -61,7 +61,7 @@ contract TestAspectApproval is AspectTestBase {
 
   function testApproveApproverMustBeEnabled() external {
     AspectTestActor[] memory actors = newActors(1);
-    addGenerations(block.timestamp, block.timestamp + 10, 1);
+    addGeneration(block.timestamp, block.timestamp + 10, "2");
     setApprovers(actors, 1);
     bytes32 hash = addRecord(pending_records, address(actors[0]), 0, "", "");
 

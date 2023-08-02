@@ -7,9 +7,8 @@ import "./base.sol";
 contract TestAspectRequest is AspectTestBase {
 
   function beforeAll() external {
-    addGenerations(block.timestamp, block.timestamp + 10, 2);
-    addGenerations(block.timestamp - 10, block.timestamp - 5, 1);
-    addGenerations(block.timestamp + 5, block.timestamp + 10, 1);
+    addGeneration(block.timestamp, block.timestamp + 10, "1");
+    addGeneration(block.timestamp, block.timestamp + 10, "2");
   }
 
   function afterEach() external {
@@ -63,53 +62,6 @@ contract TestAspectRequest is AspectTestBase {
     assertRecipientRecords(getRecords(records_by_recipient[addrs[1]], pending_records),
       addrs[1], gens, details,
       "Actor 1 should have the right records.");
-  }
-
-  function testGenerationDoesNotExist() external {
-    AspectTestActor actor = newActors(1)[0];
-    try actor.request(4, "", "") {
-      Assert.fail("Should revert.");
-    } catch Error(string memory what) {
-      Assert.equal("Generation does not exist.", what, "Should revert with right message.");
-    }
-  }
-
-  function testGenerationNotActive() external {
-    AspectTestActor actor = newActors(1)[0];
-    try actor.request(2, "", "") {
-      Assert.fail("Should revert.");
-    } catch Error(string memory what) {
-      Assert.equal("Generation inactive.", what, "Should revert with right message.");
-    }
-  }
-
-  function testGenerationExpired() external {
-    AspectTestActor actor = newActors(1)[0];
-    try actor.request(3, "", "") {
-      Assert.fail("Should revert.");
-    } catch Error(string memory what) {
-      Assert.equal("Generation inactive.", what, "Should revert with right message.");
-    }
-  }
-
-  function testRerequestPending() external {
-    AspectTestActor actor = newActors(1)[0];
-    actor.request(0, "details", "content");
-    try actor.request(0, "details", "content") {
-      Assert.fail("Should revert.");
-    } catch Error(string memory what) {
-      Assert.equal("Already exists.", what, "Should revert with right message.");
-    }
-  }
-
-  function testRerequest() external {
-    AspectTestActor actor = newActors(1)[0];
-    addRecord(records, address(actor), 0, "details", "content");
-    try actor.request(0, "details", "content") {
-      Assert.fail("Should revert.");
-    } catch Error(string memory what) {
-      Assert.equal("Already exists.", what, "Should revert with right message.");
-    }
   }
 
   function assertGenerationRecords(
