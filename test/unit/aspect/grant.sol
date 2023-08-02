@@ -47,7 +47,7 @@ contract TestAspectGrant is AspectTestBase {
       "The record should have all approvals");
 
     Assert.equal(pending_records[hash].timestamp, 0, "There should be no pending record.");
-    Assert.isTrue(contains(generations_idx["gen 1"].records, hash),
+    Assert.isTrue(contains(generations["gen 1"].records, hash),
       "The record should be associated with the generation.");
     Assert.isTrue(contains(records_by_recipient[address(actors[1])], hash),
       "The record should be associated with the recipient.");

@@ -45,13 +45,13 @@ contract TestAspectClearGeneration is AspectTestBase {
       records[hashes[7]].timestamp != 0,
       "It should not remove non-pending records of other generations.");
 
-    bytes32[] memory stored = generations_idx["gen 1"].records;
+    bytes32[] memory stored = generations["gen 1"].records;
     Assert.isTrue(
       stored.length == 2 &&
       contains(stored, hashes[4]) &&
       contains(stored, hashes[6]),
       "Cleared generation should only have non-pending records left.");
-    stored = generations_idx["gen 2"].records;
+    stored = generations["gen 2"].records;
     Assert.isTrue(
       stored.length == 4 &&
       contains(stored, hashes[1]) &&
