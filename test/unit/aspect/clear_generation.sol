@@ -4,65 +4,11 @@ pragma solidity >=0.4.22 <0.9.0;
 import "truffle/Assert.sol";
 import "./base.sol";
 
-contract TestAspectGenerations is AspectTestBase {
+contract TestAspectClearGeneration is AspectTestBase {
 
   function afterEach() external {
     purgeGenerations();
     purgeApprovers();
-  }
-
-  function testNewGenerations() external {
-    AspectTestActor actor = newActors(1)[0];
-    setOwner(address(actor));
-
-    actor.newGeneration(uint64(block.timestamp), uint64(block.timestamp + 10));
-
-    Assert.equal(1, generations.length, "One generation should have been added.");
-    Generation storage gen = generations[0];
-    Assert.equal(block.timestamp, gen.begin_timestamp,
-      "Generation should have correct begin timestamp.");
-    Assert.equal(block.timestamp + 10, gen.end_timestamp,
-      "Generation should have correct end timestamp.");
-    Assert.equal(0, gen.records.length,
-      "Generation should have no records.");
-  }
-
-  function testNewGenerationApprovers() external {
-    AspectTestActor          actor     = newActors(1)[0];
-    AspectTestActor[] memory approvers = newActors(5);
-    setOwner(address(actor));
-    setApprovers(approvers, hex"00_02_04");
-
-    actor.newGeneration(uint64(block.timestamp), uint64(block.timestamp + 10));
-
-    Assert.equal(1, generations.length, "A generation should have been added.");
-    address[] memory approves = getApprovers(0);
-    Assert.isTrue(
-      approves.length == 3 &&
-      contains(approves, address(approvers[0])) &&
-      contains(approves, address(approvers[2])) &&
-      contains(approves, address(approvers[4])),
-      "The generation should have all enabled approvers");
-  }
-
-  function testNewGenerationValidTimestamps() external {
-    AspectTestActor actor = newActors(1)[0];
-    setOwner(address(actor));
-    try actor.newGeneration(uint64(block.timestamp + 10), uint64(block.timestamp)) {
-      Assert.fail("Should revert.");
-    } catch Error(string memory what) {
-      Assert.equal("Ending must be before beginning.", what, "Should revert with right message.");
-    }
-  }
-
-  function testNewGenerationOnlyOwner() external {
-    AspectTestActor actor = newActors(1)[0];
-    try actor.newGeneration(uint64(block.timestamp + 10), uint64(block.timestamp)) {
-      Assert.fail("Should revert.");
-    } catch Error(string memory what) {
-      Assert.equal("Only owner can perform this action.", what,
-        "Should revert with right message.");
-    }
   }
 
   function testClearGeneration() external {

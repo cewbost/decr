@@ -17,8 +17,8 @@ contract AspectTestActor {
   function grant(bytes32 hash) external {
     target.grant(hash);
   }
-  function newGeneration(uint64 begin, uint64 end) external {
-    target.newGeneration(begin, end);
+  function newGeneration(bytes32 id, uint64 begin, uint64 end) external {
+    target.newGeneration(id, begin, end);
   }
   function clearGeneration(uint32 gen) external {
     target.clearGeneration(gen);

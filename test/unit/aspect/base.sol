@@ -19,6 +19,7 @@ contract AspectTestBase is Aspect, ArrayTools {
 
   function addGeneration(uint begin, uint end, bytes32 id) internal {
     generations_idx[id] = generations.length;
+    generation_ids.push(id);
     Generation storage gen = generations.push();
     gen.begin_timestamp = uint64(begin);
     gen.end_timestamp   = uint64(end);
@@ -89,15 +90,6 @@ contract AspectTestBase is Aspect, ArrayTools {
     return truncate(res, count);
   }
 
-  function getApprovers(uint generation) internal view returns(address[] memory) {
-    uint               len   = approvers.length;
-    Generation storage gen   = generations[generation];
-    address[]  memory  res   = new address[](len);
-    uint               count = 0;
-    for (uint n = 0; n < len; n++) if (gen.approvers_mask.getBit(n)) res[count++] = approvers[n];
-    return truncate(res, count);
-  }
-
   function purgeRecords() internal {
     uint gens = generations.length;
     for (uint g = 0; g < gens; g++) {
@@ -116,6 +108,10 @@ contract AspectTestBase is Aspect, ArrayTools {
   function purgeGenerations() internal {
     purgeRecords();
     while(generations.length > 0) generations.pop();
+    while(generation_ids.length > 0) {
+      delete generations_idx[generation_ids[generation_ids.length - 1]];
+      generation_ids.pop();
+    }
   }
 
   function purgeApprovers() internal {
