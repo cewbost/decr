@@ -17,7 +17,7 @@ contract TestAspectApproval is AspectTestBase {
 
   function testApprove() external {
     AspectTestActor[] memory actors = newActors(5);
-    setApprovers(actors, 0);
+    setApproversForGeneration(actors, "gen 1");
     bytes32 hash = addRecord(pending_records, address(actors[0]), "gen 1", "", "");
 
     actors[0].approve(hash);
@@ -36,7 +36,7 @@ contract TestAspectApproval is AspectTestBase {
 
   function testApproveRecordMustBePending() external {
     AspectTestActor[] memory actors = newActors(1);
-    setApprovers(actors, 0);
+    setApproversForGeneration(actors, "gen 1");
     bytes32 hash = addRecord(records, address(actors[0]), "gen 1", "", "");
 
     try actors[0].approve(hash) {
@@ -62,7 +62,7 @@ contract TestAspectApproval is AspectTestBase {
   function testApproveApproverMustBeEnabled() external {
     AspectTestActor[] memory actors = newActors(1);
     addGeneration(block.timestamp, block.timestamp + 10, "gen 2");
-    setApprovers(actors, 1);
+    setApproversForGeneration(actors, "gen 2");
     bytes32 hash = addRecord(pending_records, address(actors[0]), "gen 1", "", "");
 
     try actors[0].approve(hash) {

@@ -18,24 +18,22 @@ contract AspectTestBase is Aspect, ArrayTools {
   }
 
   function addGeneration(uint begin, uint end, bytes32 id) internal {
-    Generation storage gen = generations.push();
+    Generation storage gen = generations_idx[id];
     gen.begin_timestamp = uint64(begin);
     gen.end_timestamp   = uint64(end);
-    generations_idx[id] = generations.length;
     generation_ids.push(id);
   }
 
   function addRecord(
     mapping(bytes32 => Record) storage map,
     address                            recipient,
-    bytes32                            genId,
+    bytes32                            gen_id,
     bytes20                            details,
     bytes32                            content
   ) internal returns(bytes32) {
-    uint generation = generations_idx[genId] - 1;
     Record memory rec = Record({
       recipient:  recipient,
-      generation: uint32(generation),
+      generation: gen_id,
       details:    details,
       content:    content,
       timestamp:  uint64(block.timestamp),
@@ -43,7 +41,7 @@ contract AspectTestBase is Aspect, ArrayTools {
     });
     bytes32 hash = hashRecord(rec);
     map[hash] = rec;
-    generations[generation].records.push(hash);
+    generations_idx[gen_id].records.push(hash);
     records_by_recipient[recipient].push(hash);
     return hash;
   }
@@ -74,9 +72,9 @@ contract AspectTestBase is Aspect, ArrayTools {
     for (uint n = 0; n < enabled.length; n++) approvers_mask.setBit(uint(uint8(enabled[n])));
   }
 
-  function setApprovers(AspectTestActor[] memory actors, uint generation) internal {
+  function setApproversForGeneration(AspectTestActor[] memory actors, bytes32 gen_id) internal {
     setApprovers(actors);
-    for (uint n = 0; n < actors.length; n++) generations[generation].approvers_mask.setBit(n);
+    for (uint n = 0; n < actors.length; n++) generations_idx[gen_id].approvers_mask.setBit(n);
   }
 
   function getApprovals(
@@ -92,9 +90,10 @@ contract AspectTestBase is Aspect, ArrayTools {
   }
 
   function purgeRecords() internal {
-    uint gens = generations.length;
+    uint gens = generation_ids.length;
     for (uint g = 0; g < gens; g++) {
-      bytes32[] storage hashes = generations[g].records;
+      Generation storage generation = generations_idx[generation_ids[g]];
+      bytes32[] storage hashes = generation.records;
       uint              recs   = hashes.length;
       for (uint n = 0; n < recs; n++) {
         bytes32 hash = hashes[n];
@@ -102,13 +101,12 @@ contract AspectTestBase is Aspect, ArrayTools {
         delete records[hash];
         delete pending_records[hash];
       }
-      delete generations[g].records;
+      delete generation.records;
     }
   }
 
   function purgeGenerations() internal {
     purgeRecords();
-    while(generations.length > 0) generations.pop();
     while(generation_ids.length > 0) {
       delete generations_idx[generation_ids[generation_ids.length - 1]];
       generation_ids.pop();

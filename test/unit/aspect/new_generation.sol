@@ -22,7 +22,7 @@ contract TestAspectNewGeneration is AspectTestBase {
     actor.newGeneration(gen_id, uint64(block.timestamp), uint64(block.timestamp + 10));
 
     Assert.equal(1, generation_ids.length, "One generation should have been added.");
-    Generation storage gen = generations[0];
+    Generation storage gen = generations_idx[gen_id];
     Assert.equal(block.timestamp, gen.begin_timestamp,
       "Generation should have correct begin timestamp.");
     Assert.equal(block.timestamp + 10, gen.end_timestamp,
@@ -80,12 +80,12 @@ contract TestAspectNewGeneration is AspectTestBase {
     }
   }
 
-  function getApprovers(bytes32 generation) internal view returns(address[] memory) {
-    uint               len   = approvers.length;
-    Generation storage gen   = generations[generations_idx[generation] - 1];
-    address[]  memory  res   = new address[](len);
-    uint               count = 0;
-    for (uint n = 0; n < len; n++) if (gen.approvers_mask.getBit(n)) res[count++] = approvers[n];
+  function getApprovers(bytes32 gen) internal view returns(address[] memory) {
+    uint               len        = approvers.length;
+    Generation storage generation = generations_idx[gen];
+    address[]  memory  res        = new address[](len);
+    uint               count      = 0;
+    for (uint n = 0; n < len; n++) if (generation.approvers_mask.getBit(n)) res[count++] = approvers[n];
     return truncate(res, count);
   }
 }

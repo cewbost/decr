@@ -8,7 +8,7 @@ using { getBit, setBit, unsetBit } for bytes;
 
 struct Record {
   address recipient;
-  uint32  generation;
+  bytes32 generation;
   uint64  timestamp;
   bytes24 details;
   bytes32 content;
@@ -25,9 +25,8 @@ struct Generation {
 contract Aspect is Owned {
 
   string                         name;
-  Generation[]                   generations;
   bytes32[]                      generation_ids;
-  mapping(bytes32 => uint)       generations_idx;
+  mapping(bytes32 => Generation) generations_idx;
   mapping(bytes32 => Record)     records;
   mapping(bytes32 => Record)     pending_records;
   mapping(address => bytes32[])  records_by_recipient;
@@ -44,16 +43,15 @@ contract Aspect is Owned {
     bytes20 details,
     bytes32 content
   ) external {
-    require(generations_idx[gen_id] != 0, "Generation does not exist.");
-    uint generation = generations_idx[gen_id] - 1;
+    require(generations_idx[gen_id].end_timestamp != 0, "Generation does not exist.");
     require(
-      generations[generation].begin_timestamp <= block.timestamp &&
-      generations[generation].end_timestamp > block.timestamp,
+      generations_idx[gen_id].begin_timestamp <= block.timestamp &&
+      generations_idx[gen_id].end_timestamp > block.timestamp,
       "Generation inactive."
     );
     Record memory rec = Record({
       recipient:  msg.sender,
-      generation: uint32(generation),
+      generation: gen_id,
       details:    details,
       content:    content,
       timestamp:  uint64(block.timestamp),
@@ -63,7 +61,7 @@ contract Aspect is Owned {
     require(pending_records[hash].timestamp == 0 && records[hash].timestamp == 0,
       "Already exists.");
     pending_records[hash] = rec;
-    generations[generation].records.push(hash);
+    generations_idx[gen_id].records.push(hash);
     records_by_recipient[rec.recipient].push(hash);
   }
 
@@ -77,26 +75,25 @@ contract Aspect is Owned {
     uint approver_idx = approvers_idx[msg.sender];
     require(approver_idx != 0, "Only approver can perform this action.");
     approver_idx--;
-    require(generations[pending_record.generation].approvers_mask.getBit(approver_idx),
+    require(generations_idx[pending_record.generation].approvers_mask.getBit(approver_idx),
       "Only approver can perform this action.");
     pending_records[hash].approvers.setBit(approver_idx);
   }
 
   function newGeneration(bytes32 id, uint64 begin, uint64 end) external onlyOwner {
-    require(id != "",                 "Generation ID must be provided.");
-    require(generations_idx[id] == 0, "ID must be unique.");
-    require(begin < end,              "Ending must be before beginning.");
-    Generation storage generation = generations.push();
+    require(id != "",                               "Generation ID must be provided.");
+    require(generations_idx[id].end_timestamp == 0, "ID must be unique.");
+    require(begin < end,                            "Ending must be before beginning.");
+    Generation storage generation = generations_idx[id];
     generation.begin_timestamp = begin;
     generation.end_timestamp   = end;
     generation.approvers_mask  = approvers_mask;
-    generations_idx[id]        = generations.length;
     generation_ids.push(id);
   }
 
   function clearGeneration(bytes32 gen) external onlyOwner {
-    require(generations_idx[gen] != 0, "Generation does not exist.");
-    Generation storage generation = generations[generations_idx[gen] - 1];
+    Generation storage generation = generations_idx[gen];
+    require(generation.end_timestamp != 0, "Generation does not exist.");
     require(generation.end_timestamp < block.timestamp, "Generation must be inactive.");
     uint             len    = generation.records.length;
     uint[]    memory idxs   = new uint[](len);

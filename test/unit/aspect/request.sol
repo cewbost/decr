@@ -19,11 +19,11 @@ contract TestAspectRequest is AspectTestBase {
     AspectTestActor actor = newActors(1)[0];
     actor.request("gen 1", "details", "content");
 
-    Record[] memory recs = getRecords(generations[0].records, pending_records);
+    Record[] memory recs = getRecords(generations_idx["gen 1"].records, pending_records);
     Assert.equal(recs.length, 1, "There should be on pending record.");
     Assert.equal(address(recs[0].recipient), address(actor),
       "The pending record should have the correct recipient.");
-    Assert.equal(recs[0].generation, 0,
+    Assert.equal(recs[0].generation, "gen 1",
       "The pending record should have the correct generation.");
     Assert.equal(recs[0].details, "details",
       "The pending record should have the correct details.");
@@ -44,16 +44,16 @@ contract TestAspectRequest is AspectTestBase {
     addrs[0] = address(actors[0]); addrs[1] = address(actors[1]);
     bytes32[] memory details = new bytes32[](2);
     details[0] = "1"; details[1] = "3";
-    assertGenerationRecords(getRecords(generations[0].records, pending_records),
-      0, addrs, details,
+    assertGenerationRecords(getRecords(generations_idx["gen 1"].records, pending_records),
+      "gen 1", addrs, details,
       "Generation 0 should have the right records.");
     details[0] = "2"; details[1] = "4";
-    assertGenerationRecords(getRecords(generations[1].records, pending_records),
-      1, addrs, details,
+    assertGenerationRecords(getRecords(generations_idx["gen 2"].records, pending_records),
+      "gen 2", addrs, details,
       "Generation 1 should have the right records.");
 
-    uint32[] memory gens = new uint32[](2);
-    gens[0] = 0; gens[1] = 1;
+    bytes32[] memory gens = new bytes32[](2);
+    gens[0] = "gen 1"; gens[1] = "gen 2";
     details[0] = "1"; details[1] = "2";
     assertRecipientRecords(getRecords(records_by_recipient[addrs[0]], pending_records),
       addrs[0], gens, details,
@@ -66,7 +66,7 @@ contract TestAspectRequest is AspectTestBase {
 
   function assertGenerationRecords(
     Record[]  memory recs,
-    uint32           gen,
+    bytes32          gen,
     address[] memory recvers,
     bytes32[] memory details,
     string    memory message
@@ -84,7 +84,7 @@ contract TestAspectRequest is AspectTestBase {
   function assertRecipientRecords(
     Record[]  memory recs,
     address          recver,
-    uint32[]  memory generations,
+    bytes32[] memory generations,
     bytes32[] memory details,
     string    memory message
   ) internal {
