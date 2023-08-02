@@ -83,15 +83,14 @@ contract Aspect is Owned {
 
   function newGeneration(bytes32 id, uint64 begin, uint64 end) external onlyOwner {
     require(id != "",                 "Generation ID must be provided.");
-    require(generations_idx[id] == 0, "Generation must not exist.");
-    require(begin != 0,               "Beginning must not be zero.");
+    require(generations_idx[id] == 0, "ID must be unique.");
     require(begin < end,              "Ending must be before beginning.");
-    generations_idx[id] = generations.length;
-    generation_ids.push(id);
     Generation storage generation = generations.push();
     generation.begin_timestamp = begin;
     generation.end_timestamp   = end;
     generation.approvers_mask  = approvers_mask;
+    generations_idx[id]        = generations.length;
+    generation_ids.push(id);
   }
 
   function clearGeneration(uint32 gen) external onlyOwner {

@@ -21,8 +21,8 @@ contract TestAspectNewGeneration is AspectTestBase {
 
     actor.newGeneration(gen_id, uint64(block.timestamp), uint64(block.timestamp + 10));
 
-    Assert.equal(1, generations.length, "One generation should have been added.");
-    Generation storage gen = generations[generations_idx[gen_id]];
+    Assert.equal(1, generation_ids.length, "One generation should have been added.");
+    Generation storage gen = generations[0];
     Assert.equal(block.timestamp, gen.begin_timestamp,
       "Generation should have correct begin timestamp.");
     Assert.equal(block.timestamp + 10, gen.end_timestamp,
@@ -39,7 +39,7 @@ contract TestAspectNewGeneration is AspectTestBase {
 
     actor.newGeneration(gen_id, uint64(block.timestamp), uint64(block.timestamp + 10));
 
-    Assert.equal(1, generations.length, "A generation should have been added.");
+    Assert.equal(1, generation_ids.length, "A generation should have been added.");
     address[] memory approves = getApprovers(gen_id);
     Assert.isTrue(
       approves.length == 3 &&
@@ -47,6 +47,17 @@ contract TestAspectNewGeneration is AspectTestBase {
       contains(approves, address(approvers[2])) &&
       contains(approves, address(approvers[4])),
       "The generation should have all enabled approvers");
+  }
+
+  function testNewGenerationUniqueId() external {
+    AspectTestActor actor = newActors(1)[0];
+    setOwner(address(actor));
+    actor.newGeneration(gen_id, uint64(block.timestamp), uint64(block.timestamp + 10));
+    try actor.newGeneration(gen_id, uint64(block.timestamp + 10), uint64(block.timestamp + 20)) {
+      Assert.fail("Should revert.");
+    } catch Error(string memory what) {
+      Assert.equal("ID must be unique.", what, "Should revert with right message.");
+    }
   }
 
   function testNewGenerationValidTimestamps() external {
@@ -71,7 +82,7 @@ contract TestAspectNewGeneration is AspectTestBase {
 
   function getApprovers(bytes32 generation) internal view returns(address[] memory) {
     uint               len   = approvers.length;
-    Generation storage gen   = generations[generations_idx[generation]];
+    Generation storage gen   = generations[generations_idx[generation] - 1];
     address[]  memory  res   = new address[](len);
     uint               count = 0;
     for (uint n = 0; n < len; n++) if (gen.approvers_mask.getBit(n)) res[count++] = approvers[n];
