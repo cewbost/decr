@@ -93,9 +93,9 @@ contract Aspect is Owned {
     generation_ids.push(id);
   }
 
-  function clearGeneration(uint32 gen) external onlyOwner {
-    require(generations.length > gen, "Generation does not exist.");
-    Generation storage generation = generations[gen];
+  function clearGeneration(bytes32 gen) external onlyOwner {
+    require(generations_idx[gen] != 0, "Generation does not exist.");
+    Generation storage generation = generations[generations_idx[gen] - 1];
     require(generation.end_timestamp < block.timestamp, "Generation must be inactive.");
     uint             len    = generation.records.length;
     uint[]    memory idxs   = new uint[](len);

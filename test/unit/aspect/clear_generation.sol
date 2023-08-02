@@ -14,8 +14,8 @@ contract TestAspectClearGeneration is AspectTestBase {
   function testClearGeneration() external {
     AspectTestActor[] memory actors = newActors(2);
     setOwner(address(actors[0]));
-    addGeneration(block.timestamp - 20, block.timestamp - 10, "1");
-    addGeneration(block.timestamp - 20, block.timestamp - 10, "2");
+    addGeneration(block.timestamp - 20, block.timestamp - 10, "gen 1");
+    addGeneration(block.timestamp - 20, block.timestamp - 10, "gen 2");
     bytes32[] memory hashes = new bytes32[](8);
     hashes[0] = addRecord(pending_records, address(actors[1]), 0, "1", "");
     hashes[1] = addRecord(pending_records, address(actors[1]), 1, "2", "");
@@ -26,7 +26,7 @@ contract TestAspectClearGeneration is AspectTestBase {
     hashes[6] = addRecord(records, address(actors[1]), 0, "7", "");
     hashes[7] = addRecord(records, address(actors[1]), 1, "8", "");
 
-    actors[0].clearGeneration(0);
+    actors[0].clearGeneration("gen 1");
 
     Assert.isTrue(
       pending_records[hashes[0]].timestamp == 0 &&
@@ -73,7 +73,7 @@ contract TestAspectClearGeneration is AspectTestBase {
 
   function testClearGenerationOnlyOwner() external {
     AspectTestActor actor = newActors(1)[0];
-    try actor.clearGeneration(0) {
+    try actor.clearGeneration("gen 1") {
       Assert.fail("Should revert.");
     } catch Error(string memory what) {
       Assert.equal("Only owner can perform this action.", what,
@@ -84,7 +84,7 @@ contract TestAspectClearGeneration is AspectTestBase {
   function testClearGenerationMustExist() external {
     AspectTestActor actor = newActors(1)[0];
     setOwner(address(actor));
-    try actor.clearGeneration(0) {
+    try actor.clearGeneration("gen 1") {
       Assert.fail("Should revert.");
     } catch Error(string memory what) {
       Assert.equal("Generation does not exist.", what, "Should revert with right message.");
@@ -93,9 +93,9 @@ contract TestAspectClearGeneration is AspectTestBase {
 
   function testClearGenerationMustBeInactive() external {
     AspectTestActor actor = newActors(1)[0];
-    addGeneration(block.timestamp, block.timestamp + 10, "1");
+    addGeneration(block.timestamp, block.timestamp + 10, "gen 1");
     setOwner(address(actor));
-    try actor.clearGeneration(0) {
+    try actor.clearGeneration("gen 1") {
       Assert.fail("Should revert.");
     } catch Error(string memory what) {
       Assert.equal("Generation must be inactive.", what, "Should revert with right message.");

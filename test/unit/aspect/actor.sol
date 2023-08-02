@@ -20,7 +20,7 @@ contract AspectTestActor {
   function newGeneration(bytes32 id, uint64 begin, uint64 end) external {
     target.newGeneration(id, begin, end);
   }
-  function clearGeneration(uint32 gen) external {
+  function clearGeneration(bytes32 gen) external {
     target.clearGeneration(gen);
   }
   function enableApprover(address approver) external {

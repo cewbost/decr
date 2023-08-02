@@ -18,11 +18,11 @@ contract AspectTestBase is Aspect, ArrayTools {
   }
 
   function addGeneration(uint begin, uint end, bytes32 id) internal {
-    generations_idx[id] = generations.length;
-    generation_ids.push(id);
     Generation storage gen = generations.push();
     gen.begin_timestamp = uint64(begin);
     gen.end_timestamp   = uint64(end);
+    generations_idx[id] = generations.length;
+    generation_ids.push(id);
   }
 
   function addRecord(
