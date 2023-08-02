@@ -17,14 +17,14 @@ contract TestAspectClearGeneration is AspectTestBase {
     addGeneration(block.timestamp - 20, block.timestamp - 10, "gen 1");
     addGeneration(block.timestamp - 20, block.timestamp - 10, "gen 2");
     bytes32[] memory hashes = new bytes32[](8);
-    hashes[0] = addRecord(pending_records, address(actors[1]), 0, "1", "");
-    hashes[1] = addRecord(pending_records, address(actors[1]), 1, "2", "");
-    hashes[2] = addRecord(pending_records, address(actors[1]), 0, "3", "");
-    hashes[3] = addRecord(pending_records, address(actors[1]), 1, "4", "");
-    hashes[4] = addRecord(records, address(actors[1]), 0, "5", "");
-    hashes[5] = addRecord(records, address(actors[1]), 1, "6", "");
-    hashes[6] = addRecord(records, address(actors[1]), 0, "7", "");
-    hashes[7] = addRecord(records, address(actors[1]), 1, "8", "");
+    hashes[0] = addRecord(pending_records, address(actors[1]), "gen 1", "1", "");
+    hashes[1] = addRecord(pending_records, address(actors[1]), "gen 2", "2", "");
+    hashes[2] = addRecord(pending_records, address(actors[1]), "gen 1", "3", "");
+    hashes[3] = addRecord(pending_records, address(actors[1]), "gen 2", "4", "");
+    hashes[4] = addRecord(records, address(actors[1]), "gen 1", "5", "");
+    hashes[5] = addRecord(records, address(actors[1]), "gen 2", "6", "");
+    hashes[6] = addRecord(records, address(actors[1]), "gen 1", "7", "");
+    hashes[7] = addRecord(records, address(actors[1]), "gen 2", "8", "");
 
     actors[0].clearGeneration("gen 1");
 

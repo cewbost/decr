@@ -7,8 +7,8 @@ import "./base.sol";
 contract TestAspectRequest is AspectTestBase {
 
   function beforeAll() external {
-    addGeneration(block.timestamp, block.timestamp + 10, "1");
-    addGeneration(block.timestamp, block.timestamp + 10, "2");
+    addGeneration(block.timestamp, block.timestamp + 10, "gen 1");
+    addGeneration(block.timestamp, block.timestamp + 10, "gen 2");
   }
 
   function afterEach() external {
@@ -17,7 +17,7 @@ contract TestAspectRequest is AspectTestBase {
 
   function testAddPendingRecordDetails() external {
     AspectTestActor actor = newActors(1)[0];
-    actor.request(0, "details", "content");
+    actor.request("gen 1", "details", "content");
 
     Record[] memory recs = getRecords(generations[0].records, pending_records);
     Assert.equal(recs.length, 1, "There should be on pending record.");
@@ -35,10 +35,10 @@ contract TestAspectRequest is AspectTestBase {
 
   function testAddPendingMultipleRecords() external {
     AspectTestActor[] memory actors = newActors(2);
-    actors[0].request(0, "1", "");
-    actors[0].request(1, "2", "");
-    actors[1].request(0, "3", "");
-    actors[1].request(1, "4", "");
+    actors[0].request("gen 1", "1", "");
+    actors[0].request("gen 2", "2", "");
+    actors[1].request("gen 1", "3", "");
+    actors[1].request("gen 2", "4", "");
 
     address[] memory addrs = new address[](actors.length);
     addrs[0] = address(actors[0]); addrs[1] = address(actors[1]);

@@ -7,10 +7,10 @@ import "./base.sol";
 contract TestAspectRequestErrors is AspectTestBase {
 
   function beforeAll() external {
-    addGeneration(block.timestamp, block.timestamp + 10, "1");
-    addGeneration(block.timestamp, block.timestamp + 10, "2");
-    addGeneration(block.timestamp - 10, block.timestamp - 5, "3");
-    addGeneration(block.timestamp + 5, block.timestamp + 10, "4");
+    addGeneration(block.timestamp, block.timestamp + 10, "gen 1");
+    addGeneration(block.timestamp, block.timestamp + 10, "gen 2");
+    addGeneration(block.timestamp - 10, block.timestamp - 5, "gen 3");
+    addGeneration(block.timestamp + 5, block.timestamp + 10, "gen 4");
   }
 
   function afterEach() external {
@@ -19,7 +19,7 @@ contract TestAspectRequestErrors is AspectTestBase {
 
   function testGenerationDoesNotExist() external {
     AspectTestActor actor = newActors(1)[0];
-    try actor.request(4, "", "") {
+    try actor.request("gen 5", "", "") {
       Assert.fail("Should revert.");
     } catch Error(string memory what) {
       Assert.equal("Generation does not exist.", what, "Should revert with right message.");
@@ -28,7 +28,7 @@ contract TestAspectRequestErrors is AspectTestBase {
 
   function testGenerationNotActive() external {
     AspectTestActor actor = newActors(1)[0];
-    try actor.request(2, "", "") {
+    try actor.request("gen 3", "", "") {
       Assert.fail("Should revert.");
     } catch Error(string memory what) {
       Assert.equal("Generation inactive.", what, "Should revert with right message.");
@@ -37,7 +37,7 @@ contract TestAspectRequestErrors is AspectTestBase {
 
   function testGenerationExpired() external {
     AspectTestActor actor = newActors(1)[0];
-    try actor.request(3, "", "") {
+    try actor.request("gen 4", "", "") {
       Assert.fail("Should revert.");
     } catch Error(string memory what) {
       Assert.equal("Generation inactive.", what, "Should revert with right message.");
@@ -46,8 +46,8 @@ contract TestAspectRequestErrors is AspectTestBase {
 
   function testRerequestPending() external {
     AspectTestActor actor = newActors(1)[0];
-    actor.request(0, "details", "content");
-    try actor.request(0, "details", "content") {
+    actor.request("gen 1", "details", "content");
+    try actor.request("gen 1", "details", "content") {
       Assert.fail("Should revert.");
     } catch Error(string memory what) {
       Assert.equal("Already exists.", what, "Should revert with right message.");
@@ -56,8 +56,8 @@ contract TestAspectRequestErrors is AspectTestBase {
 
   function testRerequest() external {
     AspectTestActor actor = newActors(1)[0];
-    addRecord(records, address(actor), 0, "details", "content");
-    try actor.request(0, "details", "content") {
+    addRecord(records, address(actor), "gen 1", "details", "content");
+    try actor.request("gen 1", "details", "content") {
       Assert.fail("Should revert.");
     } catch Error(string memory what) {
       Assert.equal("Already exists.", what, "Should revert with right message.");

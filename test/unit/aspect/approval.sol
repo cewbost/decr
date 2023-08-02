@@ -7,7 +7,7 @@ import "./base.sol";
 contract TestAspectApproval is AspectTestBase {
 
   function beforeEach() external {
-    addGeneration(block.timestamp, block.timestamp + 10, "1");
+    addGeneration(block.timestamp, block.timestamp + 10, "gen 1");
   }
 
   function afterEach() external {
@@ -18,7 +18,7 @@ contract TestAspectApproval is AspectTestBase {
   function testApprove() external {
     AspectTestActor[] memory actors = newActors(5);
     setApprovers(actors, 0);
-    bytes32 hash = addRecord(pending_records, address(actors[0]), 0, "", "");
+    bytes32 hash = addRecord(pending_records, address(actors[0]), "gen 1", "", "");
 
     actors[0].approve(hash);
     actors[2].approve(hash);
@@ -37,7 +37,7 @@ contract TestAspectApproval is AspectTestBase {
   function testApproveRecordMustBePending() external {
     AspectTestActor[] memory actors = newActors(1);
     setApprovers(actors, 0);
-    bytes32 hash = addRecord(records, address(actors[0]), 0, "", "");
+    bytes32 hash = addRecord(records, address(actors[0]), "gen 1", "", "");
 
     try actors[0].approve(hash) {
       Assert.fail("Should revert.");
@@ -49,7 +49,7 @@ contract TestAspectApproval is AspectTestBase {
 
   function testApproveMustBeApprover() external {
     AspectTestActor[] memory actors = newActors(1);
-    bytes32 hash = addRecord(pending_records, address(actors[0]), 0, "", "");
+    bytes32 hash = addRecord(pending_records, address(actors[0]), "gen 1", "", "");
 
     try actors[0].approve(hash) {
       Assert.fail("Should revert.");
@@ -61,9 +61,9 @@ contract TestAspectApproval is AspectTestBase {
 
   function testApproveApproverMustBeEnabled() external {
     AspectTestActor[] memory actors = newActors(1);
-    addGeneration(block.timestamp, block.timestamp + 10, "2");
+    addGeneration(block.timestamp, block.timestamp + 10, "gen 2");
     setApprovers(actors, 1);
-    bytes32 hash = addRecord(pending_records, address(actors[0]), 0, "", "");
+    bytes32 hash = addRecord(pending_records, address(actors[0]), "gen 1", "", "");
 
     try actors[0].approve(hash) {
       Assert.fail("Should revert.");

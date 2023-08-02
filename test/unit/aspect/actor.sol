@@ -11,7 +11,7 @@ contract AspectTestActor {
     target = Aspect(msg.sender);
   }
 
-  function request(uint32 generation, bytes20 details, bytes32 content) external {
+  function request(bytes32 generation, bytes20 details, bytes32 content) external {
     target.request(generation, details, content);
   }
   function grant(bytes32 hash) external {

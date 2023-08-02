@@ -40,11 +40,12 @@ contract Aspect is Owned {
   }
 
   function request(
-    uint32  generation,
+    bytes32 gen_id,
     bytes20 details,
     bytes32 content
   ) external {
-    require(generations.length > generation, "Generation does not exist.");
+    require(generations_idx[gen_id] != 0, "Generation does not exist.");
+    uint generation = generations_idx[gen_id] - 1;
     require(
       generations[generation].begin_timestamp <= block.timestamp &&
       generations[generation].end_timestamp > block.timestamp,
@@ -52,7 +53,7 @@ contract Aspect is Owned {
     );
     Record memory rec = Record({
       recipient:  msg.sender,
-      generation: generation,
+      generation: uint32(generation),
       details:    details,
       content:    content,
       timestamp:  uint64(block.timestamp),
@@ -62,7 +63,7 @@ contract Aspect is Owned {
     require(pending_records[hash].timestamp == 0 && records[hash].timestamp == 0,
       "Already exists.");
     pending_records[hash] = rec;
-    generations[rec.generation].records.push(hash);
+    generations[generation].records.push(hash);
     records_by_recipient[rec.recipient].push(hash);
   }
 

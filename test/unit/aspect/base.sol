@@ -28,13 +28,14 @@ contract AspectTestBase is Aspect, ArrayTools {
   function addRecord(
     mapping(bytes32 => Record) storage map,
     address                            recipient,
-    uint32                             generation,
+    bytes32                            genId,
     bytes20                            details,
     bytes32                            content
   ) internal returns(bytes32) {
+    uint generation = generations_idx[genId] - 1;
     Record memory rec = Record({
       recipient:  recipient,
-      generation: generation,
+      generation: uint32(generation),
       details:    details,
       content:    content,
       timestamp:  uint64(block.timestamp),
