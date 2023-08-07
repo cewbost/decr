@@ -56,7 +56,7 @@ contract TestAspectNewGeneration is AspectTestBase {
     try actor.newGeneration(gen_id, uint64(block.timestamp + 10), uint64(block.timestamp + 20)) {
       Assert.fail("Should revert.");
     } catch Error(string memory what) {
-      Assert.equal("ID must be unique.", what, "Should revert with right message.");
+      Assert.equal("Already exists.", what, "Should revert with right message.");
     }
   }
 
