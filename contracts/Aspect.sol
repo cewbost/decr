@@ -22,6 +22,13 @@ struct Generation {
   bytes32[] records;
 }
 
+struct GenerationResponse {
+  bytes32   id;
+  uint64    begin_timestamp;
+  uint64    end_timestamp;
+  address[] approvers;
+}
+
 contract Aspect is Owned {
 
   string                         name;
@@ -36,6 +43,30 @@ contract Aspect is Owned {
 
   constructor(string memory n) {
     name = n;
+  }
+
+  function getGenerations() external view returns(GenerationResponse[] memory) {
+    uint len = generation_ids.length;
+    uint alen = approvers.length;
+    GenerationResponse[] memory res = new GenerationResponse[](len);
+    for (uint n = 0; n < len; n++) {
+      bytes32 gen_id = generation_ids[n];
+      Generation storage generation = generations[gen_id];
+      address[] memory apps = new address[](alen);
+      uint acount = 0;
+      for (uint a = 0; a < alen; a++) {
+        if (generation.approvers_mask.getBit(a)) apps[acount++] = approvers[a];
+      }
+      address[] memory napps = new address[](acount);
+      for (uint a = 0; a < acount; a++) napps[a] = apps[a];
+      res[n] = GenerationResponse({
+        id:              gen_id,
+        begin_timestamp: generation.begin_timestamp,
+        end_timestamp:   generation.end_timestamp,
+        approvers:       napps
+      });
+    }
+    return res;
   }
 
   function request(

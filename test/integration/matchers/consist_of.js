@@ -6,12 +6,12 @@ class ConsistOfMatcher extends Matcher {
 
   constructor(matchers) {
     super();
-    let matchs = {};
-    for (const [key, matcher] of Object.entries(matchers)) {
+    let matchs = [];
+    for (const matcher of matchers) {
       if (matcher instanceof Matcher) {
-        matchs[key] = matcher;
+        matchs.push(matcher);
       } else {
-        matchs[key] = equal(matcher);
+        matchs.push(equal(matcher));
       }
     }
     this.#matchers = matchs;
@@ -33,15 +33,15 @@ class ConsistOfMatcher extends Matcher {
     }
     let messages = [];
     if (unmatched.length > 0) {
-      messages.push(["unmatched elements:", unmatched]);
+      messages.push(["unmatched elements:", unmatched.map(m => [JSON.stringify(m)])]);
     }
     if (matchers.length > 0) {
-      messages.push(["unsatisfied matchers:", matchers]);
+      messages.push(["unsatisfied matchers:", matchers.map(m => [m.description()])]);
     }
     if (messages.length > 0) {
       return [
         ["expected", JSON.stringify(obj)],
-        ["to consist of", this.#matchers.map(m => m.description())],
+        ["to consist of", this.#matchers.map(m => [m.description()])],
       ].concat(messages);
     }
     return [];

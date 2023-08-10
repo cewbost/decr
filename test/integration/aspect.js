@@ -10,6 +10,7 @@ const {
   consistOf
 } = require("./matchers/matchers.js")
 const { asEthWord } = require("./utils/numbers.js")
+const { objectify } = require("./utils/objectify.js")
 const { day } = require("./utils/time.js")
 
 contract("Aspect", accounts => {
@@ -61,7 +62,26 @@ contract("Aspect", accounts => {
       )
 
       let resp = await testAspect.getGenerations(fromOwner)
-      console.log(resp)
+      expect(resp.map(objectify)).to(consistOf([
+        matchFields({
+          "id": beNumber(testNo + 1),
+          "begin_timestamp": beNumber(unixTime),
+          "end_timestamp": beNumber(unixTime + 30 * day),
+          "approvers": consistOf([accounts[1], accounts[2]]),
+        }),
+        matchFields({
+          "id": beNumber(testNo + 2),
+          "begin_timestamp": beNumber(unixTime + 15 * day),
+          "end_timestamp": beNumber(unixTime + 45 * day),
+          "approvers": consistOf([accounts[2], accounts[3], accounts[4]]),
+        }),
+        matchFields({
+          "id": beNumber(testNo + 3),
+          "begin_timestamp": beNumber(unixTime + 30 * day),
+          "end_timestamp": beNumber(unixTime + 60 * day),
+          "approvers": consistOf([accounts[3], accounts[4], accounts[5], accounts[6]]),
+        }),
+      ]))
     })
   })
 })

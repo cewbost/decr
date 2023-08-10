@@ -1,7 +1,7 @@
-const { Matcher } = require('./matcher.js');
+const { Matcher } = require('./matcher.js')
 
 class InstanceOfMatcher extends Matcher {
-  #type;
+  #type
 
   constructor(type) {
     super()
@@ -9,7 +9,7 @@ class InstanceOfMatcher extends Matcher {
   }
 
   description() {
-    return "instance of " + JSON.stringify(this.#type);
+    return "instance of " + JSON.stringify(this.#type)
   }
 
   match(obj) {

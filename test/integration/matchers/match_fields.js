@@ -40,7 +40,7 @@ class FieldsMatcher extends Matcher {
 
   description() {
     let matchs = [];
-    for (const [key, match] of this.#matchers) {
+    for (const [key, match] of Object.entries(this.#matchers)) {
       const desc = match.description();
       matchs.push(`"${key}": ${desc}`);
     }

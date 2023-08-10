@@ -4,8 +4,10 @@ function indent(spaces, text) {
 }
 
 function textify(list) {
+  console.log("textify", list)
   let entries = [];
   for (let vals of list) {
+  console.log("vals", vals)
     if (vals.length == 0 || vals.length > 2){
       throw Error("textify: Argument must be array of pairs or singletons");
     }
