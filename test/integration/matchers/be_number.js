@@ -9,6 +9,10 @@ class NumberMatcher extends Matcher {
     this.#value = BigNumber(number);
   }
 
+  description() {
+    return "= " + this.#value.toString();
+  }
+
   match(obj) {
     let num = BigNumber(obj);
     if (this.#value.isEqualTo(num)) {

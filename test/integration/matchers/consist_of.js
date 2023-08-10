@@ -41,10 +41,14 @@ class ConsistOfMatcher extends Matcher {
     if (messages.length > 0) {
       return [
         ["expected", JSON.stringify(obj)],
-        ["to consist of", this.#matchers.map(matcher => matcher.description())],
+        ["to consist of", this.#matchers.map(m => m.description())],
       ].concat(messages);
     }
     return [];
+  }
+
+  description() {
+    return "consist of " + this.#matchers.map(m => m.description()).join(", ");
   }
 }
 

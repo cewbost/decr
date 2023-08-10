@@ -7,7 +7,7 @@ class FieldsMatcher extends Matcher {
   constructor(fields) {
     super();
     let matchers = {};
-    for (let [key, matcher] of Object.entries(fields)) {
+    for (const [key, matcher] of Object.entries(fields)) {
       if (matcher instanceof Matcher) {
         matchers[key] = matcher;
       } else {
@@ -19,11 +19,11 @@ class FieldsMatcher extends Matcher {
 
   match(obj) {
     let messages = [];
-    for (let [key, matcher] of Object.entries(this.#matchers)) {
+    for (const [key, matcher] of Object.entries(this.#matchers)) {
       if (!(key in obj)) {
         messages.push([`expected to have property ${key}`]);
       } else {
-        let match = matcher.match(obj[key]);
+        const match = matcher.match(obj[key]);
         if (match.length > 0) {
           messages.push([`on property ${key}:`, match]);
         }
@@ -36,6 +36,15 @@ class FieldsMatcher extends Matcher {
       ];
     }
     return [];
+  }
+
+  description() {
+    let matchs = [];
+    for (const [key, match] of this.#matchers) {
+      const desc = match.description();
+      matchs.push(`"${key}": ${desc}`);
+    }
+    return "match fields {" + matchs.join(", ") + "}";
   }
 }
 

@@ -17,6 +17,10 @@ class ContainMatcher extends Matcher {
     }
     return []
   }
+
+  description() {
+    return "contains " + this.#value;
+  }
 }
 
 function contain(obj) {

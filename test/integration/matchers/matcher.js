@@ -7,6 +7,10 @@ class Matcher {
     throw new Error("match method not implemented");
   }
 
+  description() {
+    return "base matcher";
+  }
+
   and(other) {
     return __andWrapper(this, other)
   }
@@ -20,6 +24,10 @@ class AndMatcher extends Matcher {
     super()
     this.#first = first
     this.#second = second
+  }
+
+  description() {
+    return this.#first.description() + " and " + this.#second.description();
   }
 
   match(obj) {

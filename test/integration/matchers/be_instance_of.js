@@ -8,6 +8,10 @@ class InstanceOfMatcher extends Matcher {
     this.#type = type
   }
 
+  description() {
+    return "instance of " + JSON.stringify(this.#type);
+  }
+
   match(obj) {
     if (!(obj instanceof this.#type)) {
       return [

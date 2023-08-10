@@ -18,6 +18,10 @@ class EqualMatcher extends Matcher {
     }
     return [];
   }
+
+  description() {
+    return "= " + this.#value;
+  }
 }
 
 function equal(obj) {
