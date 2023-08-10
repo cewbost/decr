@@ -10,7 +10,7 @@ class EqualMatcher extends Matcher {
   }
 
   match(obj) {
-    if(!deepEqual(this.#value, obj)) {
+    if (!deepEqual(this.#value, obj)) {
       return [
         ["expected", JSON.stringify(obj)],
         ["to equal", JSON.stringify(this.#value)],

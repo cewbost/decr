@@ -11,7 +11,7 @@ class NumberMatcher extends Matcher {
 
   match(obj) {
     let num = BigNumber(obj);
-    if(this.#value.isEqualTo(num)) {
+    if (this.#value.isEqualTo(num)) {
       return [];
     } else {
       return [

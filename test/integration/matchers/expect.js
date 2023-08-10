@@ -7,11 +7,11 @@ class Expectation {
     this.#obj = obj;
   }
   to(matcher) {
-    if(!(matcher instanceof Matcher)) {
+    if (!(matcher instanceof Matcher)) {
       throw Error("Argument to 'to' must be a matcher");
     }
     let res = matcher.match(this.#obj);
-    if(res.length > 0) {
+    if (res.length > 0) {
       throw new AssertionFailed(res);
     }
   }

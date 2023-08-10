@@ -7,8 +7,8 @@ class FieldsMatcher extends Matcher {
   constructor(fields) {
     super();
     let matchers = {};
-    for(let [key, matcher] of Object.entries(fields)) {
-      if(matcher instanceof Matcher) {
+    for (let [key, matcher] of Object.entries(fields)) {
+      if (matcher instanceof Matcher) {
         matchers[key] = matcher;
       } else {
         matchers[key] = equal(matcher);
@@ -19,17 +19,17 @@ class FieldsMatcher extends Matcher {
 
   match(obj) {
     let messages = [];
-    for(let [key, matcher] of Object.entries(this.#matchers)) {
-      if(!(key in obj)) {
+    for (let [key, matcher] of Object.entries(this.#matchers)) {
+      if (!(key in obj)) {
         messages.push([`expected to have property ${key}`]);
       } else {
         let match = matcher.match(obj[key]);
-        if(match.length > 0) {
+        if (match.length > 0) {
           messages.push([`on property ${key}:`, match]);
         }
       }
     }
-    if(messages.length > 0) {
+    if (messages.length > 0) {
       return [
         ["matching fields on", JSON.stringify(obj)],
         ["failed with errors:", messages],

@@ -24,7 +24,7 @@ class AndMatcher extends Matcher {
 
   match(obj) {
     let first = this.#first.match(obj)
-    if(first.length > 0) return first
+    if (first.length > 0) return first
     else return this.#second.match(obj)
   }
 }

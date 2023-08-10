@@ -9,7 +9,7 @@ class ContainMatcher extends Matcher {
   }
 
   match(obj) {
-    if(!obj.includes(this.#value)) {
+    if (!obj.includes(this.#value)) {
       return [
         ["expected", JSON.stringify(obj)],
         ["to contain", JSON.stringify(this.#value)],

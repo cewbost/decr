@@ -9,7 +9,7 @@ class InstanceOfMatcher extends Matcher {
   }
 
   match(obj) {
-    if(!(obj instanceof this.#type)) {
+    if (!(obj instanceof this.#type)) {
       return [
         ["expected", JSON.stringify(obj)],
         ["to be instance of", JSON.stringify(this.#type)],
