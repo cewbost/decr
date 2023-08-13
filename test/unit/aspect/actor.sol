@@ -32,4 +32,7 @@ contract AspectTestActor {
   function approve(bytes32 hash) external {
     target.approve(hash);
   }
+  function changeOwnership(address new_owner) external {
+    target.changeOwnership(new_owner);
+  }
 }

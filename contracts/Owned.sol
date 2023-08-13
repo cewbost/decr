@@ -18,7 +18,7 @@ contract Owned {
     _;
   }
 
-  function giveOwnership(address new_owner) public onlyOwner {
+  function changeOwnership(address new_owner) public onlyOwner {
     setOwner(new_owner);
   }
 
