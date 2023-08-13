@@ -30,7 +30,7 @@ contract("Aspect", accounts => {
     testNo += 0x100
   })
 
-  describe("generations and approvers", () => {
+  describe("Management", () => {
     it("should set generation approvers by contract approvers", async () => {
       await testAspect.enableApprover(accounts[1], fromOwner)
       await testAspect.enableApprover(accounts[2], fromOwner)
@@ -64,22 +64,22 @@ contract("Aspect", accounts => {
       let resp = await testAspect.getGenerations(fromOwner)
       expect(resp.map(objectify)).to(consistOf([
         matchFields({
-          "id": beNumber(testNo + 1),
+          "id":              beNumber(testNo + 1),
           "begin_timestamp": beNumber(unixTime),
-          "end_timestamp": beNumber(unixTime + 30 * day),
-          "approvers": consistOf([accounts[1], accounts[2]]),
+          "end_timestamp":   beNumber(unixTime + 30 * day),
+          "approvers":       consistOf([accounts[1], accounts[2]]),
         }),
         matchFields({
-          "id": beNumber(testNo + 2),
+          "id":              beNumber(testNo + 2),
           "begin_timestamp": beNumber(unixTime + 15 * day),
-          "end_timestamp": beNumber(unixTime + 45 * day),
-          "approvers": consistOf([accounts[2], accounts[3], accounts[4]]),
+          "end_timestamp":   beNumber(unixTime + 45 * day),
+          "approvers":       consistOf([accounts[2], accounts[3], accounts[4]]),
         }),
         matchFields({
-          "id": beNumber(testNo + 3),
+          "id":              beNumber(testNo + 3),
           "begin_timestamp": beNumber(unixTime + 30 * day),
-          "end_timestamp": beNumber(unixTime + 60 * day),
-          "approvers": consistOf([accounts[3], accounts[4], accounts[5], accounts[6]]),
+          "end_timestamp":   beNumber(unixTime + 60 * day),
+          "approvers":       consistOf([accounts[3], accounts[4], accounts[5], accounts[6]]),
         }),
       ]))
     })
