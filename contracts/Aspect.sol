@@ -2,7 +2,7 @@
 pragma solidity >=0.4.22 <0.9.0;
 
 import "./Owned.sol";
-import "./Bitset.sol";
+import "./bitset.sol";
 
 using { getBit, setBit, unsetBit } for bytes;
 
@@ -20,6 +20,15 @@ struct Generation {
   uint64    end_timestamp;
   bytes     approvers_mask;
   bytes32[] records;
+}
+
+struct RecordResponse {
+  bytes32   hash;
+  address   recipient;
+  uint64    timestamp;
+  bytes24   details;
+  bytes32   content;
+  address[] approvers;
 }
 
 struct GenerationResponse {
@@ -69,9 +78,41 @@ contract Aspect is Owned {
     return res;
   }
 
+  /*
+  function getPendingRecords(bytes32 gen_id) external view returns(RecordResponse[] memory) {
+    Generation storage gen = generations[gen_id];
+    uint len = gen.records.length;
+    uint num = 0;
+    RecordResponse[] memory ret = new RecordResponse[](len);
+    address[]        memory approvers = new address[]();
+    for (uint n = 0; n < len; n++) {
+      bytes32 hash = gen.records[n];
+      Record storage rec = pending_records[hash];
+      if (rec.timestamp != 0) {
+        ret[num].hash = hash;
+        ret[num].recipient = rec.recipient;
+        ret[num].timestamp = rec.timestamp;
+        ret[num].details = rec.details;
+        ret[num].content = rec.content;
+        for ()
+        struct RecordResponse {
+          bytes32   hash;
+          address   recipient;
+          uint64    timestamp;
+          bytes24   details;
+          bytes32   content;
+          address[] approvers;
+        }
+        num++;
+      }
+    }
+    return ret;
+  }
+  */
+
   function request(
     bytes32 gen_id,
-    bytes20 details,
+    bytes24 details,
     bytes32 content
   ) external activeGeneration(gen_id) {
     Record memory rec = Record({
