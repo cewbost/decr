@@ -2,65 +2,33 @@
 pragma solidity >=0.4.22 <0.9.0;
 
 import "./Owned.sol";
-import "./Bitset.sol";
+import "./Shared.sol";
 
-using { Bitset.getBit, Bitset.setBit, Bitset.unsetBit } for bytes;
-
-struct Record {
-  address recipient;
-  bytes32 generation;
-  uint64  timestamp;
-  bytes24 details;
-  bytes32 content;
-  bytes   approvers;
-}
-
-struct Generation {
-  uint64    begin_timestamp;
-  uint64    end_timestamp;
-  bytes     approvers_mask;
-  bytes32[] records;
-}
-
-struct RecordResponse {
-  bytes32   hash;
-  address   recipient;
-  uint64    timestamp;
-  bytes24   details;
-  bytes32   content;
-  address[] approvers;
-}
-
-struct GenerationResponse {
-  bytes32   id;
-  uint64    begin_timestamp;
-  uint64    end_timestamp;
-  address[] approvers;
-}
+using { Shared.getBit, Shared.setBit, Shared.unsetBit } for bytes;
 
 contract Aspect is Owned {
 
-  string                         name;
-  bytes32[]                      generation_ids;
-  mapping(bytes32 => Generation) generations;
-  mapping(bytes32 => Record)     records;
-  mapping(bytes32 => Record)     pending_records;
-  mapping(address => bytes32[])  records_by_recipient;
-  address[]                      approvers;
-  mapping(address => uint)       approvers_idx;
-  bytes                          approvers_mask;
+  string                                name;
+  bytes32[]                             generation_ids;
+  mapping(bytes32 => Shared.Generation) generations;
+  mapping(bytes32 => Shared.Record)     records;
+  mapping(bytes32 => Shared.Record)     pending_records;
+  mapping(address => bytes32[])         records_by_recipient;
+  address[]                             approvers;
+  mapping(address => uint)              approvers_idx;
+  bytes                                 approvers_mask;
 
   constructor(string memory n) {
     name = n;
   }
 
-  function getGenerations() external view returns(GenerationResponse[] memory) {
+  function getGenerations() external view returns(Shared.GenerationResponse[] memory) {
     uint len = generation_ids.length;
     uint alen = approvers.length;
-    GenerationResponse[] memory res = new GenerationResponse[](len);
+    Shared.GenerationResponse[] memory res = new Shared.GenerationResponse[](len);
     for (uint n = 0; n < len; n++) {
       bytes32 gen_id = generation_ids[n];
-      Generation storage generation = generations[gen_id];
+      Shared.Generation storage generation = generations[gen_id];
       address[] memory apps = new address[](alen);
       uint acount = 0;
       for (uint a = 0; a < alen; a++) {
@@ -68,7 +36,7 @@ contract Aspect is Owned {
       }
       address[] memory napps = new address[](acount);
       for (uint a = 0; a < acount; a++) napps[a] = apps[a];
-      res[n] = GenerationResponse({
+      res[n] = Shared.GenerationResponse({
         id:              gen_id,
         begin_timestamp: generation.begin_timestamp,
         end_timestamp:   generation.end_timestamp,
@@ -83,7 +51,7 @@ contract Aspect is Owned {
     bytes24 details,
     bytes32 content
   ) external activeGeneration(gen_id) {
-    Record memory rec = Record({
+    Shared.Record memory rec = Shared.Record({
       recipient:  msg.sender,
       generation: gen_id,
       details:    details,
@@ -100,7 +68,7 @@ contract Aspect is Owned {
   }
 
   function approve(bytes32 hash) external pendingRecord(hash) {
-    Record storage pending_record = pending_records[hash];
+    Shared.Record storage pending_record = pending_records[hash];
     addApproval(pending_record.generation, hash);
   }
 
@@ -111,7 +79,7 @@ contract Aspect is Owned {
   ) external onlyOwner uniqueGeneration(id) {
     require(id != "",                           "Generation ID must be provided.");
     require(begin < end,                        "Ending must be before beginning.");
-    Generation storage generation = generations[id];
+    Shared.Generation storage generation = generations[id];
     generation.begin_timestamp = begin;
     generation.end_timestamp   = end;
     generation.approvers_mask  = approvers_mask;
@@ -119,7 +87,7 @@ contract Aspect is Owned {
   }
 
   function clearGeneration(bytes32 gen) external onlyOwner inactiveGeneration(gen) {
-    Generation storage generation = generations[gen];
+    Shared.Generation storage generation = generations[gen];
     uint               len        = generation.records.length;
     uint[]     memory  idxs       = new uint[](len);
     bytes32[]  memory  hashes     = new bytes32[](len);
@@ -169,7 +137,7 @@ contract Aspect is Owned {
     approvers_mask.unsetBit(idx);
   }
 
-  function hashRecord(Record memory rec) internal pure returns(bytes32) {
+  function hashRecord(Shared.Record memory rec) internal pure returns(bytes32) {
     return keccak256(bytes.concat(
       bytes20(rec.recipient),
       bytes4(rec.generation),
@@ -178,7 +146,7 @@ contract Aspect is Owned {
     ));
   }
 
-  function addPendingRecord(Record memory rec, bytes32 hash) internal uniqueRecord(hash) {
+  function addPendingRecord(Shared.Record memory rec, bytes32 hash) internal uniqueRecord(hash) {
     pending_records[hash] = rec;
     generations[rec.generation].records.push(hash);
     records_by_recipient[rec.recipient].push(hash);

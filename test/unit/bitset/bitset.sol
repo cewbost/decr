@@ -2,9 +2,9 @@
 pragma solidity >=0.4.22 <0.9.0;
 
 import "truffle/Assert.sol";
-import "../../../contracts/Bitset.sol";
+import "../../../contracts/Shared.sol";
 
-using { Bitset.getBit, Bitset.setBit, Bitset.unsetBit } for bytes;
+using { Shared.getBit, Shared.setBit, Shared.unsetBit } for bytes;
 
 contract TestBitset {
 
