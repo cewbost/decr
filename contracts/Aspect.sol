@@ -2,17 +2,17 @@
 pragma solidity >=0.4.22 <0.9.0;
 
 import "./Owned.sol";
-import "./Shared.sol";
+import "./shared.sol";
 
-using { Shared.getBit, Shared.setBit, Shared.unsetBit } for bytes;
+using { shared.getBit, shared.setBit, shared.unsetBit } for bytes;
 
 contract Aspect is Owned {
 
   string                                name;
   bytes32[]                             generation_ids;
-  mapping(bytes32 => Shared.Generation) generations;
-  mapping(bytes32 => Shared.Record)     records;
-  mapping(bytes32 => Shared.Record)     pending_records;
+  mapping(bytes32 => shared.Generation) generations;
+  mapping(bytes32 => shared.Record)     records;
+  mapping(bytes32 => shared.Record)     pending_records;
   mapping(address => bytes32[])         records_by_recipient;
   address[]                             approvers;
   mapping(address => uint)              approvers_idx;
@@ -22,13 +22,13 @@ contract Aspect is Owned {
     name = n;
   }
 
-  function getGenerations() external view returns(Shared.GenerationResponse[] memory) {
+  function getGenerations() external view returns(shared.GenerationResponse[] memory) {
     uint len = generation_ids.length;
     uint alen = approvers.length;
-    Shared.GenerationResponse[] memory res = new Shared.GenerationResponse[](len);
+    shared.GenerationResponse[] memory res = new shared.GenerationResponse[](len);
     for (uint n = 0; n < len; n++) {
       bytes32 gen_id = generation_ids[n];
-      Shared.Generation storage generation = generations[gen_id];
+      shared.Generation storage generation = generations[gen_id];
       address[] memory apps = new address[](alen);
       uint acount = 0;
       for (uint a = 0; a < alen; a++) {
@@ -36,7 +36,7 @@ contract Aspect is Owned {
       }
       address[] memory napps = new address[](acount);
       for (uint a = 0; a < acount; a++) napps[a] = apps[a];
-      res[n] = Shared.GenerationResponse({
+      res[n] = shared.GenerationResponse({
         id:              gen_id,
         begin_timestamp: generation.begin_timestamp,
         end_timestamp:   generation.end_timestamp,
@@ -48,32 +48,32 @@ contract Aspect is Owned {
 
   function getPendingRecords(
     bytes32 gen_id
-  ) external view returns(Shared.RecordResponse[] memory) {
-    Shared.Generation storage gen = generations[gen_id];
+  ) external view returns(shared.RecordResponse[] memory) {
+    shared.Generation storage gen = generations[gen_id];
     require(gen.end_timestamp != 0, "Generation does not exist.");
     return getRecs(gen, pending_records);
   }
 
   function getRecords(
     bytes32 gen_id
-  ) external view returns(Shared.RecordResponse[] memory) {
-    Shared.Generation storage gen = generations[gen_id];
+  ) external view returns(shared.RecordResponse[] memory) {
+    shared.Generation storage gen = generations[gen_id];
     require(gen.end_timestamp != 0, "Generation does not exist.");
     return getRecs(gen, records);
   }
 
   function getRecs(
-    Shared.Generation storage gen,
-    mapping(bytes32 => Shared.Record) storage recs
-  ) internal view returns(Shared.RecordResponse[] memory) {
+    shared.Generation storage gen,
+    mapping(bytes32 => shared.Record) storage recs
+  ) internal view returns(shared.RecordResponse[] memory) {
     uint len           = gen.records.length;
     uint approvers_len = approvers.length;
     uint num_recs      = 0;
-    Shared.RecordResponse[] memory res              = new Shared.RecordResponse[](len);
+    shared.RecordResponse[] memory res              = new shared.RecordResponse[](len);
     address[]               memory approvers_buffer = new address[](approvers_len);
     for (uint n = 0; n < len; n++) {
       bytes32               hash = gen.records[n];
-      Shared.Record storage rec  = recs[hash];
+      shared.Record storage rec  = recs[hash];
       if (rec.timestamp != 0) {
         res[num_recs].hash = hash;
         res[num_recs].recipient = rec.recipient;
@@ -82,15 +82,15 @@ contract Aspect is Owned {
         res[num_recs].content = rec.content;
         uint num_approvers = 0;
         for (uint m = 0; m < approvers_len; m++) {
-          if (Shared.getBit(rec.approvers, m)) {
+          if (shared.getBit(rec.approvers, m)) {
             approvers_buffer[num_approvers++] = approvers[m];
           }
         }
-        res[num_recs].approvers = Shared.truncate(approvers_buffer, num_approvers);
+        res[num_recs].approvers = shared.truncate(approvers_buffer, num_approvers);
         num_recs++;
       }
     }
-    return Shared.truncate(res, num_recs);
+    return shared.truncate(res, num_recs);
   }
 
   function request(
@@ -98,7 +98,7 @@ contract Aspect is Owned {
     bytes24 details,
     bytes32 content
   ) external activeGeneration(gen_id) {
-    Shared.Record memory rec = Shared.Record({
+    shared.Record memory rec = shared.Record({
       recipient:  msg.sender,
       generation: gen_id,
       details:    details,
@@ -115,7 +115,7 @@ contract Aspect is Owned {
   }
 
   function approve(bytes32 hash) external pendingRecord(hash) {
-    Shared.Record storage pending_record = pending_records[hash];
+    shared.Record storage pending_record = pending_records[hash];
     addApproval(pending_record.generation, hash);
   }
 
@@ -126,7 +126,7 @@ contract Aspect is Owned {
   ) external onlyOwner uniqueGeneration(id) {
     require(id != "",                           "Generation ID must be provided.");
     require(begin < end,                        "Ending must be before beginning.");
-    Shared.Generation storage generation = generations[id];
+    shared.Generation storage generation = generations[id];
     generation.begin_timestamp = begin;
     generation.end_timestamp   = end;
     generation.approvers_mask  = approvers_mask;
@@ -134,7 +134,7 @@ contract Aspect is Owned {
   }
 
   function clearGeneration(bytes32 gen) external onlyOwner inactiveGeneration(gen) {
-    Shared.Generation storage generation = generations[gen];
+    shared.Generation storage generation = generations[gen];
     uint               len        = generation.records.length;
     uint[]     memory  idxs       = new uint[](len);
     bytes32[]  memory  hashes     = new bytes32[](len);
@@ -184,7 +184,7 @@ contract Aspect is Owned {
     approvers_mask.unsetBit(idx);
   }
 
-  function hashRecord(Shared.Record memory rec) internal pure returns(bytes32) {
+  function hashRecord(shared.Record memory rec) internal pure returns(bytes32) {
     return keccak256(bytes.concat(
       bytes20(rec.recipient),
       bytes4(rec.generation),
@@ -193,7 +193,7 @@ contract Aspect is Owned {
     ));
   }
 
-  function addPendingRecord(Shared.Record memory rec, bytes32 hash) internal uniqueRecord(hash) {
+  function addPendingRecord(shared.Record memory rec, bytes32 hash) internal uniqueRecord(hash) {
     pending_records[hash] = rec;
     generations[rec.generation].records.push(hash);
     records_by_recipient[rec.recipient].push(hash);

@@ -1,8 +1,8 @@
 const Aspect = artifacts.require("Aspect");
-const Shared = artifacts.require("Shared");
+const shared = artifacts.require("shared");
 
 module.exports = function (deployer) {
-  deployer.deploy(Shared);
-  deployer.link(Shared, Aspect);
+  deployer.deploy(shared);
+  deployer.link(shared, Aspect);
   deployer.deploy(Aspect, "test aspect");
 };

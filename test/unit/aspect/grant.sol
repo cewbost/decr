@@ -3,9 +3,9 @@ pragma solidity >=0.4.22 <0.9.0;
 
 import "truffle/Assert.sol";
 import "./base.sol";
-import "../../../contracts/Shared.sol";
+import "../../../contracts/shared.sol";
 
-using { Shared.setBit } for bytes;
+using { shared.setBit } for bytes;
 
 contract TestAspectGrant is AspectTestBase {
 
@@ -27,7 +27,7 @@ contract TestAspectGrant is AspectTestBase {
 
     actors[0].grant(hash);
 
-    Shared.Record memory rec = records[hash];
+    shared.Record memory rec = records[hash];
     Assert.equal(address(rec.recipient), address(actors[1]),
       "The record should have the correct recipient.");
     Assert.equal(rec.generation, "gen 1",

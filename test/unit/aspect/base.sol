@@ -5,7 +5,7 @@ import "./actor.sol";
 import "../utils/tools.sol";
 import "../../../contracts/Aspect.sol";
 
-using { Shared.setBit, Shared.getBit } for bytes;
+using { shared.setBit, shared.getBit } for bytes;
 
 contract AspectTestBase is Aspect, ArrayTools {
 
@@ -18,20 +18,20 @@ contract AspectTestBase is Aspect, ArrayTools {
   }
 
   function addGeneration(uint begin, uint end, bytes32 id) internal {
-    Shared.Generation storage gen = generations[id];
+    shared.Generation storage gen = generations[id];
     gen.begin_timestamp = uint64(begin);
     gen.end_timestamp   = uint64(end);
     generation_ids.push(id);
   }
 
   function addRecord(
-    mapping(bytes32 => Shared.Record) storage map,
+    mapping(bytes32 => shared.Record) storage map,
     address                            recipient,
     bytes32                            gen_id,
     bytes20                            details,
     bytes32                            content
   ) internal returns(bytes32) {
-    Shared.Record memory rec = Shared.Record({
+    shared.Record memory rec = shared.Record({
       recipient:  recipient,
       generation: gen_id,
       details:    details,
@@ -48,16 +48,16 @@ contract AspectTestBase is Aspect, ArrayTools {
 
   function getRecords(
     bytes32[]                  storage hashes,
-    mapping(bytes32 => Shared.Record) storage map
-  ) internal view returns(Shared.Record[] memory) {
+    mapping(bytes32 => shared.Record) storage map
+  ) internal view returns(shared.Record[] memory) {
     uint            len  = hashes.length;
     uint            num  = 0;
-    Shared.Record[] memory recs = new Shared.Record[](len);
+    shared.Record[] memory recs = new shared.Record[](len);
     for (uint n = 0; n < len; n++) {
-      Shared.Record storage rec = map[hashes[n]];
+      shared.Record storage rec = map[hashes[n]];
       if (rec.timestamp != 0) recs[num++] = rec;
     }
-    return Shared.truncate(recs, num);
+    return shared.truncate(recs, num);
   }
 
   function setApprovers(AspectTestActor[] memory actors) internal {
@@ -78,21 +78,21 @@ contract AspectTestBase is Aspect, ArrayTools {
   }
 
   function getApprovals(
-    mapping(bytes32 => Shared.Record) storage map,
+    mapping(bytes32 => shared.Record) storage map,
     bytes32                            hash
   ) internal view returns(address[] memory) {
     uint              len   = approvers.length;
-    Shared.Record    storage rec   = map[hash];
+    shared.Record    storage rec   = map[hash];
     address[] memory  res   = new address[](len);
     uint              count = 0;
     for (uint n = 0; n < len; n++) if (rec.approvers.getBit(n)) res[count++] = approvers[n];
-    return Shared.truncate(res, count);
+    return shared.truncate(res, count);
   }
 
   function purgeRecords() internal {
     uint gens = generation_ids.length;
     for (uint g = 0; g < gens; g++) {
-      Shared.Generation storage generation = generations[generation_ids[g]];
+      shared.Generation storage generation = generations[generation_ids[g]];
       bytes32[] storage hashes = generation.records;
       uint              recs   = hashes.length;
       for (uint n = 0; n < recs; n++) {

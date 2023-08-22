@@ -19,7 +19,7 @@ contract TestAspectRequest is AspectTestBase {
     AspectTestActor actor = newActors(1)[0];
     actor.request("gen 1", "details", "content");
 
-    Shared.Record[] memory recs = getRecords(generations["gen 1"].records, pending_records);
+    shared.Record[] memory recs = getRecords(generations["gen 1"].records, pending_records);
     Assert.equal(recs.length, 1, "There should be on pending record.");
     Assert.equal(address(recs[0].recipient), address(actor),
       "The pending record should have the correct recipient.");
@@ -65,7 +65,7 @@ contract TestAspectRequest is AspectTestBase {
   }
 
   function assertGenerationRecords(
-    Shared.Record[]  memory recs,
+    shared.Record[]  memory recs,
     bytes32          gen,
     address[] memory recvers,
     bytes32[] memory details,
@@ -82,7 +82,7 @@ contract TestAspectRequest is AspectTestBase {
   }
 
   function assertRecipientRecords(
-    Shared.Record[]  memory recs,
+    shared.Record[]  memory recs,
     address          recver,
     bytes32[] memory generations,
     bytes32[] memory details,
