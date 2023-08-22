@@ -4,7 +4,7 @@ pragma solidity >=0.4.22 <0.9.0;
 import "truffle/Assert.sol";
 import "./base.sol";
 
-using { getBit } for bytes;
+using { Bitset.getBit } for bytes;
 
 contract TestAspectNewGeneration is AspectTestBase {
 

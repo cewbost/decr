@@ -5,7 +5,7 @@ import "./actor.sol";
 import "../utils/tools.sol";
 import "../../../contracts/Aspect.sol";
 
-using { setBit, getBit } for bytes;
+using { Bitset.setBit, Bitset.getBit } for bytes;
 
 contract AspectTestBase is Aspect, ArrayTools {
 
