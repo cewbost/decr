@@ -46,6 +46,53 @@ contract Aspect is Owned {
     return res;
   }
 
+  function getPendingRecords(
+    bytes32 gen_id
+  ) external view returns(Shared.RecordResponse[] memory) {
+    Shared.Generation storage gen = generations[gen_id];
+    require(gen.end_timestamp != 0, "Generation does not exist.");
+    return getRecs(gen, pending_records);
+  }
+
+  function getRecords(
+    bytes32 gen_id
+  ) external view returns(Shared.RecordResponse[] memory) {
+    Shared.Generation storage gen = generations[gen_id];
+    require(gen.end_timestamp != 0, "Generation does not exist.");
+    return getRecs(gen, records);
+  }
+
+  function getRecs(
+    Shared.Generation storage gen,
+    mapping(bytes32 => Shared.Record) storage recs
+  ) internal view returns(Shared.RecordResponse[] memory) {
+    uint len           = gen.records.length;
+    uint approvers_len = approvers.length;
+    uint num_recs      = 0;
+    Shared.RecordResponse[] memory res              = new Shared.RecordResponse[](len);
+    address[]               memory approvers_buffer = new address[](approvers_len);
+    for (uint n = 0; n < len; n++) {
+      bytes32               hash = gen.records[n];
+      Shared.Record storage rec  = recs[hash];
+      if (rec.timestamp != 0) {
+        res[num_recs].hash = hash;
+        res[num_recs].recipient = rec.recipient;
+        res[num_recs].timestamp = rec.timestamp;
+        res[num_recs].details = rec.details;
+        res[num_recs].content = rec.content;
+        uint num_approvers = 0;
+        for (uint m = 0; m < approvers_len; m++) {
+          if (Shared.getBit(rec.approvers, m)) {
+            approvers_buffer[num_approvers++] = approvers[m];
+          }
+        }
+        res[num_recs].approvers = Shared.truncate(approvers_buffer, num_approvers);
+        num_recs++;
+      }
+    }
+    return Shared.truncate(res, num_recs);
+  }
+
   function request(
     bytes32 gen_id,
     bytes24 details,

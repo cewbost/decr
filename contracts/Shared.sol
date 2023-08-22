@@ -73,4 +73,13 @@ library Shared {
     return res;
   }
 
+  function truncate(
+    RecordResponse[] memory arr,
+    uint elems
+  ) internal pure returns(RecordResponse[] memory) {
+    RecordResponse[] memory res = new RecordResponse[](elems);
+    for (uint n = 0; n < elems; n++) res[n] = arr[n];
+    return res;
+  }
+
 }
