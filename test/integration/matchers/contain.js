@@ -1,4 +1,4 @@
-const { Matcher } = require('./matcher.js');
+const { Matcher } = require('./matcher.js')
 
 class ContainMatcher extends Matcher {
   #value
@@ -19,12 +19,12 @@ class ContainMatcher extends Matcher {
   }
 
   description() {
-    return "contains " + this.#value;
+    return "contains " + this.#value
   }
 }
 
 function contain(obj) {
-  return new ContainMatcher(obj);
+  return new ContainMatcher(obj)
 }
 
 module.exports = {

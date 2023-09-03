@@ -1,31 +1,31 @@
-const { Matcher } = require('./matcher.js');
-const { equal } = require('./equal.js');
+const { Matcher } = require('./matcher.js')
+const { equal } = require('./equal.js')
 
 class FieldsMatcher extends Matcher {
   #matchers
 
   constructor(fields) {
-    super();
-    let matchers = {};
+    super()
+    let matchers = {}
     for (const [key, matcher] of Object.entries(fields)) {
       if (matcher instanceof Matcher) {
-        matchers[key] = matcher;
+        matchers[key] = matcher
       } else {
-        matchers[key] = equal(matcher);
+        matchers[key] = equal(matcher)
       }
     }
-    this.#matchers = matchers;
+    this.#matchers = matchers
   }
 
   match(obj) {
-    let messages = [];
+    let messages = []
     for (const [key, matcher] of Object.entries(this.#matchers)) {
       if (!(key in obj)) {
-        messages.push([`expected to have property ${key}`]);
+        messages.push([`expected to have property ${key}`])
       } else {
-        const match = matcher.match(obj[key]);
+        const match = matcher.match(obj[key])
         if (match.length > 0) {
-          messages.push([`on property ${key}:`, match]);
+          messages.push([`on property ${key}:`, match])
         }
       }
     }
@@ -33,23 +33,23 @@ class FieldsMatcher extends Matcher {
       return [
         ["matching fields on", JSON.stringify(obj)],
         ["failed with errors:", messages],
-      ];
+      ]
     }
-    return [];
+    return []
   }
 
   description() {
-    let matchs = [];
+    let matchs = []
     for (const [key, match] of Object.entries(this.#matchers)) {
-      const desc = match.description();
-      matchs.push(`"${key}": ${desc}`);
+      const desc = match.description()
+      matchs.push(`"${key}": ${desc}`)
     }
-    return "match fields {" + matchs.join(", ") + "}";
+    return "match fields {" + matchs.join(", ") + "}"
   }
 }
 
 function matchFields(obj) {
-  return new FieldsMatcher(obj);
+  return new FieldsMatcher(obj)
 }
 
 module.exports = {

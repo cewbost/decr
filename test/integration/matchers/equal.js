@@ -1,12 +1,12 @@
-const { Matcher } = require('./matcher.js');
-const deepEqual = require('deep-equal');
+const { Matcher } = require('./matcher.js')
+const deepEqual = require('deep-equal')
 
 class EqualMatcher extends Matcher {
-  #value;
+  #value
 
   constructor(value) {
-    super();
-    this.#value = value;
+    super()
+    this.#value = value
   }
 
   match(obj) {
@@ -14,18 +14,18 @@ class EqualMatcher extends Matcher {
       return [
         ["expected", JSON.stringify(obj)],
         ["to equal", JSON.stringify(this.#value)],
-      ];
+      ]
     }
-    return [];
+    return []
   }
 
   description() {
-    return "= " + this.#value;
+    return "= " + this.#value
   }
 }
 
 function equal(obj) {
-  return new EqualMatcher(obj);
+  return new EqualMatcher(obj)
 }
 
 module.exports = {
