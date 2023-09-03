@@ -46,34 +46,46 @@ contract Aspect is Owned {
     return res;
   }
 
-  function getPendingRecords(
+  function getPendingRecordsByGeneration(
     bytes32 gen_id
   ) external view returns(shared.RecordResponse[] memory) {
     shared.Generation storage gen = generations[gen_id];
     require(gen.end_timestamp != 0, "Generation does not exist.");
-    return getRecs(gen, pending_records);
+    return getRecs(gen.records, pending_records);
   }
 
-  function getRecords(
-    bytes32 gen_id
+  function getRecordsByGeneration(
+    address account
   ) external view returns(shared.RecordResponse[] memory) {
     shared.Generation storage gen = generations[gen_id];
     require(gen.end_timestamp != 0, "Generation does not exist.");
-    return getRecs(gen, records);
+    return getRecs(gen.records, records);
+  }
+
+  function getPendingRecordsByRecipient(
+    address account
+  ) external view returns(shared.RecordResponse[] memory) {
+    return getRecs(records_by_recipient[account], pending_records);
+  }
+
+  function getRecordsByRecipient(
+    bytes32 gen_id
+  ) external view returns(shared.RecordResponse[] memory) {
+    return getRecs(records_by_recipient[account], records);
   }
 
   function getRecs(
-    shared.Generation storage gen,
-    mapping(bytes32 => shared.Record) storage recs
+    bytes32[]                         storage recs,
+    mapping(bytes32 => shared.Record) storage recs_map
   ) internal view returns(shared.RecordResponse[] memory) {
-    uint len           = gen.records.length;
+    uint len           = recs.length;
     uint approvers_len = approvers.length;
     uint num_recs      = 0;
     shared.RecordResponse[] memory res              = new shared.RecordResponse[](len);
     address[]               memory approvers_buffer = new address[](approvers_len);
     for (uint n = 0; n < len; n++) {
-      bytes32               hash = gen.records[n];
-      shared.Record storage rec  = recs[hash];
+      bytes32               hash = recs[n];
+      shared.Record storage rec  = recs_map[hash];
       if (rec.timestamp != 0) {
         res[num_recs].hash = hash;
         res[num_recs].recipient = rec.recipient;
