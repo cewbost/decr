@@ -227,76 +227,69 @@ contract("Aspect", accounts => {
       let matchGenWithAccs = (gen, accs) => consistOf(accs.map(arg => matchRecord(arg, gen)))
       let matchAccWithGens = (acc, gens) => consistOf(gens.map(arg => matchRecord(acc, arg)))
 
-      let gensRecs = new Array(5)
-      gensRecs[0] = (await testAspect.getPendingRecordsByGeneration(asEthWord(1))).map(objectify)
-      gensRecs[1] = (await testAspect.getPendingRecordsByGeneration(asEthWord(2))).map(objectify)
-      gensRecs[2] = (await testAspect.getPendingRecordsByGeneration(asEthWord(3))).map(objectify)
-      gensRecs[3] = (await testAspect.getPendingRecordsByGeneration(asEthWord(4))).map(objectify)
-      gensRecs[4] = (await testAspect.getPendingRecordsByGeneration(asEthWord(5))).map(objectify)
-      expect(gensRecs[0]).to(matchGenWithAccs(1, [1, 2, 3, 4, 5]))
-      expect(gensRecs[1]).to(matchGenWithAccs(2, [1, 2, 3, 4, 5]))
-      expect(gensRecs[2]).to(matchGenWithAccs(3, [1, 2, 3, 4, 5]))
-      expect(gensRecs[3]).to(matchGenWithAccs(4, [1, 2, 3, 4, 5]))
-      expect(gensRecs[4]).to(matchGenWithAccs(5, [1, 2, 3, 4, 5]))
-      expect((await testAspect.getPendingRecordsByRecipient(accounts[1])).map(objectify))
-        .to(matchAccWithGens(1, [1, 2, 3, 4, 5]))
-      expect((await testAspect.getPendingRecordsByRecipient(accounts[2])).map(objectify))
-        .to(matchAccWithGens(2, [1, 2, 3, 4, 5]))
-      expect((await testAspect.getPendingRecordsByRecipient(accounts[3])).map(objectify))
-        .to(matchAccWithGens(3, [1, 2, 3, 4, 5]))
-      expect((await testAspect.getPendingRecordsByRecipient(accounts[4])).map(objectify))
-        .to(matchAccWithGens(4, [1, 2, 3, 4, 5]))
-      expect((await testAspect.getPendingRecordsByRecipient(accounts[5])).map(objectify))
-        .to(matchAccWithGens(5, [1, 2, 3, 4, 5]))
+      let getRecords = async (fn, num) => {
+        let res = new Array(num)
+        for (let n = 1; n <= num; n++) res[n - 1] = (await fn(n)).map(objectify)
+        return res
+      }
+      let getPendingRecordsByGenerations = () =>
+        getRecords(n => testAspect.getPendingRecordsByGeneration(asEthWord(n)), numGenerations)
+      let getRecordsByGenerations = () =>
+        getRecords(n => testAspect.getRecordsByGeneration(asEthWord(n)), numGenerations)
+      let getPendingRecordsByRecipients = () =>
+        getRecords(n => testAspect.getPendingRecordsByRecipient(accounts[n]), numGenerations)
+      let getRecordsByRecipients = () =>
+        getRecords(n => testAspect.getRecordsByRecipient(accounts[n]), numGenerations)
+
+      let gensRecs = await getPendingRecordsByGenerations()
+      expect(gensRecs).to(matchElements([
+        matchGenWithAccs(1, [1, 2, 3, 4, 5]),
+        matchGenWithAccs(2, [1, 2, 3, 4, 5]),
+        matchGenWithAccs(3, [1, 2, 3, 4, 5]),
+        matchGenWithAccs(4, [1, 2, 3, 4, 5]),
+        matchGenWithAccs(5, [1, 2, 3, 4, 5]),
+      ]))
+      expect(await getPendingRecordsByRecipients()).to(matchElements([
+        matchAccWithGens(1, [1, 2, 3, 4, 5]),
+        matchAccWithGens(2, [1, 2, 3, 4, 5]),
+        matchAccWithGens(3, [1, 2, 3, 4, 5]),
+        matchAccWithGens(4, [1, 2, 3, 4, 5]),
+        matchAccWithGens(5, [1, 2, 3, 4, 5]),
+      ]))
 
       for (let [idx, recs] of gensRecs.entries()) {
         let accs = new Set(accounts.slice(1, 1 + numAccounts - idx))
         for (let rec of recs.filter(r => accs.has(r.recipient))) await testAspect.grant(rec.hash)
       }
 
-      expect((await testAspect.getPendingRecordsByGeneration(asEthWord(1))).map(objectify))
-        .to(beEmpty())
-      expect((await testAspect.getPendingRecordsByGeneration(asEthWord(2))).map(objectify))
-        .to(matchGenWithAccs(2, [5]))
-      expect((await testAspect.getPendingRecordsByGeneration(asEthWord(3))).map(objectify))
-        .to(matchGenWithAccs(3, [4, 5]))
-      expect((await testAspect.getPendingRecordsByGeneration(asEthWord(4))).map(objectify))
-        .to(matchGenWithAccs(4, [3, 4, 5]))
-      expect((await testAspect.getPendingRecordsByGeneration(asEthWord(5))).map(objectify))
-        .to(matchGenWithAccs(5, [2, 3, 4, 5]))
-
-      expect((await testAspect.getPendingRecordsByRecipient(accounts[1])).map(objectify))
-        .to(beEmpty())
-      expect((await testAspect.getPendingRecordsByRecipient(accounts[2])).map(objectify))
-        .to(matchAccWithGens(2, [5]))
-      expect((await testAspect.getPendingRecordsByRecipient(accounts[3])).map(objectify))
-        .to(matchAccWithGens(3, [4, 5]))
-      expect((await testAspect.getPendingRecordsByRecipient(accounts[4])).map(objectify))
-        .to(matchAccWithGens(4, [3, 4, 5]))
-      expect((await testAspect.getPendingRecordsByRecipient(accounts[5])).map(objectify))
-        .to(matchAccWithGens(5, [2, 3, 4, 5]))
-
-      expect((await testAspect.getRecordsByGeneration(asEthWord(1))).map(objectify))
-        .to(matchGenWithAccs(1, [1, 2, 3, 4, 5]))
-      expect((await testAspect.getRecordsByGeneration(asEthWord(2))).map(objectify))
-        .to(matchGenWithAccs(2, [1, 2, 3, 4]))
-      expect((await testAspect.getRecordsByGeneration(asEthWord(3))).map(objectify))
-        .to(matchGenWithAccs(3, [1, 2, 3]))
-      expect((await testAspect.getRecordsByGeneration(asEthWord(4))).map(objectify))
-        .to(matchGenWithAccs(4, [1, 2]))
-      expect((await testAspect.getRecordsByGeneration(asEthWord(5))).map(objectify))
-        .to(matchGenWithAccs(5, [1]))
-
-      expect((await testAspect.getRecordsByRecipient(accounts[1])).map(objectify))
-        .to(matchAccWithGens(1, [1, 2, 3, 4, 5]))
-      expect((await testAspect.getRecordsByRecipient(accounts[2])).map(objectify))
-        .to(matchAccWithGens(2, [1, 2, 3, 4]))
-      expect((await testAspect.getRecordsByRecipient(accounts[3])).map(objectify))
-        .to(matchAccWithGens(3, [1, 2, 3]))
-      expect((await testAspect.getRecordsByRecipient(accounts[4])).map(objectify))
-        .to(matchAccWithGens(4, [1, 2]))
-      expect((await testAspect.getRecordsByRecipient(accounts[5])).map(objectify))
-        .to(matchAccWithGens(5, [1]))
+      expect(await getPendingRecordsByGenerations()).to(matchElements([
+        beEmpty(),
+        matchGenWithAccs(2, [5]),
+        matchGenWithAccs(3, [4, 5]),
+        matchGenWithAccs(4, [3, 4, 5]),
+        matchGenWithAccs(5, [2, 3, 4, 5]),
+      ]))
+      expect(await getPendingRecordsByRecipients()).to(matchElements([
+        beEmpty(),
+        matchAccWithGens(2, [5]),
+        matchAccWithGens(3, [4, 5]),
+        matchAccWithGens(4, [3, 4, 5]),
+        matchAccWithGens(5, [2, 3, 4, 5]),
+      ]))
+      expect(await getRecordsByGenerations()).to(matchElements([
+        matchGenWithAccs(1, [1, 2, 3, 4, 5]),
+        matchGenWithAccs(2, [1, 2, 3, 4]),
+        matchGenWithAccs(3, [1, 2, 3]),
+        matchGenWithAccs(4, [1, 2]),
+        matchGenWithAccs(5, [1]),
+      ]))
+      expect(await getRecordsByRecipients()).to(matchElements([
+        matchAccWithGens(1, [1, 2, 3, 4, 5]),
+        matchAccWithGens(2, [1, 2, 3, 4]),
+        matchAccWithGens(3, [1, 2, 3]),
+        matchAccWithGens(4, [1, 2]),
+        matchAccWithGens(5, [1]),
+      ]))
     })
   })
 })

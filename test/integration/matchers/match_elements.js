@@ -17,13 +17,13 @@ class MatchElementsMatcher extends Matcher {
     let messages = []
     for (let [key, elem] of obj.entries()) {
       let res = this.#matchers[key].match(elem)
-      if (res.length == 0) messages.push([`${key}:`, res])
+      if (res.length > 0) messages.push([`${key}:`, res])
     }
     if (messages.length > 0) return [
       ["expected", JSON.stringify(obj)],
-      ["to consist of", this.#matchers.map(m => [m.description()])],
+      ["to match elements", this.#matchers.map(m => [m.description()])],
       ["failed with errors:", messages]
-    ].concat(messages)
+    ]
     return []
   }
 
