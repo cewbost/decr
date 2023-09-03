@@ -8,7 +8,8 @@ const {
   beInstanceOf,
   contain,
   consistOf,
-  beEmpty
+  beEmpty,
+  matchElements
 } = require("./matchers/matchers.js")
 const { asEthWord, asEthBytes } = require("./utils/ethword.js")
 const { objectify } = require("./utils/objectify.js")
