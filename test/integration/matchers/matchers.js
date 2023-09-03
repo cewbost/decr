@@ -1,11 +1,11 @@
-const { expect } = require("./expect.js");
-const { equal } = require("./equal.js");
-const { matchFields } = require("./match_fields.js");
-const { beNumber } = require("./be_number.js");
-const { beInstanceOf } = require("./be_instance_of.js");
-const { contain } = require("./contain.js");
-const { consistOf } = require("./consist_of.js");
-const { throwError } = require("./throw_error.js");
+const { expect       } = require("./expect.js")
+const { equal        } = require("./equal.js")
+const { matchFields  } = require("./match_fields.js")
+const { beNumber     } = require("./be_number.js")
+const { beInstanceOf } = require("./be_instance_of.js")
+const { contain      } = require("./contain.js")
+const { consistOf    } = require("./consist_of.js")
+const { beEmpty      } = require("./be_empty.js")
 
 module.exports = {
   expect:       expect,
@@ -15,5 +15,5 @@ module.exports = {
   beInstanceOf: beInstanceOf,
   contain:      contain,
   consistOf:    consistOf,
-  throwError:   throwError,
+  beEmpty:      beEmpty,
 }

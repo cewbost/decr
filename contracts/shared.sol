@@ -22,6 +22,7 @@ library shared {
   struct RecordResponse {
     bytes32   hash;
     address   recipient;
+    bytes32   generation;
     uint64    timestamp;
     bytes24   details;
     bytes32   content;

@@ -55,7 +55,7 @@ contract Aspect is Owned {
   }
 
   function getRecordsByGeneration(
-    address account
+    bytes32 gen_id
   ) external view returns(shared.RecordResponse[] memory) {
     shared.Generation storage gen = generations[gen_id];
     require(gen.end_timestamp != 0, "Generation does not exist.");
@@ -69,7 +69,7 @@ contract Aspect is Owned {
   }
 
   function getRecordsByRecipient(
-    bytes32 gen_id
+    address account
   ) external view returns(shared.RecordResponse[] memory) {
     return getRecs(records_by_recipient[account], records);
   }
@@ -87,11 +87,12 @@ contract Aspect is Owned {
       bytes32               hash = recs[n];
       shared.Record storage rec  = recs_map[hash];
       if (rec.timestamp != 0) {
-        res[num_recs].hash = hash;
-        res[num_recs].recipient = rec.recipient;
-        res[num_recs].timestamp = rec.timestamp;
-        res[num_recs].details = rec.details;
-        res[num_recs].content = rec.content;
+        res[num_recs].hash       = hash;
+        res[num_recs].recipient  = rec.recipient;
+        res[num_recs].generation = rec.generation;
+        res[num_recs].timestamp  = rec.timestamp;
+        res[num_recs].details    = rec.details;
+        res[num_recs].content    = rec.content;
         uint num_approvers = 0;
         for (uint m = 0; m < approvers_len; m++) {
           if (shared.getBit(rec.approvers, m)) {
@@ -199,7 +200,7 @@ contract Aspect is Owned {
   function hashRecord(shared.Record memory rec) internal pure returns(bytes32) {
     return keccak256(bytes.concat(
       bytes20(rec.recipient),
-      bytes4(rec.generation),
+      bytes32(rec.generation),
       rec.details,
       rec.content
     ));
