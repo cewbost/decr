@@ -21,7 +21,7 @@ contract("Aspect", accounts => {
 
   beVMException = (msg) => beInstanceOf(Error).and(matchFields({
     "data": matchFields({
-      "reason": "Only owner can perform this action."
+      "reason": msg
     }),
   }))
 
@@ -290,6 +290,46 @@ contract("Aspect", accounts => {
         matchAccWithGens(4, [1, 2]),
         matchAccWithGens(5, [1]),
       ]))
+    })
+    it("should not allow non-owners to grant requests", async () => {
+      await testAspect.enableApprover(accounts[1], fromOwner)
+      await testAspect.newGeneration(
+        asEthWord(1),
+        unixTime,
+        unixTime + 30 * day,
+        fromOwner
+      )
+      await testAspect.request(
+        asEthWord(1),
+        asEthBytes("details", 24),
+        asEthWord("content"),
+        { from: accounts[2] }
+      )
+      let hash = (await testAspect.getPendingRecordsByGeneration(asEthWord(1)))
+        .map(objectify)[0].hash
+
+      for (let acc of accounts.slice(1, 4)) {
+        expect(await awaitException(() => {
+          return testAspect.grant(hash, { from: acc })
+        })).to(beVMException("Only owner can perform this action."))
+      }
+    })
+    it("should not allow requesting from inactive generations", async () => {
+      await testAspect.newGeneration(
+        asEthWord(1),
+        unixTime + 15 * day,
+        unixTime + 30 * day,
+        fromOwner
+      )
+      expect(await awaitException(() => {
+        return testAspect.request(
+          asEthWord(1),
+          asEthBytes("details", 24),
+          asEthWord("content"),
+          { from: accounts[1] }
+        )
+      })).to(beVMException("Generation inactive."))
+      expect(await testAspect.getPendingRecordsByGeneration(asEthWord(1))).to(beEmpty())
     })
   })
 })
