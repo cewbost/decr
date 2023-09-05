@@ -35,7 +35,6 @@ contract("Aspect", accounts => {
     testAspect = await Aspect.new("TestAspect", fromOwner)
   })
 
-  /*
   describe("Management", () => {
     it("should set generation approvers by contract approvers", async () => {
       await testAspect.enableApprover(accounts[1], fromOwner)
@@ -333,7 +332,6 @@ contract("Aspect", accounts => {
       expect(await testAspect.getPendingRecordsByGeneration(asEthWord(1))).to(beEmpty())
     })
   })
-  */
   describe("Approvers", () => {
 
     let approvers
@@ -395,6 +393,35 @@ contract("Aspect", accounts => {
           "approvers": consistOf(approvers.slice(0, 3)),
         }),
       ]))
+    })
+    it("should not allow approval from non-approver", async () => {
+      await testAspect.request(
+        asEthWord(1),
+        asEthBytes("details", 24),
+        asEthWord("content"),
+        { from: accounts[1] }
+      )
+      let hash = (await testAspect.getPendingRecordsByGeneration(asEthWord(1)))
+        .map(objectify)[0].hash
+
+      expect(await awaitException(() => {
+        return testAspect.approve(hash, { from: accounts[4] })
+      })).to(beVMException("Only approver can perform this action."))
+    })
+    it("should not allow approving already granted request", async () => {
+      await testAspect.request(
+        asEthWord(1),
+        asEthBytes("details", 24),
+        asEthWord("content"),
+        { from: accounts[4] }
+      )
+      let hash = (await testAspect.getPendingRecordsByGeneration(asEthWord(1)))
+        .map(objectify)[0].hash
+      await testAspect.grant(hash, fromOwner)
+
+      expect(await awaitException(() => {
+        return testAspect.approve(hash, { from: accounts[1] })
+      })).to(beVMException("Pending record does not exist."))
     })
   })
 })
