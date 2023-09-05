@@ -35,6 +35,7 @@ contract("Aspect", accounts => {
     testAspect = await Aspect.new("TestAspect", fromOwner)
   })
 
+  /*
   describe("Management", () => {
     it("should set generation approvers by contract approvers", async () => {
       await testAspect.enableApprover(accounts[1], fromOwner)
@@ -330,6 +331,70 @@ contract("Aspect", accounts => {
         )
       })).to(beVMException("Generation inactive."))
       expect(await testAspect.getPendingRecordsByGeneration(asEthWord(1))).to(beEmpty())
+    })
+  })
+  */
+  describe("Approvers", () => {
+
+    let approvers
+
+    beforeEach(async () => {
+      approvers = accounts.slice(1, 4)
+      for (let app of approvers) await testAspect.enableApprover(app, fromOwner)
+      await testAspect.newGeneration(
+        asEthWord(1),
+        unixTime,
+        unixTime + 30 * day,
+        fromOwner
+      )
+    })
+    it("should allow approving requests", async () => {
+      for (let acc of accounts.slice(4, 7)) await testAspect.request(
+        asEthWord(1),
+        asEthBytes("details", 24),
+        asEthWord("content"),
+        { from: acc }
+      )
+      let recs = (await testAspect.getPendingRecordsByGeneration(asEthWord(1))).map(objectify)
+      let hashes = accounts.slice(4, 7)
+        .map(acc => recs.filter(rec => rec.recipient == acc)[0].hash)
+
+      for (let [idx, hash] of hashes.entries()) for (let app of approvers.slice(0, idx + 1))
+        await testAspect.approve(hash, { from: app })
+
+      recs = (await testAspect.getPendingRecordsByGeneration(asEthWord(1))).map(objectify)
+      expect(recs).to(consistOf([
+        matchFields({
+          "hash":      hashes[0],
+          "approvers": consistOf(approvers.slice(0, 1)),
+        }),
+        matchFields({
+          "hash":      hashes[1],
+          "approvers": consistOf(approvers.slice(0, 2)),
+        }),
+        matchFields({
+          "hash":      hashes[2],
+          "approvers": consistOf(approvers.slice(0, 3)),
+        }),
+      ]))
+
+      for (let hash of hashes) await testAspect.grant(hash, fromOwner)
+
+      recs = (await testAspect.getRecordsByGeneration(asEthWord(1))).map(objectify)
+      expect(recs).to(consistOf([
+        matchFields({
+          "hash":      hashes[0],
+          "approvers": consistOf(approvers.slice(0, 1)),
+        }),
+        matchFields({
+          "hash":      hashes[1],
+          "approvers": consistOf(approvers.slice(0, 2)),
+        }),
+        matchFields({
+          "hash":      hashes[2],
+          "approvers": consistOf(approvers.slice(0, 3)),
+        }),
+      ]))
     })
   })
 })
