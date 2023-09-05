@@ -48,18 +48,14 @@ contract Aspect is Owned {
 
   function getPendingRecordsByGeneration(
     bytes32 gen_id
-  ) external view returns(shared.RecordResponse[] memory) {
-    shared.Generation storage gen = generations[gen_id];
-    require(gen.end_timestamp != 0, "Generation does not exist.");
-    return getRecs(gen.records, pending_records);
+  ) external view generationExists(gen_id) returns(shared.RecordResponse[] memory) {
+    return getRecs(generations[gen_id].records, pending_records);
   }
 
   function getRecordsByGeneration(
     bytes32 gen_id
-  ) external view returns(shared.RecordResponse[] memory) {
-    shared.Generation storage gen = generations[gen_id];
-    require(gen.end_timestamp != 0, "Generation does not exist.");
-    return getRecs(gen.records, records);
+  ) external view generationExists(gen_id) returns(shared.RecordResponse[] memory) {
+    return getRecs(generations[gen_id].records, records);
   }
 
   function getPendingRecordsByRecipient(
@@ -234,6 +230,11 @@ contract Aspect is Owned {
   modifier inactiveGeneration(bytes32 id) {
     require(generations[id].end_timestamp != 0, "Generation does not exist.");
     require(generations[id].end_timestamp < block.timestamp, "Generation must be inactive.");
+    _;
+  }
+
+  modifier generationExists(bytes32 id) {
+    require(generations[id].end_timestamp != 0, "Generation does not exist.");
     _;
   }
 
