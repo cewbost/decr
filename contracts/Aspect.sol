@@ -186,11 +186,36 @@ contract Aspect is Owned {
     approvers_mask.setBit(idx);
   }
 
+  function enableApprover(
+    address approver,
+    bytes32 gen_id
+  ) external notExpiredGeneration(gen_id) onlyOwner {
+    uint idx = approvers_idx[approver];
+    if (idx == 0) {
+      approvers.push(approver);
+      idx = approvers.length - 1;
+      approvers_idx[approver] = idx + 1;
+    } else {
+      idx--;
+    }
+    generations[gen_id].approvers_mask.setBit(idx);
+  }
+
   function disableApprover(address approver) external onlyOwner {
     uint idx = approvers_idx[approver];
     if (idx == 0) return;
     idx--;
     approvers_mask.unsetBit(idx);
+  }
+
+  function disableApprover(
+    address approver,
+    bytes32 gen_id
+  ) external notExpiredGeneration(gen_id) onlyOwner {
+    uint idx = approvers_idx[approver];
+    if (idx == 0) return;
+    idx--;
+    generations[gen_id].approvers_mask.unsetBit(idx);
   }
 
   function hashRecord(shared.Record memory rec) internal pure returns(bytes32) {
