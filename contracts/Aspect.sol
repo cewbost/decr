@@ -142,7 +142,7 @@ contract Aspect is Owned {
     generation_ids.push(id);
   }
 
-  function clearGeneration(bytes32 gen) external onlyOwner inactiveGeneration(gen) {
+  function clearGeneration(bytes32 gen) external onlyOwner expiredGeneration(gen) {
     shared.Generation storage generation = generations[gen];
     uint               len        = generation.records.length;
     uint[]     memory  idxs       = new uint[](len);
@@ -227,9 +227,15 @@ contract Aspect is Owned {
     _;
   }
 
-  modifier inactiveGeneration(bytes32 id) {
+  modifier expiredGeneration(bytes32 id) {
     require(generations[id].end_timestamp != 0, "Generation does not exist.");
-    require(generations[id].end_timestamp < block.timestamp, "Generation must be inactive.");
+    require(generations[id].end_timestamp < block.timestamp, "Generation must be expired.");
+    _;
+  }
+
+  modifier notExpiredGeneration(bytes32 id) {
+    require(generations[id].end_timestamp != 0, "Generation does not exist.");
+    require(generations[id].end_timestamp > block.timestamp, "Generation is expired.");
     _;
   }
 
@@ -238,14 +244,14 @@ contract Aspect is Owned {
     _;
   }
 
-  modifier uniqueRecord(bytes32 hash) {
-    require(pending_records[hash].timestamp == 0 && records[hash].timestamp == 0,
-      "Already exists.");
+  modifier uniqueGeneration(bytes32 id) {
+    require(generations[id].end_timestamp == 0, "Already exists.");
     _;
   }
 
-  modifier uniqueGeneration(bytes32 id) {
-    require(generations[id].end_timestamp == 0, "Already exists.");
+  modifier uniqueRecord(bytes32 hash) {
+    require(pending_records[hash].timestamp == 0 && records[hash].timestamp == 0,
+      "Already exists.");
     _;
   }
 
