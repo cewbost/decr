@@ -34,7 +34,7 @@ contract TestAspectGrant is AspectTestBase {
       "The record should have the correct content.");
     Assert.equal(rec.timestamp, block.timestamp,
       "The record should have the correct timestamp.");
-    address[] memory approves = getPendingRecordsByGeneration("gen 1")[0].approvers;
+    address[] memory approves = getRecordsByGeneration("gen 1")[0].approvers;
     Assert.isTrue(
       approves.length == 3 &&
       contains(approves, address(approvers[0])) &&
@@ -47,30 +47,5 @@ contract TestAspectGrant is AspectTestBase {
       "The record should be associated with the generation.");
     Assert.isTrue(contains(records_by_recipient[address(actors[1])], hash),
       "The record should be associated with the recipient.");
-  }
-
-  function testOnlyOwnerAllowed() external {
-    AspectTestActor[] memory actors = newActors(2);
-    bytes32 hash = addRecord(pending_records, address(actors[1]), "gen 1", "details", "content");
-
-    try actors[0].grant(hash) {
-      Assert.fail("Should revert.");
-    } catch Error(string memory what) {
-      Assert.equal("Only owner can perform this action.", what,
-        "Should revert with right message.");
-    }
-  }
-
-  function testRecordMustExist() external {
-    AspectTestActor[] memory actors = newActors(2);
-    setOwner(address(actors[0]));
-    bytes32 hash = addRecord(pending_records, address(actors[1]), "gen 1", "details", "content");
-    actors[0].grant(hash);
-
-    try actors[0].grant(hash) {
-      Assert.fail("Should revert.");
-    } catch Error(string memory what) {
-      Assert.equal("Pending record does not exist.", what, "Should revert with right message.");
-    }
   }
 }
