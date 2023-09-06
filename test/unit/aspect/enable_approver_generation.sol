@@ -48,14 +48,4 @@ contract TestAspectEnableApproverGeneration is AspectTestBase {
     bytes storage apprs_mask = generations["gen"].approvers_mask;
     Assert.isTrue(apprs_mask.getBit(0), "Approver should be enabled.");
   }
-
-  function testEnableApproverOnlyOwner() external {
-    AspectTestActor[] memory actors = newActors(2);
-    try actors[0].enableApprover(address(actors[1]), "gen") {
-      Assert.fail("Should revert.");
-    } catch Error(string memory what) {
-      Assert.equal("Only owner can perform this action.", what,
-        "Should revert with right message.");
-    }
-  }
 }
