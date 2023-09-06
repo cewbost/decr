@@ -10,11 +10,6 @@ contract TestAspectNewGeneration is AspectTestBase {
 
   bytes32 constant gen_id = "gen id";
 
-  function afterEach() external {
-    purgeGenerations();
-    purgeApprovers();
-  }
-
   function testNewGenerations() external {
     AspectTestActor actor = newActors(1)[0];
     setOwner(address(actor));
@@ -35,7 +30,8 @@ contract TestAspectNewGeneration is AspectTestBase {
     AspectTestActor          actor     = newActors(1)[0];
     AspectTestActor[] memory approvers = newActors(5);
     setOwner(address(actor));
-    setApprovers(approvers, hex"00_02_04");
+    addApprovers(approvers);
+    approvers_mask = hex"15";
 
     actor.newGeneration(gen_id, uint64(block.timestamp), uint64(block.timestamp + 10));
 

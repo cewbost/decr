@@ -6,15 +6,11 @@ import "./base.sol";
 
 contract TestAspectRequestErrors is AspectTestBase {
 
-  function beforeAll() external {
+  function beforeEach() external {
     addGeneration(block.timestamp, block.timestamp + 10, "gen 1");
     addGeneration(block.timestamp, block.timestamp + 10, "gen 2");
     addGeneration(block.timestamp - 10, block.timestamp - 5, "gen 3");
     addGeneration(block.timestamp + 5, block.timestamp + 10, "gen 4");
-  }
-
-  function afterEach() external {
-    purgeRecords();
   }
 
   function testGenerationDoesNotExist() external {

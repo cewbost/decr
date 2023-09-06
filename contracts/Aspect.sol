@@ -22,7 +22,7 @@ contract Aspect is Owned {
     name = n;
   }
 
-  function getGenerations() external view returns(shared.GenerationResponse[] memory) {
+  function getGenerations() public view returns(shared.GenerationResponse[] memory) {
     uint len = generation_ids.length;
     uint alen = approvers.length;
     shared.GenerationResponse[] memory res = new shared.GenerationResponse[](len);
@@ -48,25 +48,25 @@ contract Aspect is Owned {
 
   function getPendingRecordsByGeneration(
     bytes32 gen_id
-  ) external view generationExists(gen_id) returns(shared.RecordResponse[] memory) {
+  ) public view generationExists(gen_id) returns(shared.RecordResponse[] memory) {
     return getRecs(generations[gen_id].records, pending_records);
   }
 
   function getRecordsByGeneration(
     bytes32 gen_id
-  ) external view generationExists(gen_id) returns(shared.RecordResponse[] memory) {
+  ) public view generationExists(gen_id) returns(shared.RecordResponse[] memory) {
     return getRecs(generations[gen_id].records, records);
   }
 
   function getPendingRecordsByRecipient(
     address account
-  ) external view returns(shared.RecordResponse[] memory) {
+  ) public view returns(shared.RecordResponse[] memory) {
     return getRecs(records_by_recipient[account], pending_records);
   }
 
   function getRecordsByRecipient(
     address account
-  ) external view returns(shared.RecordResponse[] memory) {
+  ) public view returns(shared.RecordResponse[] memory) {
     return getRecs(records_by_recipient[account], records);
   }
 

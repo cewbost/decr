@@ -6,11 +6,6 @@ import "./base.sol";
 
 contract TestAspectClearGeneration is AspectTestBase {
 
-  function afterEach() external {
-    purgeGenerations();
-    purgeApprovers();
-  }
-
   function testClearGeneration() external {
     AspectTestActor[] memory actors = newActors(2);
     setOwner(address(actors[0]));

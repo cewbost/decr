@@ -10,21 +10,17 @@ contract TestAspectApproval is AspectTestBase {
     addGeneration(block.timestamp, block.timestamp + 10, "gen 1");
   }
 
-  function afterEach() external {
-    purgeApprovers();
-    purgeGenerations();
-  }
-
   function testApprove() external {
     AspectTestActor[] memory actors = newActors(5);
-    setApproversForGeneration(actors, "gen 1");
+    addApprovers(actors);
+    generations["gen 1"].approvers_mask = hex"1f";
     bytes32 hash = addRecord(pending_records, address(actors[0]), "gen 1", "", "");
 
     actors[0].approve(hash);
     actors[2].approve(hash);
     actors[4].approve(hash);
 
-    address[] memory approvers = getApprovals(pending_records, hash);
+    address[] memory approvers = getPendingRecordsByGeneration("gen 1")[0].approvers;
     Assert.equal(approvers.length, 3, "There should be two approvals.");
 
     Assert.isTrue(
@@ -36,7 +32,8 @@ contract TestAspectApproval is AspectTestBase {
 
   function testApproveRecordMustBePending() external {
     AspectTestActor[] memory actors = newActors(1);
-    setApproversForGeneration(actors, "gen 1");
+    addApprovers(actors);
+    generations["gen 1"].approvers_mask = hex"01";
     bytes32 hash = addRecord(records, address(actors[0]), "gen 1", "", "");
 
     try actors[0].approve(hash) {
@@ -62,7 +59,8 @@ contract TestAspectApproval is AspectTestBase {
   function testApproveApproverMustBeEnabled() external {
     AspectTestActor[] memory actors = newActors(1);
     addGeneration(block.timestamp, block.timestamp + 10, "gen 2");
-    setApproversForGeneration(actors, "gen 2");
+    addApprovers(actors);
+    generations["gen 2"].approvers_mask = hex"01";
     bytes32 hash = addRecord(pending_records, address(actors[0]), "gen 1", "", "");
 
     try actors[0].approve(hash) {

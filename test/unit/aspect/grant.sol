@@ -9,19 +9,15 @@ using { shared.setBit } for bytes;
 
 contract TestAspectGrant is AspectTestBase {
 
-  function beforeAll() external {
+  function beforeEach() external {
     addGeneration(block.timestamp, block.timestamp + 10, "gen 1");
-  }
-
-  function afterEach() external {
-    purgeRecords();
   }
 
   function testGrant() external {
     AspectTestActor[] memory actors = newActors(2);
     AspectTestActor[] memory approvers = newActors(3);
     setOwner(address(actors[0]));
-    setApprovers(approvers, "gen 1");
+    addApprovers(approvers);
     bytes32 hash = addRecord(pending_records, address(actors[1]), "gen 1", "details", "content");
     for (uint n = 0; n < 3; n++) pending_records[hash].approvers.setBit(n);
 
@@ -38,7 +34,7 @@ contract TestAspectGrant is AspectTestBase {
       "The record should have the correct content.");
     Assert.equal(rec.timestamp, block.timestamp,
       "The record should have the correct timestamp.");
-    address[] memory approves = getApprovals(records, hash);
+    address[] memory approves = getPendingRecordsByGeneration("gen 1")[0].approvers;
     Assert.isTrue(
       approves.length == 3 &&
       contains(approves, address(approvers[0])) &&

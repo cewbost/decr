@@ -9,10 +9,6 @@ using { shared.getBit } for bytes;
 
 contract TestAspectApprovers is AspectTestBase {
 
-  function afterEach() external {
-    purgeApprovers();
-  }
-
   function testEnableApprover() external {
     AspectTestActor[] memory actors = newActors(3);
     setOwner(address(actors[0]));
