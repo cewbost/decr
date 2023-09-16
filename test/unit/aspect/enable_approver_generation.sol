@@ -17,8 +17,8 @@ contract TestAspectEnableApproverGeneration is AspectTestBase {
     AspectTestActor[] memory actors = newActors(3);
     setOwner(address(actors[0]));
 
-    actors[0].enableApprover(address(actors[1]), "gen");
-    actors[0].enableApprover(address(actors[2]), "gen");
+    actors[0].enableApproverForGeneration(address(actors[1]), "gen");
+    actors[0].enableApproverForGeneration(address(actors[2]), "gen");
 
     Assert.equal(approvers.length, 2, "There should be 2 approvers");
     (uint idx1, uint idx2) = (approvers_idx[address(actors[1])], approvers_idx[address(actors[2])]);
@@ -41,7 +41,7 @@ contract TestAspectEnableApproverGeneration is AspectTestBase {
     approvers.push(address(actors[1]));
     approvers_idx[address(actors[1])] = 1;
 
-    actors[0].enableApprover(address(actors[1]), "gen");
+    actors[0].enableApproverForGeneration(address(actors[1]), "gen");
 
     Assert.equal(approvers.length, 1, "There should be 1 approvers");
     Assert.equal(approvers_idx[address(actors[1])], 1, "Approvers index should be unchanged.");

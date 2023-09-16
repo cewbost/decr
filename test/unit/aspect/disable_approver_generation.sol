@@ -23,7 +23,7 @@ contract TestAspectDisableApproverGeneration is AspectTestBase {
     approvers_mask = hex"03";
     generations["gen 1"].approvers_mask = hex"03";
 
-    actor.disableApprover(address(apprs[1]), "gen 1");
+    actor.disableApproverForGeneration(address(apprs[1]), "gen 1");
 
     Assert.equal(approvers.length, 2, "Both actors should still be in approvers.");
     (uint idx0, uint idx1) = (approvers_idx[address(apprs[0])], approvers_idx[address(apprs[1])]);
@@ -35,7 +35,7 @@ contract TestAspectDisableApproverGeneration is AspectTestBase {
 
   function testDisableApproverOnlyOwner() external {
     AspectTestActor[] memory actors = newActors(2);
-    try actors[0].disableApprover(address(actors[1]), "gen 1") {
+    try actors[0].disableApproverForGeneration(address(actors[1]), "gen 1") {
       Assert.fail("Should revert.");
     } catch Error(string memory what) {
       Assert.equal("Only owner can perform this action.", what,
@@ -45,7 +45,7 @@ contract TestAspectDisableApproverGeneration is AspectTestBase {
 
   function testEnableApproverGenerationMustExist() external {
     AspectTestActor[] memory actors = newActors(2);
-    try actors[0].disableApprover(address(actors[1]), "gen 3") {
+    try actors[0].disableApproverForGeneration(address(actors[1]), "gen 3") {
       Assert.fail("Should revert.");
     } catch Error(string memory what) {
       Assert.equal("Generation does not exist.", what,
@@ -55,7 +55,7 @@ contract TestAspectDisableApproverGeneration is AspectTestBase {
 
   function testEnableApproverGenerationExpired() external {
     AspectTestActor[] memory actors = newActors(2);
-    try actors[0].disableApprover(address(actors[1]), "gen 2") {
+    try actors[0].disableApproverForGeneration(address(actors[1]), "gen 2") {
       Assert.fail("Should revert.");
     } catch Error(string memory what) {
       Assert.equal("Generation is expired.", what,

@@ -36,6 +36,59 @@ contract("Aspect", accounts => {
   })
 
   describe("Management", () => {
+    it("should allow setting approvers by generation", async () => {
+      await testAspect.newGeneration(
+        asEthWord(1),
+        unixTime,
+        unixTime + 30 * day,
+        fromOwner
+      )
+      await testAspect.newGeneration(
+        asEthWord(2),
+        unixTime + 15 * day,
+        unixTime + 45 * day,
+        fromOwner
+      )
+
+      await testAspect.enableApproverForGeneration(accounts[1], asEthWord(1), fromOwner)
+      await testAspect.enableApproverForGeneration(accounts[2], asEthWord(1), fromOwner)
+      await testAspect.enableApproverForGeneration(accounts[1], asEthWord(2), fromOwner)
+
+      let resp = await testAspect.getGenerations(fromOwner)
+      expect(resp.map(objectify)).to(consistOf([
+        matchFields({
+          "id":              beNumber(1),
+          "begin_timestamp": beNumber(unixTime),
+          "end_timestamp":   beNumber(unixTime + 30 * day),
+          "approvers":       consistOf([accounts[1], accounts[2]]),
+        }),
+        matchFields({
+          "id":              beNumber(2),
+          "begin_timestamp": beNumber(unixTime + 15 * day),
+          "end_timestamp":   beNumber(unixTime + 45 * day),
+          "approvers":       consistOf([accounts[1]]),
+        }),
+      ]))
+
+      await testAspect.disableApproverForGeneration(accounts[1], asEthWord(1), fromOwner)
+      await testAspect.disableApproverForGeneration(accounts[1], asEthWord(2), fromOwner)
+
+      resp = await testAspect.getGenerations(fromOwner)
+      expect(resp.map(objectify)).to(consistOf([
+        matchFields({
+          "id":              beNumber(1),
+          "begin_timestamp": beNumber(unixTime),
+          "end_timestamp":   beNumber(unixTime + 30 * day),
+          "approvers":       consistOf([accounts[2]]),
+        }),
+        matchFields({
+          "id":              beNumber(2),
+          "begin_timestamp": beNumber(unixTime + 15 * day),
+          "end_timestamp":   beNumber(unixTime + 45 * day),
+          "approvers":       beEmpty(),
+        }),
+      ]))
+    })
     it("should set generation approvers by contract approvers", async () => {
       await testAspect.enableApprover(accounts[1], fromOwner)
       await testAspect.enableApprover(accounts[2], fromOwner)
@@ -113,7 +166,21 @@ contract("Aspect", accounts => {
         return testAspect.enableApprover(accounts[4], { from: accounts[0] })
       })).to(beVMException("Only owner can perform this action."))
       expect(await awaitException(() => {
+        return testAspect.enableApproverForGeneration(
+          accounts[4],
+          asEthWord(1),
+          { from: accounts[0] }
+        )
+      })).to(beVMException("Only owner can perform this action."))
+      expect(await awaitException(() => {
         return testAspect.disableApprover(accounts[3], { from: accounts[0] })
+      })).to(beVMException("Only owner can perform this action."))
+      expect(await awaitException(() => {
+        return testAspect.disableApproverForGeneration(
+          accounts[3],
+          asEthWord(1),
+          { from: accounts[0] }
+        )
       })).to(beVMException("Only owner can perform this action."))
 
       await testAspect.changeOwnership(accounts[0], { from: accounts[1] })
@@ -128,18 +195,7 @@ contract("Aspect", accounts => {
       )
 
       expect(await awaitException(() => {
-        return testAspect.newGeneration(
-          asEthWord(3),
-          unixTime,
-          unixTime + 30 * day,
-          { from: accounts[1] }
-        )
-      })).to(beVMException("Only owner can perform this action."))
-      expect(await awaitException(() => {
         return testAspect.enableApprover(accounts[5], { from: accounts[1] })
-      })).to(beVMException("Only owner can perform this action."))
-      expect(await awaitException(() => {
-        return testAspect.disableApprover(accounts[4], { from: accounts[1] })
       })).to(beVMException("Only owner can perform this action."))
 
       let resp = await testAspect.getGenerations({ from: accounts[0] })

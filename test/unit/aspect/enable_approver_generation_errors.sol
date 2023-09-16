@@ -16,7 +16,7 @@ contract TestAspectEnableApproverGenerationErrors is AspectTestBase {
 
   function testEnableApproverOnlyOwner() external {
     AspectTestActor[] memory actors = newActors(2);
-    try actors[0].enableApprover(address(actors[1]), "gen 1") {
+    try actors[0].enableApproverForGeneration(address(actors[1]), "gen 1") {
       Assert.fail("Should revert.");
     } catch Error(string memory what) {
       Assert.equal("Only owner can perform this action.", what,
@@ -26,7 +26,7 @@ contract TestAspectEnableApproverGenerationErrors is AspectTestBase {
 
   function testEnableApproverGenerationMustExist() external {
     AspectTestActor[] memory actors = newActors(2);
-    try actors[0].enableApprover(address(actors[1]), "gen 3") {
+    try actors[0].enableApproverForGeneration(address(actors[1]), "gen 3") {
       Assert.fail("Should revert.");
     } catch Error(string memory what) {
       Assert.equal("Generation does not exist.", what,
@@ -36,7 +36,7 @@ contract TestAspectEnableApproverGenerationErrors is AspectTestBase {
 
   function testEnableApproverGenerationExpired() external {
     AspectTestActor[] memory actors = newActors(2);
-    try actors[0].enableApprover(address(actors[1]), "gen 2") {
+    try actors[0].enableApproverForGeneration(address(actors[1]), "gen 2") {
       Assert.fail("Should revert.");
     } catch Error(string memory what) {
       Assert.equal("Generation is expired.", what,

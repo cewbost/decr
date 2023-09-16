@@ -186,7 +186,7 @@ contract Aspect is Owned {
     approvers_mask.setBit(idx);
   }
 
-  function enableApprover(
+  function enableApproverForGeneration(
     address approver,
     bytes32 gen_id
   ) external notExpiredGeneration(gen_id) onlyOwner {
@@ -208,7 +208,7 @@ contract Aspect is Owned {
     approvers_mask.unsetBit(idx);
   }
 
-  function disableApprover(
+  function disableApproverForGeneration(
     address approver,
     bytes32 gen_id
   ) external notExpiredGeneration(gen_id) onlyOwner {

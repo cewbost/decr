@@ -26,14 +26,14 @@ contract AspectTestActor {
   function enableApprover(address approver) external {
     target.enableApprover(approver);
   }
-  function enableApprover(address approver, bytes32 gen_id) external {
-    target.enableApprover(approver, gen_id);
+  function enableApproverForGeneration(address approver, bytes32 gen_id) external {
+    target.enableApproverForGeneration(approver, gen_id);
   }
   function disableApprover(address approver) external {
     target.disableApprover(approver);
   }
-  function disableApprover(address approver, bytes32 gen_id) external {
-    target.disableApprover(approver, gen_id);
+  function disableApproverForGeneration(address approver, bytes32 gen_id) external {
+    target.disableApproverForGeneration(approver, gen_id);
   }
   function approve(bytes32 hash) external {
     target.approve(hash);
