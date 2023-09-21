@@ -10,6 +10,7 @@ const {
   consistOf,
   beApprox,
   beInstanceOf,
+  beEmpty,
 } = require("../matchers/matchers.js")
 
 contract("AspectBare", accounts => {
@@ -121,11 +122,14 @@ contract("AspectBare", accounts => {
       })).to(beVMException("Already exists."))
     })
     it("should not allow rerequesting granted aspect", async () => {
+      let now = timeNow()
       await testAspect.addRecordBare(
         accounts[1],
         asEthWord(1),
+        day,
         asEthBytes("details", 24),
-        asEthWord("content")
+        asEthWord("content"),
+        []
       )
       expect(await awaitException(() => {
         return testAspect.request(
@@ -135,6 +139,58 @@ contract("AspectBare", accounts => {
           { from: accounts[1] }
         )
       })).to(beVMException("Already exists."))
+    })
+  })
+  describe("grant", () => {
+
+    let now
+    let hash
+
+    beforeEach(async () => {
+      now = timeNow()
+      await testAspect.addGenerationBare(unixTime - 10 * day, unixTime + 10 * day, asEthWord(1))
+      await testAspect.addApproversBare([
+        accounts[2],
+        accounts[3],
+        accounts[4],
+        accounts[5],
+        accounts[6]
+      ])
+      await testAspect.addPendingRecordBare(
+        accounts[1],
+        asEthWord(1),
+        now - 10 * day,
+        asEthBytes("details", 24),
+        asEthWord("content"),
+        [accounts[2], accounts[4], accounts[6]]
+      )
+      hash = (await testAspect.getPendingRecordsByRecipient(accounts[1]))[0].hash
+    })
+    it("should move the record from pending to granted", async () => {
+      await testAspect.grant(hash, fromOwner)
+
+      let match = consistOf([matchFields({
+        "recipient":  accounts[1],
+        "generation": asEthWord(1),
+        "details":    asEthBytes("details", 24),
+        "content":    asEthWord("content"),
+        "approvers":  consistOf([accounts[2], accounts[4], accounts[6]]),
+        "timestamp":  beApprox(now, 5),
+      })])
+      expect((await testAspect.getRecordsByRecipient(accounts[1])).map(objectify)).to(match)
+      expect((await testAspect.getRecordsByGeneration(asEthWord(1))).map(objectify)).to(match)
+      expect(await testAspect.getPendingRecordsByRecipient(accounts[1])).to(beEmpty())
+      expect(await testAspect.getPendingRecordsByGeneration(asEthWord(1))).to(beEmpty())
+    })
+    it("should only allow owner to grant", async () => {
+      expect(await awaitException(() => {
+        return testAspect.grant(hash, { from: accounts[1] })
+      })).to(beVMException("Only owner can perform this action."))
+    })
+    it("should only allow owner to grant", async () => {
+      expect(await awaitException(() => {
+        return testAspect.grant(asEthWord(1), fromOwner)
+      })).to(beVMException("Pending record does not exist."))
     })
   })
 })

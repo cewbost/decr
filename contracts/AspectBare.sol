@@ -3,6 +3,8 @@ pragma solidity >=0.4.22 <0.9.0;
 
 import "./Aspect.sol";
 
+using { shared.setBit } for bytes;
+
 contract AspectBare is Aspect {
 
   constructor(string memory n) Aspect(n) {}
@@ -39,21 +41,62 @@ contract AspectBare is Aspect {
   }
 
   function addRecordBare(
-    address recipient,
-    bytes32 gen_id,
-    bytes24 details,
-    bytes32 content
+    address            recipient,
+    bytes32            gen_id,
+    uint64             timestamp,
+    bytes24            details,
+    bytes32            content,
+    address[] calldata apprs
   ) external {
+    addRecordImpl(records, recipient, gen_id, timestamp, details, content, apprs);
+  }
+
+  function addPendingRecordBare(
+    address            recipient,
+    bytes32            gen_id,
+    uint64             timestamp,
+    bytes24            details,
+    bytes32            content,
+    address[] calldata apprs
+  ) external {
+    addRecordImpl(pending_records, recipient, gen_id, timestamp, details, content, apprs);
+  }
+
+  function addApproversBare(address[] calldata accs) external {
+    for (uint n = 0; n < accs.length; n++) {
+      approvers.push(accs[n]);
+      approvers_idx[accs[n]] = n + 1;
+    }
+  }
+
+  function addRecordImpl(
+    mapping(bytes32 => shared.Record) storage  map,
+    address                                    recipient,
+    bytes32                                    gen_id,
+    uint64                                     timestamp,
+    bytes24                                    details,
+    bytes32                                    content,
+    address[]                         calldata apprs
+  ) internal {
     shared.Record memory rec = shared.Record({
       recipient:  recipient,
       generation: gen_id,
       details:    details,
       content:    content,
-      timestamp:  uint64(block.timestamp),
+      timestamp:  timestamp,
       approvers:  ""
     });
     bytes32 hash = hashRecord(rec);
-    records[hash] = rec;
+    map[hash] = rec;
+    bytes storage bts = map[hash].approvers;
+    for (uint n = 0; n < apprs.length; n++) {
+      for (uint m = 0; m < approvers.length; m++) {
+        if (approvers[m] == apprs[n]) {
+          bts.setBit(m);
+          break;
+        }
+      }
+    }
     generations[gen_id].records.push(hash);
     records_by_recipient[recipient].push(hash);
   }

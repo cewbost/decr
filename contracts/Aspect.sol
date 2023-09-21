@@ -120,6 +120,7 @@ contract Aspect is Owned {
 
   function grant(bytes32 hash) external onlyOwner pendingRecord(hash) {
     records[hash] = pending_records[hash];
+    records[hash].timestamp = uint64(block.timestamp);
     delete pending_records[hash];
   }
 
