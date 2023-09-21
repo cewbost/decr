@@ -10,12 +10,12 @@ const {
   consistOf,
   beEmpty,
   matchElements
-} = require("./matchers/matchers.js")
-const { asEthWord, asEthBytes } = require("./utils/ethword.js")
-const { objectify } = require("./utils/objectify.js")
-const { day } = require("./utils/time.js")
-const { awaitException } = require("./utils/exception.js")
-const { split } = require("./utils/split.js")
+} = require("../matchers/matchers.js")
+const { asEthWord, asEthBytes } = require("../utils/ethword.js")
+const { objectify } = require("../utils/objectify.js")
+const { day } = require("../utils/time.js")
+const { awaitException } = require("../utils/exception.js")
+const { split } = require("../utils/split.js")
 
 contract("Aspect", accounts => {
 
