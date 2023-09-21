@@ -14,7 +14,7 @@ const {
   beNumber,
 } = require("../matchers/matchers.js")
 
-contract("AspectBare", accounts => {
+contract("Aspect -- unit", accounts => {
 
   beVMException = (msg) => beInstanceOf(Error).and(matchFields({
     "data": matchFields({

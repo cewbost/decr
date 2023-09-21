@@ -17,7 +17,7 @@ const {
   matchElements
 } = require("../matchers/matchers.js")
 
-contract("Aspect", accounts => {
+contract("Aspect -- integration", accounts => {
 
   beVMException = (msg) => beInstanceOf(Error).and(matchFields({
     "data": matchFields({
