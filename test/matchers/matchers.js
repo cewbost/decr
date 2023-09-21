@@ -7,6 +7,7 @@ const { contain       } = require("./contain.js")
 const { consistOf     } = require("./consist_of.js")
 const { beEmpty       } = require("./be_empty.js")
 const { matchElements } = require("./match_elements.js")
+const { beApprox      } = require("./be_approx.js")
 
 module.exports = {
   expect:        expect,
@@ -18,4 +19,5 @@ module.exports = {
   consistOf:     consistOf,
   beEmpty:       beEmpty,
   matchElements: matchElements,
+  beApprox:      beApprox,
 }

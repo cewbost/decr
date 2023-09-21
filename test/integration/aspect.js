@@ -1,5 +1,10 @@
 const Aspect = artifacts.require("Aspect")
 const { BigNumber } = require("bignumber.js")
+const { asEthWord, asEthBytes } = require("../utils/ethword.js")
+const { objectify } = require("../utils/objectify.js")
+const { day } = require("../utils/time.js")
+const { awaitException } = require("../utils/exception.js")
+const { split } = require("../utils/split.js")
 const {
   expect,
   equal,
@@ -11,11 +16,6 @@ const {
   beEmpty,
   matchElements
 } = require("../matchers/matchers.js")
-const { asEthWord, asEthBytes } = require("../utils/ethword.js")
-const { objectify } = require("../utils/objectify.js")
-const { day } = require("../utils/time.js")
-const { awaitException } = require("../utils/exception.js")
-const { split } = require("../utils/split.js")
 
 contract("Aspect", accounts => {
 
@@ -28,7 +28,6 @@ contract("Aspect", accounts => {
   let testAspect
 
   let unixTime = Math.floor(Date.now() / 1000)
-
   let fromOwner = { from: accounts[0] }
 
   beforeEach(async () => {

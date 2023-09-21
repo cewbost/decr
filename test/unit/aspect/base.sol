@@ -28,11 +28,11 @@ contract AspectTestBase is Aspect, ArrayTools {
       generation_ids.pop();
     }
     uint len = approvers.length;
-    approvers_mask = "";
-    for (uint n = 1; n <= len; n++) {
-      delete approvers_idx[approvers[len - n]];
+    for (uint n = len; n > 0; n--) {
+      delete approvers_idx[approvers[n - 1]];
       approvers.pop();
     }
+    approvers_mask = "";
   }
 
   function newActors(uint num) internal returns(AspectTestActor[] memory) {
