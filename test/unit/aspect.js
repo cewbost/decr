@@ -11,6 +11,7 @@ const {
   beApprox,
   beInstanceOf,
   beEmpty,
+  beNumber,
 } = require("../matchers/matchers.js")
 
 contract("AspectBare", accounts => {
@@ -23,25 +24,26 @@ contract("AspectBare", accounts => {
 
   let testAspect
 
-  let timeNow = () => Math.floor(Date.now() / 1000)
-  let unixTime = Math.floor(Date.now() / 1000)
+  let now
   let fromOwner = { from: accounts[0] }
 
   before(async () => {
     testAspect = await AspectBare.new("TestAspect")
+  })
+  beforeEach(() => {
+    now = Math.floor(Date.now() / 1000)
   })
   afterEach(async () => {
     await testAspect.clearBare()
   })
   describe("request", () => {
     beforeEach(async () => {
-      await testAspect.addGenerationBare(unixTime, unixTime + 10 * day, asEthWord(1))
-      await testAspect.addGenerationBare(unixTime, unixTime + 10 * day, asEthWord(2))
-      await testAspect.addGenerationBare(unixTime - 10 * day, unixTime - 5 * day, asEthWord(3))
-      await testAspect.addGenerationBare(unixTime + 5 * day, unixTime + 10 * day, asEthWord(4))
+      await testAspect.addGenerationBare(now, now + 10 * day, asEthWord(1))
+      await testAspect.addGenerationBare(now, now + 10 * day, asEthWord(2))
+      await testAspect.addGenerationBare(now - 10 * day, now - 5 * day, asEthWord(3))
+      await testAspect.addGenerationBare(now + 5 * day, now + 10 * day, asEthWord(4))
     })
     it("should store multiple distinct records", async () => {
-      let now = timeNow()
       let requestAndMatcher = async (account, gen, details, content) => {
         await testAspect.request(
           gen,
@@ -122,7 +124,6 @@ contract("AspectBare", accounts => {
       })).to(beVMException("Already exists."))
     })
     it("should not allow rerequesting granted aspect", async () => {
-      let now = timeNow()
       await testAspect.addRecordBare(
         accounts[1],
         asEthWord(1),
@@ -143,19 +144,17 @@ contract("AspectBare", accounts => {
   })
   describe("grant", () => {
 
-    let now
     let hash
 
     beforeEach(async () => {
-      now = timeNow()
-      await testAspect.addGenerationBare(unixTime - 10 * day, unixTime + 10 * day, asEthWord(1))
+      await testAspect.addGenerationBare(now - 10 * day, now + 10 * day, asEthWord(1))
       await testAspect.addApproversBare([
         accounts[2],
         accounts[3],
         accounts[4],
         accounts[5],
         accounts[6]
-      ])
+      ], [])
       await testAspect.addPendingRecordBare(
         accounts[1],
         asEthWord(1),
@@ -191,6 +190,45 @@ contract("AspectBare", accounts => {
       expect(await awaitException(() => {
         return testAspect.grant(asEthWord(1), fromOwner)
       })).to(beVMException("Pending record does not exist."))
+    })
+  })
+  describe("newGeneration", () => {
+    it("should add a new generation", async () => {
+      await testAspect.addApproversBare([
+        accounts[2],
+        accounts[3],
+        accounts[4],
+        accounts[5],
+        accounts[6]
+      ], [
+        accounts[2],
+        accounts[4],
+        accounts[6]
+      ])
+      await testAspect.newGeneration(asEthWord(1), now, now + 10 * day, fromOwner)
+      let gens = await testAspect.getGenerations(fromOwner)
+      expect(gens.map(objectify)).to(consistOf([matchFields({
+        "id":              asEthWord(1),
+        "begin_timestamp": beNumber(now),
+        "end_timestamp":   beNumber(now + 10 * day),
+        "approvers":       consistOf([accounts[2], accounts[4], accounts[6]]),
+      })]))
+    })
+    it("should not allow creating multiple generations with same id", async () => {
+      await testAspect.newGeneration(asEthWord(1), now, now + 10 * day, fromOwner)
+      expect(await awaitException(() => {
+        return testAspect.newGeneration(asEthWord(1), now, now + 10 * day, fromOwner)
+      })).to(beVMException("Already exists."))
+    })
+    it("should not allow creating generations with end timestamp before beginning", async () => {
+      expect(await awaitException(() => {
+        return testAspect.newGeneration(asEthWord(1), now + 10 * day, now, fromOwner)
+      })).to(beVMException("Ending must be before beginning."))
+    })
+    it("should only allow owner to create generations", async () => {
+      expect(await awaitException(() => {
+        return testAspect.newGeneration(asEthWord(1), now, now + 10 * day, { from: accounts[1]})
+      })).to(beVMException("Only owner can perform this action."))
     })
   })
 })

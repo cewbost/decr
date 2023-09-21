@@ -62,10 +62,13 @@ contract AspectBare is Aspect {
     addRecordImpl(pending_records, recipient, gen_id, timestamp, details, content, apprs);
   }
 
-  function addApproversBare(address[] calldata accs) external {
+  function addApproversBare(address[] calldata accs, address[] calldata enable) external {
     for (uint n = 0; n < accs.length; n++) {
       approvers.push(accs[n]);
       approvers_idx[accs[n]] = n + 1;
+      for (uint m = 0; m < enable.length; m++) {
+        if (accs[n] == enable[m]) approvers_mask.setBit(n);
+      }
     }
   }
 
