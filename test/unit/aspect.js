@@ -535,4 +535,21 @@ contract("Aspect -- unit", accounts => {
       })).to(beVMException("Generation is expired."))
     })
   })
+  describe("changeOwnership", () => {
+    it("should only allow owner to change owner", async () => {
+      expect(await awaitException(() => {
+        return testAspect.changeOwnership(accounts[2], { from: accounts[1] })
+      })).to(beVMException("Only owner can perform this action."))
+    })
+    it("should allow owner to change owner", async () => {
+      await testAspect.changeOwnership(accounts[1], { from: accounts[0] })
+      expect(await awaitException(() => {
+        return testAspect.changeOwnership(accounts[2], { from: accounts[0] })
+      })).to(beVMException("Only owner can perform this action."))
+      await testAspect.changeOwnership(accounts[2], { from: accounts[1] })
+      expect(await awaitException(() => {
+        return testAspect.changeOwnership(accounts[3], { from: accounts[1] })
+      })).to(beVMException("Only owner can perform this action."))
+    })
+  })
 })
