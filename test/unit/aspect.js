@@ -16,16 +16,17 @@ const {
 
 contract("Aspect -- unit", accounts => {
 
-  beVMException = (msg) => beInstanceOf(Error).and(matchFields({
-    "data": matchFields({
-      "reason": msg
-    }),
-  }))
 
   let testAspect
 
   let now
   let fromOwner = { from: accounts[0] }
+
+  beVMException = (msg) => beInstanceOf(Error).and(matchFields({
+    "data": matchFields({
+      "reason": msg
+    }),
+  }))
 
   before(async () => {
     testAspect = await AspectBare.new("TestAspect")
@@ -228,6 +229,87 @@ contract("Aspect -- unit", accounts => {
     it("should only allow owner to create generations", async () => {
       expect(await awaitException(() => {
         return testAspect.newGeneration(asEthWord(1), now, now + 10 * day, { from: accounts[1]})
+      })).to(beVMException("Only owner can perform this action."))
+    })
+  })
+  describe("clearGeneration", () => {
+    beforeEach(async () => {
+      await testAspect.addGenerationBare(now - 10 * day, now - 1 * day, asEthWord(1))
+      await testAspect.addGenerationBare(now - 10 * day, now - 1 * day, asEthWord(2))
+      await testAspect.addGenerationBare(now - 10 * day, now + 10 * day, asEthWord(3))
+      await testAspect.addPendingRecordBare(
+        accounts[1],
+        asEthWord(1),
+        now - 10 * day,
+        asEthBytes("details", 24),
+        asEthWord("content"),
+        []
+      )
+    })
+    it("should remove pending records from cleared generation", async () => {
+      let addPendingRecord = async (gen, details) => {
+        await testAspect.addPendingRecordBare(
+          accounts[1],
+          asEthWord(gen),
+          now - day,
+          asEthBytes(details, 24),
+          asEthWord(""),
+          []
+        )
+      }
+      let addRecord = async (gen, details) => {
+        await testAspect.addRecordBare(
+          accounts[1],
+          asEthWord(gen),
+          now - day,
+          asEthBytes(details, 24),
+          asEthWord(""),
+          []
+        )
+      }
+      let matchRecord = (gen, details) => matchFields({
+        "generation": asEthWord(gen),
+        "details":    asEthBytes(details, 24),
+      })
+
+      await addPendingRecord(1, "det 1")
+      await addPendingRecord(2, "det 2")
+      await addPendingRecord(1, "det 3")
+      await addPendingRecord(2, "det 4")
+      await addRecord(1, "det 5")
+      await addRecord(2, "det 6")
+      await addRecord(1, "det 7")
+      await addRecord(2, "det 8")
+
+      await testAspect.clearGeneration(asEthWord(1))
+
+      let resp = (await testAspect.getPendingRecordsByGeneration(asEthWord(1))).map(objectify)
+      expect(resp).to(beEmpty())
+      resp = (await testAspect.getRecordsByGeneration(asEthWord(1))).map(objectify)
+      expect(resp).to(consistOf([matchRecord(1, "det 5"), matchRecord(1, "det 7")]))
+      resp = (await testAspect.getPendingRecordsByRecipient(accounts[1])).map(objectify)
+      expect(resp).to(consistOf([matchRecord(2, "det 2"), matchRecord(2, "det 4")]))
+      resp = (await testAspect.getRecordsByRecipient(accounts[1])).map(objectify)
+      expect(resp).to(consistOf([
+        matchRecord(1, "det 5"),
+        matchRecord(2, "det 6"),
+        matchRecord(1, "det 7"),
+        matchRecord(2, "det 8"),
+      ]))
+    })
+    it("should only allow owner to clear generations", async () => {
+      expect(await awaitException(() => {
+        return testAspect.clearGeneration(asEthWord(1), {from: accounts[1]})
+      })).to(beVMException("Only owner can perform this action."))
+    })
+    it("should fail if generation doesn't exist", async () => {
+      expect(await awaitException(() => {
+        return testAspect.clearGeneration(asEthWord(4), {from: accounts[1]})
+      })).to(beVMException("Only owner can perform this action."))
+    })
+    it("should fail if generation hasn't expired", async () => {
+      expect(await awaitException(() => {
+        return testAspect.clearGeneration(asEthWord(3), {from: accounts[1]})
       })).to(beVMException("Only owner can perform this action."))
     })
   })
