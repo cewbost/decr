@@ -234,8 +234,8 @@ contract("Aspect -- unit", accounts => {
   })
   describe("clearGeneration", () => {
     beforeEach(async () => {
-      await testAspect.addGenerationBare(now - 10 * day, now - 1 * day, asEthWord(1))
-      await testAspect.addGenerationBare(now - 10 * day, now - 1 * day, asEthWord(2))
+      await testAspect.addGenerationBare(now - 10 * day, now - day, asEthWord(1))
+      await testAspect.addGenerationBare(now - 10 * day, now - day, asEthWord(2))
       await testAspect.addGenerationBare(now - 10 * day, now + 10 * day, asEthWord(3))
       await testAspect.addPendingRecordBare(
         accounts[1],
@@ -311,6 +311,94 @@ contract("Aspect -- unit", accounts => {
       expect(await awaitException(() => {
         return testAspect.clearGeneration(asEthWord(3), {from: accounts[1]})
       })).to(beVMException("Only owner can perform this action."))
+    })
+  })
+  describe("enableApprover", async () => {
+    it("should add approvers to approvers list and index", async () => {
+      await testAspect.addApproversBare(accounts.slice(1, 4), [accounts[3]])
+
+      await testAspect.enableApprover(accounts[2])
+      await testAspect.enableApprover(accounts[3])
+      await testAspect.enableApprover(accounts[4])
+
+      let resp = (await testAspect.getApprovers()).map(objectify)
+      expect(resp).to(consistOf([
+        matchFields({
+          "approver": accounts[1],
+          "enabled":  false,
+        }),
+        matchFields({
+          "approver": accounts[2],
+          "enabled":  true,
+        }),
+        matchFields({
+          "approver": accounts[3],
+          "enabled":  true,
+        }),
+        matchFields({
+          "approver": accounts[4],
+          "enabled":  true,
+        }),
+      ]))
+    })
+    it("should only allow owner to enable approvers", async () => {
+      expect(await awaitException(() => {
+        return testAspect.enableApprover(accounts[2], {from: accounts[1]})
+      })).to(beVMException("Only owner can perform this action."))
+    })
+  })
+  describe("enableApproverForGeneration", async () => {
+    beforeEach(async () => {
+      await testAspect.addGenerationBare(now, now + 10 * day, asEthWord(1))
+    })
+    it("should enable approvers for a generation", async () => {
+      await testAspect.addApproversBare(accounts.slice(1, 3), [])
+
+      await testAspect.enableApproverForGeneration(accounts[2], asEthWord(1))
+      await testAspect.enableApproverForGeneration(accounts[3], asEthWord(1))
+
+      let resp = (await testAspect.getApprovers()).map(objectify)
+      expect(resp).to(consistOf([
+        matchFields({
+          "approver": accounts[1],
+          "enabled":  false,
+        }),
+        matchFields({
+          "approver": accounts[2],
+          "enabled":  false,
+        }),
+        matchFields({
+          "approver": accounts[3],
+          "enabled":  false,
+        }),
+      ]))
+      resp = (await testAspect.getGenerations()).map(objectify)
+      expect(resp).to(consistOf([
+        matchFields({
+          "id":        asEthWord(1),
+          "approvers": consistOf(accounts.slice(2, 4)),
+        }),
+      ]))
+    })
+    it("should only allow owner to enable approvers for a generation", async () => {
+      expect(await awaitException(() => {
+        return testAspect.enableApproverForGeneration(
+          accounts[2],
+          asEthWord(1),
+          { from: accounts[1] }
+        )
+      })).to(beVMException("Only owner can perform this action."))
+    })
+    it("should fail if generation doesn't exist", async () => {
+      expect(await awaitException(() => {
+        return testAspect.enableApproverForGeneration(accounts[1], asEthWord(2))
+      })).to(beVMException("Generation does not exist."))
+    })
+    it("should only allow owner to enable approvers for a generation", async () => {
+      await testAspect.addGenerationBare(now - 10 * day, now - day, asEthWord(2))
+      expect(await awaitException(() => {
+        return testAspect.enableApproverForGeneration(accounts[1], asEthWord(2))
+      })).to(beVMException("Generation is expired."))
     })
   })
 })

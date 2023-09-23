@@ -36,6 +36,11 @@ library shared {
     address[] approvers;
   }
 
+  struct ApproverResponse {
+    address approver;
+    bool    enabled;
+  }
+
   function getBit(bytes storage bts, uint idx) public view returns(bool) {
     return bts.length > idx / 8? (bts[idx / 8] & toBit(idx % 8)) != 0 : false;
   }
