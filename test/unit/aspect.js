@@ -193,6 +193,58 @@ contract("Aspect -- unit", accounts => {
       })).to(beVMException("Pending record does not exist."))
     })
   })
+  describe("approve", () => {
+
+    let hash
+
+    beforeEach(async () => {
+      await testAspect.addGenerationBare(now, now + 10 * day, asEthWord(1))
+      await testAspect.addApproversBare(accounts.slice(2, 6), [accounts[3], accounts[5]])
+      await testAspect.setGenerationApproversBare(accounts.slice(4, 6), asEthWord(1))
+      await testAspect.addPendingRecordBare(
+        accounts[1],
+        asEthWord(1),
+        now - 10 * day,
+        asEthBytes("details 1", 24),
+        asEthWord("content 1"),
+        []
+      )
+      await testAspect.addRecordBare(
+        accounts[1],
+        asEthWord(1),
+        now - 10 * day,
+        asEthBytes("details 2", 24),
+        asEthWord("content 2"),
+        []
+      )
+      hash = (await testAspect.getPendingRecordsByRecipient(accounts[1]))[0].hash
+    })
+    it("should add approvals to the record", async () => {
+      await testAspect.approve(hash, { from: accounts[4] })
+      await testAspect.approve(hash, { from: accounts[5] })
+
+      let resp = (await testAspect.getPendingRecordsByGeneration(asEthWord(1))).map(objectify)
+      expect(resp.length).to(equal(1))
+      expect(resp[0]).to(matchFields({
+        "hash":      hash,
+        "approvers": consistOf(accounts.slice(4, 6)),
+      }))
+    })
+    it("should fail if record is not pending", async () => {
+      hash = (await testAspect.getRecordsByRecipient(accounts[1]))[0].hash
+      expect(await awaitException(() => {
+        return testAspect.approve(hash, { from: accounts[4] })
+      })).to(beVMException("Pending record does not exist."))
+    })
+    it("should fail if record sender is not approver", async () => {
+      expect(await awaitException(() => {
+        return testAspect.approve(hash, { from: accounts[2] })
+      })).to(beVMException("Only approver can perform this action."))
+      expect(await awaitException(() => {
+        return testAspect.approve(hash, { from: accounts[3] })
+      })).to(beVMException("Only approver can perform this action."))
+    })
+  })
   describe("newGeneration", () => {
     it("should add a new generation", async () => {
       await testAspect.addApproversBare([
@@ -398,6 +450,88 @@ contract("Aspect -- unit", accounts => {
       await testAspect.addGenerationBare(now - 10 * day, now - day, asEthWord(2))
       expect(await awaitException(() => {
         return testAspect.enableApproverForGeneration(accounts[1], asEthWord(2))
+      })).to(beVMException("Generation is expired."))
+    })
+  })
+  describe("disableApprover", () => {
+    it("should disable approvers", async () => {
+      await testAspect.addApproversBare(accounts.slice(1, 4), accounts.slice(1, 4))
+
+      await testAspect.disableApprover(accounts[2])
+
+      let resp = (await testAspect.getApprovers()).map(objectify)
+      expect(resp).to(consistOf([
+        matchFields({
+          "approver": accounts[1],
+          "enabled":  true,
+        }),
+        matchFields({
+          "approver": accounts[2],
+          "enabled":  false,
+        }),
+        matchFields({
+          "approver": accounts[3],
+          "enabled":  true,
+        }),
+      ]))
+    })
+    it("should only allow owner to disable approver", async () => {
+      expect(await awaitException(() => {
+        return testAspect.disableApprover(accounts[1], { from: accounts[1] })
+      })).to(beVMException("Only owner can perform this action."))
+    })
+  })
+  describe("disableApproverForGeneration", async () => {
+    beforeEach(async () => {
+      await testAspect.addGenerationBare(now, now + 10 * day, asEthWord(1))
+      await testAspect.addApproversBare(accounts.slice(1, 4), [])
+      await testAspect.setGenerationApproversBare(accounts.slice(1, 4), asEthWord(1))
+    })
+    it("should enable approvers for a generation", async () => {
+      await testAspect.disableApproverForGeneration(accounts[1], asEthWord(1))
+      await testAspect.disableApproverForGeneration(accounts[3], asEthWord(1))
+
+      let resp = (await testAspect.getApprovers()).map(objectify)
+      expect(resp).to(consistOf([
+        matchFields({
+          "approver": accounts[1],
+          "enabled":  false,
+        }),
+        matchFields({
+          "approver": accounts[2],
+          "enabled":  false,
+        }),
+        matchFields({
+          "approver": accounts[3],
+          "enabled":  false,
+        }),
+      ]))
+      resp = (await testAspect.getGenerations()).map(objectify)
+      expect(resp).to(consistOf([
+        matchFields({
+          "id":        asEthWord(1),
+          "approvers": consistOf([accounts[2]]),
+        }),
+      ]))
+    })
+    it("should only allow owner to disable approvers for a generation", async () => {
+      expect(await awaitException(() => {
+        return testAspect.disableApproverForGeneration(
+          accounts[2],
+          asEthWord(1),
+          { from: accounts[1] }
+        )
+      })).to(beVMException("Only owner can perform this action."))
+    })
+    it("should fail if generation doesn't exist", async () => {
+      expect(await awaitException(() => {
+        return testAspect.disableApproverForGeneration(accounts[1], asEthWord(2))
+      })).to(beVMException("Generation does not exist."))
+    })
+    it("should only allow owner to disable approvers for a generation", async () => {
+      await testAspect.addGenerationBare(now - 10 * day, now - day, asEthWord(2))
+      expect(await awaitException(() => {
+        return testAspect.disableApproverForGeneration(accounts[1], asEthWord(2))
       })).to(beVMException("Generation is expired."))
     })
   })

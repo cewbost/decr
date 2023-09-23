@@ -72,6 +72,13 @@ contract AspectBare is Aspect {
     }
   }
 
+  function setGenerationApproversBare(address[] calldata accs, bytes32 gen_id) external {
+    shared.Generation storage gen = generations[gen_id];
+    for (uint n = 0; n < accs.length; n++) {
+      gen.approvers_mask.setBit(approvers_idx[accs[n]] - 1);
+    }
+  }
+
   function addRecordImpl(
     mapping(bytes32 => shared.Record) storage  map,
     address                                    recipient,
