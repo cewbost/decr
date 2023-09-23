@@ -1,4 +1,4 @@
-const { Matcher } = require('./matcher.js');
+const { Matcher } = require('./matcher.js')
 
 class ContainMatcher extends Matcher {
   #value
@@ -9,7 +9,7 @@ class ContainMatcher extends Matcher {
   }
 
   match(obj) {
-    if(!obj.includes(this.#value)) {
+    if (!obj.includes(this.#value)) {
       return [
         ["expected", JSON.stringify(obj)],
         ["to contain", JSON.stringify(this.#value)],
@@ -17,10 +17,14 @@ class ContainMatcher extends Matcher {
     }
     return []
   }
+
+  description() {
+    return "contains " + this.#value
+  }
 }
 
 function contain(obj) {
-  return new ContainMatcher(obj);
+  return new ContainMatcher(obj)
 }
 
 module.exports = {

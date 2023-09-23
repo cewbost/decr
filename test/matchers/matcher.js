@@ -1,10 +1,14 @@
-const { AssertionFailed } = require('./error.js');
+const { AssertionFailed } = require('./error.js')
 
 let __andWrapper = null
 
 class Matcher {
   match(obj) {
-    throw new Error("match method not implemented");
+    throw new Error("match method not implemented")
+  }
+
+  description() {
+    return "base matcher"
   }
 
   and(other) {
@@ -22,9 +26,13 @@ class AndMatcher extends Matcher {
     this.#second = second
   }
 
+  description() {
+    return this.#first.description() + " and " + this.#second.description()
+  }
+
   match(obj) {
     let first = this.#first.match(obj)
-    if(first.length > 0) return first
+    if (first.length > 0) return first
     else return this.#second.match(obj)
   }
 }
