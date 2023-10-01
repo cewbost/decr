@@ -18,6 +18,11 @@ contract Aspect is Owned {
   mapping(address => uint)              approvers_idx;
   bytes                                 approvers_mask;
 
+  event AspectGranted (
+    bytes32 generation,
+    address recipient
+  );
+
   constructor(string memory n) {
     name = n;
   }
@@ -40,8 +45,10 @@ contract Aspect is Owned {
 
   function grant(bytes32 hash) external onlyOwner pendingRecord(hash) {
     records[hash] = pending_records[hash];
-    records[hash].timestamp = uint64(block.timestamp);
+    shared.Record storage record = records[hash];
+    record.timestamp = uint64(block.timestamp);
     delete pending_records[hash];
+    emit AspectGranted(record.generation, record.recipient);
   }
 
   function approve(bytes32 hash) external pendingRecord(hash) {

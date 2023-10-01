@@ -147,6 +147,14 @@ contract("Aspect -- unit", accounts => {
 
     let hash
 
+    let matchGrantEvent = (acc, gen) => matchFields({
+      "event": "AspectGranted",
+      "args": matchFields({
+        "recipient":  acc,
+        "generation": asEthWord(gen),
+      }),
+    })
+
     beforeEach(async () => {
       await testAspect.addGenerationBare(now - 10 * day, now + 10 * day, asEthWord(1))
       await testAspect.addApproversBare([
@@ -167,7 +175,9 @@ contract("Aspect -- unit", accounts => {
       hash = (await testAspect.getPendingRecordsByRecipient(accounts[1]))[0].hash
     })
     it("should move the record from pending to granted", async () => {
-      await testAspect.grant(hash, fromOwner)
+      expect((await testAspect.grant(hash, fromOwner)).logs).to(consistOf([
+        matchGrantEvent(accounts[1], 1)
+      ]))
 
       let match = consistOf([matchFields({
         "recipient":  accounts[1],

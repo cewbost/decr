@@ -216,6 +216,13 @@ contract("Aspect -- integration", accounts => {
   })
   describe("Requests", () => {
 
+    matchGrantEvent = (acc, gen) => matchFields({
+      "event": "AspectGranted",
+      "args": matchFields({
+        "recipient":  acc,
+        "generation": asEthWord(gen),
+      }),
+    })
     newGenerations = async (num) => {
       for (let n = 1; n <= num; n++)
         await testAspect.newGeneration(asEthWord(n), unixTime, unixTime + 30 * day, fromOwner)
@@ -247,8 +254,14 @@ contract("Aspect -- integration", accounts => {
 
       let st = new Set([asEthWord(`content 0`), asEthWord(`content 2`), asEthWord(`content 4`)])
       let sp = split(records, rec => st.has(rec.content))
-      for (let rec of sp[true]) await testAspect.grant(rec.hash)
+      let logs = []
+      for (let rec of sp[true]) logs.push(...(await testAspect.grant(rec.hash)).logs)
 
+      expect(logs).to(consistOf([
+        matchGrantEvent(accounts[1], 1),
+        matchGrantEvent(accounts[1], 1),
+        matchGrantEvent(accounts[1], 1),
+      ]))
       let matchPending = consistOf([matchRecord(1), matchRecord(3)])
       let matchGranted = consistOf([matchRecord(0), matchRecord(2), matchRecord(4)])
       expect((await testAspect.getPendingRecordsByGeneration(asEthWord(1))).map(objectify))
@@ -312,11 +325,31 @@ contract("Aspect -- integration", accounts => {
         matchAccWithGens(5, [1, 2, 3, 4, 5]),
       ]))
 
+      let logs = []
       for (let [idx, recs] of gensRecs.entries()) {
         let accs = new Set(accounts.slice(1, 1 + numAccounts - idx))
-        for (let rec of recs.filter(r => accs.has(r.recipient))) await testAspect.grant(rec.hash)
+        for (let rec of recs.filter(r => accs.has(r.recipient))) {
+          logs.push(...(await testAspect.grant(rec.hash)).logs)
+        }
       }
 
+      expect(logs).to(consistOf([
+        matchGrantEvent(accounts[1], 1),
+        matchGrantEvent(accounts[1], 2),
+        matchGrantEvent(accounts[1], 3),
+        matchGrantEvent(accounts[1], 4),
+        matchGrantEvent(accounts[1], 5),
+        matchGrantEvent(accounts[2], 1),
+        matchGrantEvent(accounts[2], 2),
+        matchGrantEvent(accounts[2], 3),
+        matchGrantEvent(accounts[2], 4),
+        matchGrantEvent(accounts[3], 1),
+        matchGrantEvent(accounts[3], 2),
+        matchGrantEvent(accounts[3], 3),
+        matchGrantEvent(accounts[4], 1),
+        matchGrantEvent(accounts[4], 2),
+        matchGrantEvent(accounts[5], 1),
+      ]))
       expect(await getPendingRecordsByGenerations()).to(matchElements([
         beEmpty(),
         matchGenWithAccs(2, [5]),
