@@ -10,7 +10,7 @@ contract Owned {
   }
 
   function authorized() public view {
-    require(msg.sender == owner, "Only owner can perform this action.");
+    require(msg.sender == owner, "Only owner can perform this action");
   }
 
   modifier onlyOwner {

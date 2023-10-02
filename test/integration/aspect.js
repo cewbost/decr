@@ -25,6 +25,14 @@ contract("Aspect -- integration", accounts => {
     }),
   }))
 
+  matchGrantEvent = (acc, gen) => matchFields({
+    "event": "AspectGranted",
+    "args": matchFields({
+      "recipient":  acc,
+      "generation": asEthWord(gen),
+    }),
+  })
+
   let testAspect
 
   let unixTime = Math.floor(Date.now() / 1000)
@@ -160,27 +168,27 @@ contract("Aspect -- integration", accounts => {
           unixTime + 30 * day,
           { from: accounts[0] }
         )
-      })).to(beVMException("Only owner can perform this action."))
+      })).to(beVMException("Only owner can perform this action"))
       expect(await awaitException(() => {
         return testAspect.enableApprover(accounts[4], { from: accounts[0] })
-      })).to(beVMException("Only owner can perform this action."))
+      })).to(beVMException("Only owner can perform this action"))
       expect(await awaitException(() => {
         return testAspect.enableApproverForGeneration(
           accounts[4],
           asEthWord(1),
           { from: accounts[0] }
         )
-      })).to(beVMException("Only owner can perform this action."))
+      })).to(beVMException("Only owner can perform this action"))
       expect(await awaitException(() => {
         return testAspect.disableApprover(accounts[3], { from: accounts[0] })
-      })).to(beVMException("Only owner can perform this action."))
+      })).to(beVMException("Only owner can perform this action"))
       expect(await awaitException(() => {
         return testAspect.disableApproverForGeneration(
           accounts[3],
           asEthWord(1),
           { from: accounts[0] }
         )
-      })).to(beVMException("Only owner can perform this action."))
+      })).to(beVMException("Only owner can perform this action"))
 
       await testAspect.changeOwnership(accounts[0], { from: accounts[1] })
 
@@ -195,7 +203,7 @@ contract("Aspect -- integration", accounts => {
 
       expect(await awaitException(() => {
         return testAspect.enableApprover(accounts[5], { from: accounts[1] })
-      })).to(beVMException("Only owner can perform this action."))
+      })).to(beVMException("Only owner can perform this action"))
 
       let resp = await testAspect.getGenerations({ from: accounts[0] })
       expect(resp.map(objectify)).to(consistOf([
@@ -216,13 +224,6 @@ contract("Aspect -- integration", accounts => {
   })
   describe("Requests", () => {
 
-    matchGrantEvent = (acc, gen) => matchFields({
-      "event": "AspectGranted",
-      "args": matchFields({
-        "recipient":  acc,
-        "generation": asEthWord(gen),
-      }),
-    })
     newGenerations = async (num) => {
       for (let n = 1; n <= num; n++)
         await testAspect.newGeneration(asEthWord(n), unixTime, unixTime + 30 * day, fromOwner)
@@ -266,12 +267,8 @@ contract("Aspect -- integration", accounts => {
       let matchGranted = consistOf([matchRecord(0), matchRecord(2), matchRecord(4)])
       expect((await testAspect.getPendingRecordsByGeneration(asEthWord(1))).map(objectify))
         .to(matchPending)
-      expect((await testAspect.getRecordsByGeneration(asEthWord(1))).map(objectify))
-        .to(matchGranted)
       expect((await testAspect.getPendingRecordsByRecipient(accounts[1])).map(objectify))
         .to(matchPending)
-      expect((await testAspect.getRecordsByRecipient(accounts[1])).map(objectify))
-        .to(matchGranted)
     })
     it("should allow granting requested aspects, multiple users and generations", async () => {
       const numGenerations = 5
@@ -302,12 +299,8 @@ contract("Aspect -- integration", accounts => {
       }
       let getPendingRecordsByGenerations = () =>
         getRecords(n => testAspect.getPendingRecordsByGeneration(asEthWord(n)), numGenerations)
-      let getRecordsByGenerations = () =>
-        getRecords(n => testAspect.getRecordsByGeneration(asEthWord(n)), numGenerations)
       let getPendingRecordsByRecipients = () =>
         getRecords(n => testAspect.getPendingRecordsByRecipient(accounts[n]), numGenerations)
-      let getRecordsByRecipients = () =>
-        getRecords(n => testAspect.getRecordsByRecipient(accounts[n]), numGenerations)
 
       let gensRecs = await getPendingRecordsByGenerations()
       expect(gensRecs).to(matchElements([
@@ -364,20 +357,6 @@ contract("Aspect -- integration", accounts => {
         matchAccWithGens(4, [3, 4, 5]),
         matchAccWithGens(5, [2, 3, 4, 5]),
       ]))
-      expect(await getRecordsByGenerations()).to(matchElements([
-        matchGenWithAccs(1, [1, 2, 3, 4, 5]),
-        matchGenWithAccs(2, [1, 2, 3, 4]),
-        matchGenWithAccs(3, [1, 2, 3]),
-        matchGenWithAccs(4, [1, 2]),
-        matchGenWithAccs(5, [1]),
-      ]))
-      expect(await getRecordsByRecipients()).to(matchElements([
-        matchAccWithGens(1, [1, 2, 3, 4, 5]),
-        matchAccWithGens(2, [1, 2, 3, 4]),
-        matchAccWithGens(3, [1, 2, 3]),
-        matchAccWithGens(4, [1, 2]),
-        matchAccWithGens(5, [1]),
-      ]))
     })
     it("should not allow non-owners to grant requests", async () => {
       await testAspect.enableApprover(accounts[1], fromOwner)
@@ -399,7 +378,7 @@ contract("Aspect -- integration", accounts => {
       for (let acc of accounts.slice(1, 4)) {
         expect(await awaitException(() => {
           return testAspect.grant(hash, { from: acc })
-        })).to(beVMException("Only owner can perform this action."))
+        })).to(beVMException("Only owner can perform this action"))
       }
     })
     it("should not allow requesting from inactive generations", async () => {
@@ -416,7 +395,7 @@ contract("Aspect -- integration", accounts => {
           asEthWord("content"),
           { from: accounts[1] }
         )
-      })).to(beVMException("Generation inactive."))
+      })).to(beVMException("Generation inactive"))
       expect(await testAspect.getPendingRecordsByGeneration(asEthWord(1))).to(beEmpty())
     })
   })
@@ -464,22 +443,12 @@ contract("Aspect -- integration", accounts => {
         }),
       ]))
 
-      for (let hash of hashes) await testAspect.grant(hash, fromOwner)
-
-      recs = (await testAspect.getRecordsByGeneration(asEthWord(1))).map(objectify)
-      expect(recs).to(consistOf([
-        matchFields({
-          "hash":      hashes[0],
-          "approvers": consistOf(approvers.slice(0, 1)),
-        }),
-        matchFields({
-          "hash":      hashes[1],
-          "approvers": consistOf(approvers.slice(0, 2)),
-        }),
-        matchFields({
-          "hash":      hashes[2],
-          "approvers": consistOf(approvers.slice(0, 3)),
-        }),
+      let logs = []
+      for (let hash of hashes) logs.push(...(await testAspect.grant(hash)).logs)
+      expect(logs).to(consistOf([
+        matchGrantEvent(accounts[4], 1),
+        matchGrantEvent(accounts[5], 1),
+        matchGrantEvent(accounts[6], 1),
       ]))
     })
     it("should not allow approval from non-approver", async () => {
@@ -494,7 +463,7 @@ contract("Aspect -- integration", accounts => {
 
       expect(await awaitException(() => {
         return testAspect.approve(hash, { from: accounts[4] })
-      })).to(beVMException("Only approver can perform this action."))
+      })).to(beVMException("Only approver can perform this action"))
     })
     it("should not allow approving already granted request", async () => {
       await testAspect.request(
@@ -505,11 +474,13 @@ contract("Aspect -- integration", accounts => {
       )
       let hash = (await testAspect.getPendingRecordsByGeneration(asEthWord(1)))
         .map(objectify)[0].hash
-      await testAspect.grant(hash, fromOwner)
+      expect((await testAspect.grant(hash, fromOwner)).logs).to(consistOf([
+        matchGrantEvent(accounts[4], 1)
+      ]))
 
       expect(await awaitException(() => {
         return testAspect.approve(hash, { from: accounts[1] })
-      })).to(beVMException("Pending record does not exist."))
+      })).to(beVMException("Pending record does not exist"))
     })
   })
 })

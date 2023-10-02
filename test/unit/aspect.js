@@ -86,7 +86,7 @@ contract("Aspect -- unit", accounts => {
           asEthWord("content"),
           { from: accounts[1] }
         )
-      })).to(beVMException("Generation does not exist."))
+      })).to(beVMException("Generation does not exist"))
     })
     it("should not allow requesting from inactive generation", async () => {
       expect(await awaitException(() => {
@@ -96,7 +96,7 @@ contract("Aspect -- unit", accounts => {
           asEthWord("content"),
           { from: accounts[1] }
         )
-      })).to(beVMException("Generation inactive."))
+      })).to(beVMException("Generation inactive"))
     })
     it("should not allow requesting from expired generation", async () => {
       expect(await awaitException(() => {
@@ -106,7 +106,7 @@ contract("Aspect -- unit", accounts => {
           asEthWord("content"),
           { from: accounts[1] }
         )
-      })).to(beVMException("Generation inactive."))
+      })).to(beVMException("Generation inactive"))
     })
     it("should not allow rerequesting aspect", async () => {
       await testAspect.request(
@@ -122,25 +122,7 @@ contract("Aspect -- unit", accounts => {
           asEthWord("content"),
           { from: accounts[1] }
         )
-      })).to(beVMException("Already exists."))
-    })
-    it("should not allow rerequesting granted aspect", async () => {
-      await testAspect.addRecordBare(
-        accounts[1],
-        asEthWord(1),
-        day,
-        asEthBytes("details", 24),
-        asEthWord("content"),
-        []
-      )
-      expect(await awaitException(() => {
-        return testAspect.request(
-          asEthWord(1),
-          asEthBytes("details", 24),
-          asEthWord("content"),
-          { from: accounts[1] }
-        )
-      })).to(beVMException("Already exists."))
+      })).to(beVMException("Already exists"))
     })
   })
   describe("grant", () => {
@@ -174,7 +156,7 @@ contract("Aspect -- unit", accounts => {
       )
       hash = (await testAspect.getPendingRecordsByRecipient(accounts[1]))[0].hash
     })
-    it("should move the record from pending to granted", async () => {
+    it("should emit grant event and remove the record from pending", async () => {
       expect((await testAspect.grant(hash, fromOwner)).logs).to(consistOf([
         matchGrantEvent(accounts[1], 1)
       ]))
@@ -187,20 +169,18 @@ contract("Aspect -- unit", accounts => {
         "approvers":  consistOf([accounts[2], accounts[4], accounts[6]]),
         "timestamp":  beApprox(now, 5),
       })])
-      expect((await testAspect.getRecordsByRecipient(accounts[1])).map(objectify)).to(match)
-      expect((await testAspect.getRecordsByGeneration(asEthWord(1))).map(objectify)).to(match)
       expect(await testAspect.getPendingRecordsByRecipient(accounts[1])).to(beEmpty())
       expect(await testAspect.getPendingRecordsByGeneration(asEthWord(1))).to(beEmpty())
     })
     it("should only allow owner to grant", async () => {
       expect(await awaitException(() => {
         return testAspect.grant(hash, { from: accounts[1] })
-      })).to(beVMException("Only owner can perform this action."))
+      })).to(beVMException("Only owner can perform this action"))
     })
     it("should only allow owner to grant", async () => {
       expect(await awaitException(() => {
         return testAspect.grant(asEthWord(1), fromOwner)
-      })).to(beVMException("Pending record does not exist."))
+      })).to(beVMException("Pending record does not exist"))
     })
   })
   describe("approve", () => {
@@ -219,14 +199,6 @@ contract("Aspect -- unit", accounts => {
         asEthWord("content 1"),
         []
       )
-      await testAspect.addRecordBare(
-        accounts[1],
-        asEthWord(1),
-        now - 10 * day,
-        asEthBytes("details 2", 24),
-        asEthWord("content 2"),
-        []
-      )
       hash = (await testAspect.getPendingRecordsByRecipient(accounts[1]))[0].hash
     })
     it("should add approvals to the record", async () => {
@@ -240,19 +212,13 @@ contract("Aspect -- unit", accounts => {
         "approvers": consistOf(accounts.slice(4, 6)),
       }))
     })
-    it("should fail if record is not pending", async () => {
-      hash = (await testAspect.getRecordsByRecipient(accounts[1]))[0].hash
-      expect(await awaitException(() => {
-        return testAspect.approve(hash, { from: accounts[4] })
-      })).to(beVMException("Pending record does not exist."))
-    })
     it("should fail if record sender is not approver", async () => {
       expect(await awaitException(() => {
         return testAspect.approve(hash, { from: accounts[2] })
-      })).to(beVMException("Only approver can perform this action."))
+      })).to(beVMException("Only approver can perform this action"))
       expect(await awaitException(() => {
         return testAspect.approve(hash, { from: accounts[3] })
-      })).to(beVMException("Only approver can perform this action."))
+      })).to(beVMException("Only approver can perform this action"))
     })
   })
   describe("newGeneration", () => {
@@ -281,17 +247,17 @@ contract("Aspect -- unit", accounts => {
       await testAspect.newGeneration(asEthWord(1), now, now + 10 * day, fromOwner)
       expect(await awaitException(() => {
         return testAspect.newGeneration(asEthWord(1), now, now + 10 * day, fromOwner)
-      })).to(beVMException("Already exists."))
+      })).to(beVMException("Already exists"))
     })
     it("should not allow creating generations with end timestamp before beginning", async () => {
       expect(await awaitException(() => {
         return testAspect.newGeneration(asEthWord(1), now + 10 * day, now, fromOwner)
-      })).to(beVMException("Ending must be before beginning."))
+      })).to(beVMException("Ending must be before beginning"))
     })
     it("should only allow owner to create generations", async () => {
       expect(await awaitException(() => {
         return testAspect.newGeneration(asEthWord(1), now, now + 10 * day, { from: accounts[1]})
-      })).to(beVMException("Only owner can perform this action."))
+      })).to(beVMException("Only owner can perform this action"))
     })
   })
   describe("clearGeneration", () => {
@@ -319,16 +285,6 @@ contract("Aspect -- unit", accounts => {
           []
         )
       }
-      let addRecord = async (gen, details) => {
-        await testAspect.addRecordBare(
-          accounts[1],
-          asEthWord(gen),
-          now - day,
-          asEthBytes(details, 24),
-          asEthWord(""),
-          []
-        )
-      }
       let matchRecord = (gen, details) => matchFields({
         "generation": asEthWord(gen),
         "details":    asEthBytes(details, 24),
@@ -338,41 +294,28 @@ contract("Aspect -- unit", accounts => {
       await addPendingRecord(2, "det 2")
       await addPendingRecord(1, "det 3")
       await addPendingRecord(2, "det 4")
-      await addRecord(1, "det 5")
-      await addRecord(2, "det 6")
-      await addRecord(1, "det 7")
-      await addRecord(2, "det 8")
 
       await testAspect.clearGeneration(asEthWord(1))
 
       let resp = (await testAspect.getPendingRecordsByGeneration(asEthWord(1))).map(objectify)
       expect(resp).to(beEmpty())
-      resp = (await testAspect.getRecordsByGeneration(asEthWord(1))).map(objectify)
-      expect(resp).to(consistOf([matchRecord(1, "det 5"), matchRecord(1, "det 7")]))
       resp = (await testAspect.getPendingRecordsByRecipient(accounts[1])).map(objectify)
       expect(resp).to(consistOf([matchRecord(2, "det 2"), matchRecord(2, "det 4")]))
-      resp = (await testAspect.getRecordsByRecipient(accounts[1])).map(objectify)
-      expect(resp).to(consistOf([
-        matchRecord(1, "det 5"),
-        matchRecord(2, "det 6"),
-        matchRecord(1, "det 7"),
-        matchRecord(2, "det 8"),
-      ]))
     })
     it("should only allow owner to clear generations", async () => {
       expect(await awaitException(() => {
         return testAspect.clearGeneration(asEthWord(1), {from: accounts[1]})
-      })).to(beVMException("Only owner can perform this action."))
+      })).to(beVMException("Only owner can perform this action"))
     })
     it("should fail if generation doesn't exist", async () => {
       expect(await awaitException(() => {
         return testAspect.clearGeneration(asEthWord(4), {from: accounts[1]})
-      })).to(beVMException("Only owner can perform this action."))
+      })).to(beVMException("Only owner can perform this action"))
     })
     it("should fail if generation hasn't expired", async () => {
       expect(await awaitException(() => {
         return testAspect.clearGeneration(asEthWord(3), {from: accounts[1]})
-      })).to(beVMException("Only owner can perform this action."))
+      })).to(beVMException("Only owner can perform this action"))
     })
   })
   describe("enableApprover", async () => {
@@ -406,7 +349,7 @@ contract("Aspect -- unit", accounts => {
     it("should only allow owner to enable approvers", async () => {
       expect(await awaitException(() => {
         return testAspect.enableApprover(accounts[2], {from: accounts[1]})
-      })).to(beVMException("Only owner can perform this action."))
+      })).to(beVMException("Only owner can perform this action"))
     })
   })
   describe("enableApproverForGeneration", async () => {
@@ -449,18 +392,18 @@ contract("Aspect -- unit", accounts => {
           asEthWord(1),
           { from: accounts[1] }
         )
-      })).to(beVMException("Only owner can perform this action."))
+      })).to(beVMException("Only owner can perform this action"))
     })
     it("should fail if generation doesn't exist", async () => {
       expect(await awaitException(() => {
         return testAspect.enableApproverForGeneration(accounts[1], asEthWord(2))
-      })).to(beVMException("Generation does not exist."))
+      })).to(beVMException("Generation does not exist"))
     })
     it("should only allow owner to enable approvers for a generation", async () => {
       await testAspect.addGenerationBare(now - 10 * day, now - day, asEthWord(2))
       expect(await awaitException(() => {
         return testAspect.enableApproverForGeneration(accounts[1], asEthWord(2))
-      })).to(beVMException("Generation is expired."))
+      })).to(beVMException("Generation is expired"))
     })
   })
   describe("disableApprover", () => {
@@ -488,7 +431,7 @@ contract("Aspect -- unit", accounts => {
     it("should only allow owner to disable approver", async () => {
       expect(await awaitException(() => {
         return testAspect.disableApprover(accounts[1], { from: accounts[1] })
-      })).to(beVMException("Only owner can perform this action."))
+      })).to(beVMException("Only owner can perform this action"))
     })
   })
   describe("disableApproverForGeneration", async () => {
@@ -531,35 +474,35 @@ contract("Aspect -- unit", accounts => {
           asEthWord(1),
           { from: accounts[1] }
         )
-      })).to(beVMException("Only owner can perform this action."))
+      })).to(beVMException("Only owner can perform this action"))
     })
     it("should fail if generation doesn't exist", async () => {
       expect(await awaitException(() => {
         return testAspect.disableApproverForGeneration(accounts[1], asEthWord(2))
-      })).to(beVMException("Generation does not exist."))
+      })).to(beVMException("Generation does not exist"))
     })
     it("should only allow owner to disable approvers for a generation", async () => {
       await testAspect.addGenerationBare(now - 10 * day, now - day, asEthWord(2))
       expect(await awaitException(() => {
         return testAspect.disableApproverForGeneration(accounts[1], asEthWord(2))
-      })).to(beVMException("Generation is expired."))
+      })).to(beVMException("Generation is expired"))
     })
   })
   describe("changeOwnership", () => {
     it("should only allow owner to change owner", async () => {
       expect(await awaitException(() => {
         return testAspect.changeOwnership(accounts[2], { from: accounts[1] })
-      })).to(beVMException("Only owner can perform this action."))
+      })).to(beVMException("Only owner can perform this action"))
     })
     it("should allow owner to change owner", async () => {
       await testAspect.changeOwnership(accounts[1], { from: accounts[0] })
       expect(await awaitException(() => {
         return testAspect.changeOwnership(accounts[2], { from: accounts[0] })
-      })).to(beVMException("Only owner can perform this action."))
+      })).to(beVMException("Only owner can perform this action"))
       await testAspect.changeOwnership(accounts[2], { from: accounts[1] })
       expect(await awaitException(() => {
         return testAspect.changeOwnership(accounts[3], { from: accounts[1] })
-      })).to(beVMException("Only owner can perform this action."))
+      })).to(beVMException("Only owner can perform this action"))
     })
   })
 })
