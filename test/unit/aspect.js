@@ -177,10 +177,33 @@ contract("Aspect -- unit", accounts => {
         return testAspect.grant(hash, { from: accounts[1] })
       })).to(beVMException("Only owner can perform this action"))
     })
-    it("should only allow owner to grant", async () => {
+    it("should not allow granting aspect more than once", async () => {
+      await testAspect.grant(hash, fromOwner)
+
+      expect(await awaitException(() => {
+        return testAspect.grant(hash, fromOwner)
+      })).to(beVMException("Record not pending"))
+    })
+    it("should fail if record doesn't exist", async () => {
       expect(await awaitException(() => {
         return testAspect.grant(asEthWord(1), fromOwner)
-      })).to(beVMException("Pending record does not exist"))
+      })).to(beVMException("Record does not exist"))
+    })
+    it("should not allow granting after generation is expired", async () => {
+      await testAspect.addGenerationBare(now - 20 * day, now - 10 * day, asEthWord(2))
+      await testAspect.addPendingRecordBare(
+        accounts[1],
+        asEthWord(2),
+        now - 15 * day,
+        asEthBytes("details", 24),
+        asEthWord("content"),
+        []
+      )
+      hash = (await testAspect.getPendingRecordsByGeneration(asEthWord(2)))[0].hash
+
+      expect(await awaitException(() => {
+        return testAspect.grant(hash, fromOwner)
+      })).to(beVMException("Generation inactive"))
     })
   })
   describe("approve", () => {
@@ -219,6 +242,29 @@ contract("Aspect -- unit", accounts => {
       expect(await awaitException(() => {
         return testAspect.approve(hash, { from: accounts[3] })
       })).to(beVMException("Only approver can perform this action"))
+    })
+    it("should fail if record does not exist", async () => {
+      expect(await awaitException(() => {
+        return testAspect.approve(asEthWord(1), { from: accounts[4] })
+      })).to(beVMException("Record does not exist"))
+    })
+    it("should not allow approving after generation is expired", async () => {
+      await testAspect.addGenerationBare(now - 20 * day, now - 10 * day, asEthWord(2))
+      await testAspect.addApproversBare([accounts[2]], [])
+      await testAspect.setGenerationApproversBare([accounts[2]], asEthWord(2))
+      await testAspect.addPendingRecordBare(
+        accounts[1],
+        asEthWord(2),
+        now - 15 * day,
+        asEthBytes("details 1", 24),
+        asEthWord("content 1"),
+        []
+      )
+      hash = (await testAspect.getPendingRecordsByGeneration(asEthWord(2)))[0].hash
+
+      expect(await awaitException(() => {
+        return testAspect.approve(hash, { from: accounts[2] })
+      })).to(beVMException("Generation inactive"))
     })
   })
   describe("newGeneration", () => {

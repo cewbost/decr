@@ -216,29 +216,40 @@ contract Aspect is Owned {
   }
 
   modifier pendingRecord(bytes32 hash) {
-    require(pending_records[hash].timestamp != 0, "Pending record does not exist");
+    require(record_hashes[hash], "Record does not exist");
+    shared.Record storage record = pending_records[hash];
+    require(record.timestamp != 0, "Record not pending");
+    shared.Generation storage generation = generations[record.generation];
+    require(
+      generation.begin_timestamp <= block.timestamp &&
+      generation.end_timestamp > block.timestamp,
+      "Generation inactive"
+    );
     _;
   }
 
   modifier activeGeneration(bytes32 id) {
-    require(generations[id].end_timestamp != 0, "Generation does not exist");
+    shared.Generation storage generation = generations[id];
+    require(generation.end_timestamp != 0, "Generation does not exist");
     require(
-      generations[id].begin_timestamp <= block.timestamp &&
-      generations[id].end_timestamp > block.timestamp,
+      generation.begin_timestamp <= block.timestamp &&
+      generation.end_timestamp > block.timestamp,
       "Generation inactive"
     );
     _;
   }
 
   modifier expiredGeneration(bytes32 id) {
-    require(generations[id].end_timestamp != 0, "Generation does not exist");
-    require(generations[id].end_timestamp < block.timestamp, "Generation must be expired");
+    shared.Generation storage generation = generations[id];
+    require(generation.end_timestamp != 0, "Generation does not exist");
+    require(generation.end_timestamp < block.timestamp, "Generation must be expired");
     _;
   }
 
   modifier notExpiredGeneration(bytes32 id) {
-    require(generations[id].end_timestamp != 0, "Generation does not exist");
-    require(generations[id].end_timestamp > block.timestamp, "Generation is expired");
+    shared.Generation storage generation = generations[id];
+    require(generation.end_timestamp != 0, "Generation does not exist");
+    require(generation.end_timestamp > block.timestamp, "Generation is expired");
     _;
   }
 

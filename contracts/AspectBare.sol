@@ -84,6 +84,7 @@ contract AspectBare is Aspect {
       approvers:  ""
     });
     bytes32 hash = hashRecord(rec);
+    record_hashes[hash] = true;
     pending_records[hash] = rec;
     bytes storage bts = pending_records[hash].approvers;
     for (uint n = 0; n < apprs.length; n++) {

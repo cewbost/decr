@@ -381,22 +381,31 @@ contract("Aspect -- integration", accounts => {
         })).to(beVMException("Only owner can perform this action"))
       }
     })
-    it("should not allow requesting from inactive generations", async () => {
+    it("should not allow approving resubmitting already granted request", async () => {
       await testAspect.newGeneration(
         asEthWord(1),
-        unixTime + 15 * day,
+        unixTime,
         unixTime + 30 * day,
         fromOwner
       )
+      await testAspect.request(
+        asEthWord(1),
+        asEthBytes("details", 24),
+        asEthWord("content"),
+        { from: accounts[2] }
+      )
+      let hash = (await testAspect.getPendingRecordsByGeneration(asEthWord(1)))
+        .map(objectify)[0].hash
+      await testAspect.grant(hash, fromOwner)
+
       expect(await awaitException(() => {
         return testAspect.request(
           asEthWord(1),
           asEthBytes("details", 24),
           asEthWord("content"),
-          { from: accounts[1] }
+          { from: accounts[2] }
         )
-      })).to(beVMException("Generation inactive"))
-      expect(await testAspect.getPendingRecordsByGeneration(asEthWord(1))).to(beEmpty())
+      })).to(beVMException("Already exists"))
     })
   })
   describe("Approvers", () => {
@@ -451,20 +460,6 @@ contract("Aspect -- integration", accounts => {
         matchGrantEvent(accounts[6], 1),
       ]))
     })
-    it("should not allow approval from non-approver", async () => {
-      await testAspect.request(
-        asEthWord(1),
-        asEthBytes("details", 24),
-        asEthWord("content"),
-        { from: accounts[1] }
-      )
-      let hash = (await testAspect.getPendingRecordsByGeneration(asEthWord(1)))
-        .map(objectify)[0].hash
-
-      expect(await awaitException(() => {
-        return testAspect.approve(hash, { from: accounts[4] })
-      })).to(beVMException("Only approver can perform this action"))
-    })
     it("should not allow approving already granted request", async () => {
       await testAspect.request(
         asEthWord(1),
@@ -480,7 +475,7 @@ contract("Aspect -- integration", accounts => {
 
       expect(await awaitException(() => {
         return testAspect.approve(hash, { from: accounts[1] })
-      })).to(beVMException("Pending record does not exist"))
+      })).to(beVMException("Record not pending"))
     })
   })
 })
