@@ -18,8 +18,7 @@ contract AspectBare is Aspect {
       uint              recs   = hashes.length;
       for (uint n = 0; n < recs; n++) {
         bytes32 hash = hashes[n];
-        delete records_by_recipient[records[hash].recipient];
-        delete records[hash];
+        delete records_by_recipient[pending_records[hash].recipient];
         delete pending_records[hash];
       }
       delete generations[gen_id];
@@ -40,17 +39,6 @@ contract AspectBare is Aspect {
     generation_ids.push(id);
   }
 
-  function addRecordBare(
-    address            recipient,
-    bytes32            gen_id,
-    uint64             timestamp,
-    bytes24            details,
-    bytes32            content,
-    address[] calldata apprs
-  ) external {
-    addRecordImpl(records, recipient, gen_id, timestamp, details, content, apprs);
-  }
-
   function addPendingRecordBare(
     address            recipient,
     bytes32            gen_id,
@@ -59,7 +47,7 @@ contract AspectBare is Aspect {
     bytes32            content,
     address[] calldata apprs
   ) external {
-    addRecordImpl(pending_records, recipient, gen_id, timestamp, details, content, apprs);
+    addRecordImpl(recipient, gen_id, timestamp, details, content, apprs);
   }
 
   function addApproversBare(address[] calldata accs, address[] calldata enable) external {
@@ -80,13 +68,12 @@ contract AspectBare is Aspect {
   }
 
   function addRecordImpl(
-    mapping(bytes32 => shared.Record) storage  map,
-    address                                    recipient,
-    bytes32                                    gen_id,
-    uint64                                     timestamp,
-    bytes24                                    details,
-    bytes32                                    content,
-    address[]                         calldata apprs
+    address            recipient,
+    bytes32            gen_id,
+    uint64             timestamp,
+    bytes24            details,
+    bytes32            content,
+    address[] calldata apprs
   ) internal {
     shared.Record memory rec = shared.Record({
       recipient:  recipient,
@@ -97,8 +84,9 @@ contract AspectBare is Aspect {
       approvers:  ""
     });
     bytes32 hash = hashRecord(rec);
-    map[hash] = rec;
-    bytes storage bts = map[hash].approvers;
+    record_hashes[hash] = true;
+    pending_records[hash] = rec;
+    bytes storage bts = pending_records[hash].approvers;
     for (uint n = 0; n < apprs.length; n++) {
       for (uint m = 0; m < approvers.length; m++) {
         if (approvers[m] == apprs[n]) {
