@@ -1,7 +1,7 @@
 const AspectBare = artifacts.require("AspectBare")
 const { day } = require("../utils/time.js")
 const { asEthWord, asEthBytes } = require("../utils/ethword.js")
-const { objectify } = require("../utils/objectify.js")
+const { objectify } = require("../utils/containers.js")
 const { awaitException } = require("../utils/exception.js")
 const {
   expect,
@@ -129,14 +129,6 @@ contract("Aspect -- unit", accounts => {
 
     let hash
 
-    let matchGrantEvent = (acc, gen) => matchFields({
-      "event": "AspectGranted",
-      "args": matchFields({
-        "recipient":  acc,
-        "generation": asEthWord(gen),
-      }),
-    })
-
     beforeEach(async () => {
       await testAspect.addGenerationBare(now - 10 * day, now + 10 * day, asEthWord(1))
       await testAspect.addApproversBare([
@@ -158,7 +150,16 @@ contract("Aspect -- unit", accounts => {
     })
     it("should emit grant event and remove the record from pending", async () => {
       expect((await testAspect.grant(hash, fromOwner)).logs).to(consistOf([
-        matchGrantEvent(accounts[1], 1)
+        matchFields({
+          "event": "AspectGranted",
+          "args": matchFields({
+            "recipient":  accounts[1],
+            "generation": asEthWord(1),
+            "details":    asEthBytes("details", 24),
+            "content":    asEthWord("content"),
+            "approvers":  "0x15",
+          }),
+        })
       ]))
 
       let match = consistOf([matchFields({

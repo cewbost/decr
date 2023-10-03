@@ -1,10 +1,9 @@
 const Aspect = artifacts.require("Aspect")
 const { BigNumber } = require("bignumber.js")
 const { asEthWord, asEthBytes } = require("../utils/ethword.js")
-const { objectify } = require("../utils/objectify.js")
+const { objectify, split } = require("../utils/containers.js")
 const { day } = require("../utils/time.js")
 const { awaitException } = require("../utils/exception.js")
-const { split } = require("../utils/split.js")
 const {
   expect,
   equal,
@@ -25,11 +24,14 @@ contract("Aspect -- integration", accounts => {
     }),
   }))
 
-  matchGrantEvent = (acc, gen) => matchFields({
+  matchGrantEvent = (acc, gen, details, content, approvers) => matchFields({
     "event": "AspectGranted",
     "args": matchFields({
       "recipient":  acc,
       "generation": asEthWord(gen),
+      "details":    asEthBytes(details, 24),
+      "content":    asEthWord(content),
+      "approvers":  approvers,
     }),
   })
 
@@ -259,12 +261,11 @@ contract("Aspect -- integration", accounts => {
       for (let rec of sp[true]) logs.push(...(await testAspect.grant(rec.hash)).logs)
 
       expect(logs).to(consistOf([
-        matchGrantEvent(accounts[1], 1),
-        matchGrantEvent(accounts[1], 1),
-        matchGrantEvent(accounts[1], 1),
+        matchGrantEvent(accounts[1], 1, "details 0", "content 0"),
+        matchGrantEvent(accounts[1], 1, "details 2", "content 2"),
+        matchGrantEvent(accounts[1], 1, "details 4", "content 4"),
       ]))
       let matchPending = consistOf([matchRecord(1), matchRecord(3)])
-      let matchGranted = consistOf([matchRecord(0), matchRecord(2), matchRecord(4)])
       expect((await testAspect.getPendingRecordsByGeneration(asEthWord(1))).map(objectify))
         .to(matchPending)
       expect((await testAspect.getPendingRecordsByRecipient(accounts[1])).map(objectify))
@@ -326,22 +327,15 @@ contract("Aspect -- integration", accounts => {
         }
       }
 
+      let matchGrantEvents = (account, gens) =>
+        gens.map(gen => matchGrantEvent(account, gen, "details", "content"))
+
       expect(logs).to(consistOf([
-        matchGrantEvent(accounts[1], 1),
-        matchGrantEvent(accounts[1], 2),
-        matchGrantEvent(accounts[1], 3),
-        matchGrantEvent(accounts[1], 4),
-        matchGrantEvent(accounts[1], 5),
-        matchGrantEvent(accounts[2], 1),
-        matchGrantEvent(accounts[2], 2),
-        matchGrantEvent(accounts[2], 3),
-        matchGrantEvent(accounts[2], 4),
-        matchGrantEvent(accounts[3], 1),
-        matchGrantEvent(accounts[3], 2),
-        matchGrantEvent(accounts[3], 3),
-        matchGrantEvent(accounts[4], 1),
-        matchGrantEvent(accounts[4], 2),
-        matchGrantEvent(accounts[5], 1),
+        ...matchGrantEvents(accounts[1], [1, 2, 3, 4, 5]),
+        ...matchGrantEvents(accounts[2], [1, 2, 3, 4]),
+        ...matchGrantEvents(accounts[3], [1, 2, 3]),
+        ...matchGrantEvents(accounts[4], [1, 2]),
+        ...matchGrantEvents(accounts[5], [1]),
       ]))
       expect(await getPendingRecordsByGenerations()).to(matchElements([
         beEmpty(),
@@ -455,9 +449,9 @@ contract("Aspect -- integration", accounts => {
       let logs = []
       for (let hash of hashes) logs.push(...(await testAspect.grant(hash)).logs)
       expect(logs).to(consistOf([
-        matchGrantEvent(accounts[4], 1),
-        matchGrantEvent(accounts[5], 1),
-        matchGrantEvent(accounts[6], 1),
+        matchGrantEvent(accounts[4], 1, "details", "content", "0x01"),
+        matchGrantEvent(accounts[5], 1, "details", "content", "0x03"),
+        matchGrantEvent(accounts[6], 1, "details", "content", "0x07"),
       ]))
     })
     it("should not allow approving already granted request", async () => {
@@ -469,9 +463,7 @@ contract("Aspect -- integration", accounts => {
       )
       let hash = (await testAspect.getPendingRecordsByGeneration(asEthWord(1)))
         .map(objectify)[0].hash
-      expect((await testAspect.grant(hash, fromOwner)).logs).to(consistOf([
-        matchGrantEvent(accounts[4], 1)
-      ]))
+      await testAspect.grant(hash, fromOwner)
 
       expect(await awaitException(() => {
         return testAspect.approve(hash, { from: accounts[1] })
