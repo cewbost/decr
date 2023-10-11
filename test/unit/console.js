@@ -25,7 +25,7 @@ contract("Console", accounts => {
     "args":  matchFields({"tag": asEthWord(tag)}),
   })
 
-  beforeEach(async () => {
+  before(async () => {
     testConsole = await Console.deployed()
   })
   describe("createAspect", () => {

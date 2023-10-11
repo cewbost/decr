@@ -1,3 +1,4 @@
+const Console = artifacts.require("Console")
 const Aspect = artifacts.require("Aspect")
 const { BigNumber } = require("bignumber.js")
 const { asEthWord, asEthBytes } = require("../../utils/ethword.js")
@@ -16,7 +17,7 @@ const {
   matchElements
 } = require("../matchers/matchers.js")
 
-contract("Aspect -- integration", accounts => {
+contract("Full", accounts => {
 
   beVMException = (msg) => beInstanceOf(Error).and(matchFields({
     "data": matchFields({
@@ -35,13 +36,24 @@ contract("Aspect -- integration", accounts => {
     }),
   })
 
+  let testConsole
   let testAspect
+
+  let aspectNo = 0
 
   let unixTime = Math.floor(Date.now() / 1000)
   let fromOwner = { from: accounts[0] }
 
+  before(async () => {
+    testConsole = await Console.deployed()
+  })
   beforeEach(async () => {
-    testAspect = await Aspect.new(asEthBytes("TestAspect"), accounts[0])
+    aspectNo++
+    const log = (await testConsole.createAspect(
+      asEthWord("test aspect" + aspectNo),
+      fromOwner,
+    )).logs[0]
+    testAspect = await Aspect.at(log.args.addr)
   })
 
   describe("Management", () => {
