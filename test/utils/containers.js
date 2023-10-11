@@ -1,3 +1,7 @@
+function objectify(obj) {
+  return Object.fromEntries([...Object.keys(obj)].filter(isNaN).map(key => [key, obj[key]]))
+}
+
 function split(arr, cat) {
   let map = {}
   for (let val of arr) {
@@ -9,5 +13,6 @@ function split(arr, cat) {
 }
 
 module.exports = {
-  split: split,
+  objectify: objectify,
+  split:     split,
 }
