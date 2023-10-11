@@ -4,12 +4,12 @@ const shared     = artifacts.require("shared")
 
 const { asEthWord } = require("../utils/ethword.js")
 
-module.exports = function (deployer, network) {
+module.exports = function (deployer, network, accounts) {
   deployer.deploy(shared)
   if (network == "test") {
     deployer.link(shared, AspectBare)
-    deployer.deploy(AspectBare, asEthWord("test aspect"))
+    deployer.deploy(AspectBare, asEthWord("test aspect"), accounts[0])
   }
   deployer.link(shared, Aspect)
-  deployer.deploy(Aspect, asEthWord("aspect"))
+  deployer.deploy(Aspect, asEthWord("aspect"), accounts[0])
 };

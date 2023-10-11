@@ -27,7 +27,7 @@ contract Aspect is Owned {
     bytes   approvers
   );
 
-  constructor(bytes32 t) {
+  constructor(bytes32 t, address owner) Owned(owner) {
     tag = t;
   }
 

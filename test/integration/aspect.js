@@ -41,7 +41,7 @@ contract("Aspect -- integration", accounts => {
   let fromOwner = { from: accounts[0] }
 
   beforeEach(async () => {
-    testAspect = await Aspect.new("TestAspect", fromOwner)
+    testAspect = await Aspect.new(asEthBytes("TestAspect"), accounts[0])
   })
 
   describe("Management", () => {

@@ -17,7 +17,7 @@ contract Console {
 
   function createAspect(bytes32 t) external unusedTag(t) {
     used_tags[t] = true;
-    Aspect aspect = new Aspect(t);
+    Aspect aspect = new Aspect(t, msg.sender);
     emit AspectCreated(address(aspect), t);
   }
 

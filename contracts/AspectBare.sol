@@ -7,9 +7,9 @@ using { shared.setBit } for bytes;
 
 contract AspectBare is Aspect {
 
-  constructor(bytes32 n) Aspect(n) {}
+  constructor(bytes32 n, address owner) Aspect(n, owner) {}
 
-  function clearBare() external {
+  function clear() external {
     uint gens = generation_ids.length;
     for (uint g = gens; g > 0; g--) {
       bytes32 gen_id = generation_ids[g - 1];
@@ -32,14 +32,14 @@ contract AspectBare is Aspect {
     approvers_mask = "";
   }
 
-  function addGenerationBare(uint begin, uint end, bytes32 id) external {
+  function insertGeneration(uint begin, uint end, bytes32 id) external {
     shared.Generation storage gen = generations[id];
     gen.begin_timestamp = uint64(begin);
     gen.end_timestamp   = uint64(end);
     generation_ids.push(id);
   }
 
-  function addPendingRecordBare(
+  function insertPendingRecord(
     address            recipient,
     bytes32            gen_id,
     uint64             timestamp,
@@ -50,7 +50,7 @@ contract AspectBare is Aspect {
     addRecordImpl(recipient, gen_id, timestamp, details, content, apprs);
   }
 
-  function addApproversBare(address[] calldata accs, address[] calldata enable) external {
+  function setApprovers(address[] calldata accs, address[] calldata enable) external {
     for (uint n = 0; n < accs.length; n++) {
       approvers.push(accs[n]);
       approvers_idx[accs[n]] = n + 1;
@@ -60,7 +60,7 @@ contract AspectBare is Aspect {
     }
   }
 
-  function setGenerationApproversBare(address[] calldata accs, bytes32 gen_id) external {
+  function setGenerationApprovers(address[] calldata accs, bytes32 gen_id) external {
     shared.Generation storage gen = generations[gen_id];
     for (uint n = 0; n < accs.length; n++) {
       gen.approvers_mask.setBit(approvers_idx[accs[n]] - 1);
