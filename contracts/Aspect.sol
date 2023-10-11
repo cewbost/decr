@@ -8,7 +8,8 @@ using { shared.getBit, shared.setBit, shared.unsetBit } for bytes;
 
 contract Aspect is Owned {
 
-  string                                name;
+  bytes32 immutable                     tag;
+
   bytes32[]                             generation_ids;
   mapping(bytes32 => shared.Generation) generations;
   mapping(bytes32 => bool)              record_hashes;
@@ -26,8 +27,8 @@ contract Aspect is Owned {
     bytes   approvers
   );
 
-  constructor(string memory n) {
-    name = n;
+  constructor(bytes32 t) {
+    tag = t;
   }
 
   function request(

@@ -7,7 +7,7 @@ using { shared.setBit } for bytes;
 
 contract AspectBare is Aspect {
 
-  constructor(string memory n) Aspect(n) {}
+  constructor(bytes32 n) Aspect(n) {}
 
   function clearBare() external {
     uint gens = generation_ids.length;

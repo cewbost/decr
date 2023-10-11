@@ -1,6 +1,6 @@
 const Aspect = artifacts.require("Aspect")
 const { BigNumber } = require("bignumber.js")
-const { asEthWord, asEthBytes } = require("../utils/ethword.js")
+const { asEthWord, asEthBytes } = require("../../utils/ethword.js")
 const { objectify, split } = require("../utils/containers.js")
 const { day } = require("../utils/time.js")
 const { awaitException } = require("../utils/exception.js")

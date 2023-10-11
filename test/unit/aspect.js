@@ -1,6 +1,6 @@
 const AspectBare = artifacts.require("AspectBare")
 const { day } = require("../utils/time.js")
-const { asEthWord, asEthBytes } = require("../utils/ethword.js")
+const { asEthWord, asEthBytes } = require("../../utils/ethword.js")
 const { objectify } = require("../utils/containers.js")
 const { awaitException } = require("../utils/exception.js")
 const {
