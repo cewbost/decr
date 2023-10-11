@@ -69,8 +69,8 @@ contract Aspect is Owned {
     uint64  begin,
     uint64  end
   ) external onlyOwner uniqueGeneration(id) {
-    require(id != "",                           "Generation ID must be provided");
-    require(begin < end,                        "Ending must be before beginning");
+    require(id != "",                           "generation ID must be provided");
+    require(begin < end,                        "ending must be before beginning");
     shared.Generation storage generation = generations[id];
     generation.begin_timestamp = begin;
     generation.end_timestamp   = end;
@@ -226,63 +226,63 @@ contract Aspect is Owned {
   }
 
   modifier pendingRecord(bytes32 hash) {
-    require(record_hashes[hash], "Record does not exist");
+    require(record_hashes[hash], "record does not exist");
     shared.Record storage record = pending_records[hash];
-    require(record.timestamp != 0, "Record not pending");
+    require(record.timestamp != 0, "record not pending");
     shared.Generation storage generation = generations[record.generation];
     require(
       generation.begin_timestamp <= block.timestamp &&
       generation.end_timestamp > block.timestamp,
-      "Generation inactive"
+      "generation inactive"
     );
     _;
   }
 
   modifier activeGeneration(bytes32 id) {
     shared.Generation storage generation = generations[id];
-    require(generation.end_timestamp != 0, "Generation does not exist");
+    require(generation.end_timestamp != 0, "generation does not exist");
     require(
       generation.begin_timestamp <= block.timestamp &&
       generation.end_timestamp > block.timestamp,
-      "Generation inactive"
+      "generation inactive"
     );
     _;
   }
 
   modifier expiredGeneration(bytes32 id) {
     shared.Generation storage generation = generations[id];
-    require(generation.end_timestamp != 0, "Generation does not exist");
-    require(generation.end_timestamp < block.timestamp, "Generation must be expired");
+    require(generation.end_timestamp != 0, "generation does not exist");
+    require(generation.end_timestamp < block.timestamp, "generation must be expired");
     _;
   }
 
   modifier notExpiredGeneration(bytes32 id) {
     shared.Generation storage generation = generations[id];
-    require(generation.end_timestamp != 0, "Generation does not exist");
-    require(generation.end_timestamp > block.timestamp, "Generation is expired");
+    require(generation.end_timestamp != 0, "generation does not exist");
+    require(generation.end_timestamp > block.timestamp, "generation is expired");
     _;
   }
 
   modifier generationExists(bytes32 id) {
-    require(generations[id].end_timestamp != 0, "Generation does not exist");
+    require(generations[id].end_timestamp != 0, "generation does not exist");
     _;
   }
 
   modifier uniqueGeneration(bytes32 id) {
-    require(generations[id].end_timestamp == 0, "Already exists");
+    require(generations[id].end_timestamp == 0, "already exists");
     _;
   }
 
   modifier uniqueRecord(bytes32 hash) {
-    require(!record_hashes[hash], "Already exists");
+    require(!record_hashes[hash], "already exists");
     _;
   }
 
   modifier onlyApprover(bytes32 generation) {
     uint approver_idx = approvers_idx[msg.sender];
-    require(approver_idx != 0, "Only approver can perform this action");
+    require(approver_idx != 0, "only approver can perform this action");
     require(generations[generation].approvers_mask.getBit(approver_idx - 1),
-      "Only approver can perform this action");
+      "only approver can perform this action");
     _;
   }
 }

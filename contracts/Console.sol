@@ -22,7 +22,7 @@ contract Console {
   }
 
   modifier unusedTag(bytes32 t) {
-    require(!used_tags[t], "Tag already taken");
+    require(!used_tags[t], "tag already taken");
     _;
   }
 }

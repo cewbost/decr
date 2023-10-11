@@ -60,7 +60,7 @@ contract("Console", accounts => {
         return testConsole.createAspect(asEthWord(tag), { from: accounts[1] })
       })).to(beInstanceOf(Error).and(matchFields({
         "data": matchFields({
-          "reason": "Tag already taken",
+          "reason": "tag already taken",
         }),
       })))
     })
