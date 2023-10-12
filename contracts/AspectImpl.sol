@@ -149,37 +149,21 @@ contract AspectImpl is Owned {
   }
 
   function enableApprover(address approver) external onlyOwner {
-    uint idx = approvers_idx[approver];
-    if (idx == 0) {
-      approvers.push(approver);
-      idx = approvers.length - 1;
-      approvers_idx[approver] = idx + 1;
-    } else {
-      idx--;
-    }
-    approvers_mask.setBit(idx);
+    approvers_mask.setBit(getApproverIdx(approver));
   }
 
   function enableApproverForGeneration(
     address approver,
     bytes32 gen_id
   ) external notExpiredGeneration(gen_id) onlyOwner {
-    uint idx = approvers_idx[approver];
-    if (idx == 0) {
-      approvers.push(approver);
-      idx = approvers.length - 1;
-      approvers_idx[approver] = idx + 1;
-    } else {
-      idx--;
-    }
-    generations[gen_id].approvers_mask.setBit(idx);
+    generations[gen_id].approvers_mask.setBit(getApproverIdx(approver));
   }
 
   function disableApprover(address approver) external onlyOwner {
     uint idx = approvers_idx[approver];
-    if (idx == 0) return;
-    idx--;
-    approvers_mask.unsetBit(idx);
+    if (idx > 0) {
+      approvers_mask.unsetBit(idx - 1);
+    }
   }
 
   function disableApproverForGeneration(
@@ -187,9 +171,9 @@ contract AspectImpl is Owned {
     bytes32 gen_id
   ) external notExpiredGeneration(gen_id) onlyOwner {
     uint idx = approvers_idx[approver];
-    if (idx == 0) return;
-    idx--;
-    generations[gen_id].approvers_mask.unsetBit(idx);
+    if (idx > 0) {
+      generations[gen_id].approvers_mask.unsetBit(idx - 1);
+    }
   }
 
   function hashRecord(Record memory rec) internal pure returns(bytes32) {
@@ -210,6 +194,18 @@ contract AspectImpl is Owned {
 
   function addApproval(bytes32 generation, bytes32 hash) internal onlyApprover(generation) {
     pending_records[hash].approvers.setBit(approvers_idx[msg.sender] - 1);
+  }
+
+  function getApproverIdx(address approver) internal returns (uint) {
+    uint idx = approvers_idx[approver];
+    if (idx == 0) {
+      idx = approvers.length;
+      approvers.push(approver);
+      approvers_idx[approver] = idx + 1;
+      return idx;
+    } else {
+      return idx - 1;
+    }
   }
 
   modifier pendingRecord(bytes32 hash) {
@@ -261,9 +257,8 @@ contract AspectImpl is Owned {
   }
 
   modifier onlyApprover(bytes32 generation) {
-    uint approver_idx = approvers_idx[msg.sender];
-    require(approver_idx > 0, "only approver can perform this action");
-    require(generations[generation].approvers_mask.getBit(approver_idx - 1),
+    uint idx = approvers_idx[msg.sender];
+    require(idx > 0 && generations[generation].approvers_mask.getBit(idx - 1),
       "only approver can perform this action");
     _;
   }
