@@ -5,12 +5,12 @@ contract Owned {
 
   address owner;
 
-  constructor() {
-    owner = msg.sender;
+  constructor(address own) {
+    owner = own;
   }
 
   function authorized() public view {
-    require(msg.sender == owner, "Only owner can perform this action");
+    require(msg.sender == owner, "only owner can perform this action");
   }
 
   modifier onlyOwner {

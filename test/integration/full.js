@@ -1,6 +1,7 @@
+const Console = artifacts.require("Console")
 const Aspect = artifacts.require("Aspect")
 const { BigNumber } = require("bignumber.js")
-const { asEthWord, asEthBytes } = require("../utils/ethword.js")
+const { asEthWord, asEthBytes } = require("../../utils/ethword.js")
 const { objectify, split } = require("../utils/containers.js")
 const { day } = require("../utils/time.js")
 const { awaitException } = require("../utils/exception.js")
@@ -16,7 +17,7 @@ const {
   matchElements
 } = require("../matchers/matchers.js")
 
-contract("Aspect -- integration", accounts => {
+contract("Full", accounts => {
 
   beVMException = (msg) => beInstanceOf(Error).and(matchFields({
     "data": matchFields({
@@ -35,13 +36,24 @@ contract("Aspect -- integration", accounts => {
     }),
   })
 
+  let testConsole
   let testAspect
+
+  let aspectNo = 0
 
   let unixTime = Math.floor(Date.now() / 1000)
   let fromOwner = { from: accounts[0] }
 
+  before(async () => {
+    testConsole = await Console.deployed()
+  })
   beforeEach(async () => {
-    testAspect = await Aspect.new("TestAspect", fromOwner)
+    aspectNo++
+    const log = (await testConsole.createAspect(
+      asEthWord("test aspect" + aspectNo),
+      fromOwner,
+    )).logs[0]
+    testAspect = await Aspect.at(log.args.addr)
   })
 
   describe("Management", () => {
@@ -170,27 +182,27 @@ contract("Aspect -- integration", accounts => {
           unixTime + 30 * day,
           { from: accounts[0] }
         )
-      })).to(beVMException("Only owner can perform this action"))
+      })).to(beVMException("only owner can perform this action"))
       expect(await awaitException(() => {
         return testAspect.enableApprover(accounts[4], { from: accounts[0] })
-      })).to(beVMException("Only owner can perform this action"))
+      })).to(beVMException("only owner can perform this action"))
       expect(await awaitException(() => {
         return testAspect.enableApproverForGeneration(
           accounts[4],
           asEthWord(1),
           { from: accounts[0] }
         )
-      })).to(beVMException("Only owner can perform this action"))
+      })).to(beVMException("only owner can perform this action"))
       expect(await awaitException(() => {
         return testAspect.disableApprover(accounts[3], { from: accounts[0] })
-      })).to(beVMException("Only owner can perform this action"))
+      })).to(beVMException("only owner can perform this action"))
       expect(await awaitException(() => {
         return testAspect.disableApproverForGeneration(
           accounts[3],
           asEthWord(1),
           { from: accounts[0] }
         )
-      })).to(beVMException("Only owner can perform this action"))
+      })).to(beVMException("only owner can perform this action"))
 
       await testAspect.changeOwnership(accounts[0], { from: accounts[1] })
 
@@ -205,7 +217,7 @@ contract("Aspect -- integration", accounts => {
 
       expect(await awaitException(() => {
         return testAspect.enableApprover(accounts[5], { from: accounts[1] })
-      })).to(beVMException("Only owner can perform this action"))
+      })).to(beVMException("only owner can perform this action"))
 
       let resp = await testAspect.getGenerations({ from: accounts[0] })
       expect(resp.map(objectify)).to(consistOf([
@@ -372,7 +384,7 @@ contract("Aspect -- integration", accounts => {
       for (let acc of accounts.slice(1, 4)) {
         expect(await awaitException(() => {
           return testAspect.grant(hash, { from: acc })
-        })).to(beVMException("Only owner can perform this action"))
+        })).to(beVMException("only owner can perform this action"))
       }
     })
     it("should not allow approving resubmitting already granted request", async () => {
@@ -399,7 +411,7 @@ contract("Aspect -- integration", accounts => {
           asEthWord("content"),
           { from: accounts[2] }
         )
-      })).to(beVMException("Already exists"))
+      })).to(beVMException("already exists"))
     })
   })
   describe("Approvers", () => {
@@ -467,7 +479,7 @@ contract("Aspect -- integration", accounts => {
 
       expect(await awaitException(() => {
         return testAspect.approve(hash, { from: accounts[1] })
-      })).to(beVMException("Record not pending"))
+      })).to(beVMException("record not pending"))
     })
   })
 })
