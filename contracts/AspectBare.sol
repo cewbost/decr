@@ -3,7 +3,7 @@ pragma solidity >=0.4.22 <0.9.0;
 
 import "./Aspect.sol";
 
-using { shared.setBit } for bytes;
+using { setBit } for bytes;
 
 contract AspectBare is Aspect {
 
@@ -13,7 +13,7 @@ contract AspectBare is Aspect {
     uint gens = generation_ids.length;
     for (uint g = gens; g > 0; g--) {
       bytes32 gen_id = generation_ids[g - 1];
-      shared.Generation storage generation = generations[gen_id];
+      Generation storage generation = generations[gen_id];
       bytes32[] storage hashes = generation.records;
       uint              recs   = hashes.length;
       for (uint n = 0; n < recs; n++) {
@@ -33,7 +33,7 @@ contract AspectBare is Aspect {
   }
 
   function insertGeneration(uint begin, uint end, bytes32 id) external {
-    shared.Generation storage gen = generations[id];
+    Generation storage gen = generations[id];
     gen.begin_timestamp = uint64(begin);
     gen.end_timestamp   = uint64(end);
     generation_ids.push(id);
@@ -61,7 +61,7 @@ contract AspectBare is Aspect {
   }
 
   function setGenerationApprovers(address[] calldata accs, bytes32 gen_id) external {
-    shared.Generation storage gen = generations[gen_id];
+    Generation storage gen = generations[gen_id];
     for (uint n = 0; n < accs.length; n++) {
       gen.approvers_mask.setBit(approvers_idx[accs[n]] - 1);
     }
@@ -75,7 +75,7 @@ contract AspectBare is Aspect {
     bytes32            content,
     address[] calldata apprs
   ) internal {
-    shared.Record memory rec = shared.Record({
+    Record memory rec = Record({
       recipient:  recipient,
       generation: gen_id,
       details:    details,
