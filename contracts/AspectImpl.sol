@@ -199,13 +199,11 @@ contract AspectImpl is Owned {
   function getApproverIdx(address approver) internal returns (uint) {
     uint idx = approvers_idx[approver];
     if (idx == 0) {
-      idx = approvers.length;
       approvers.push(approver);
-      approvers_idx[approver] = idx + 1;
-      return idx;
-    } else {
-      return idx - 1;
+      idx = approvers.length;
+      approvers_idx[approver] = idx;
     }
+    return idx - 1;
   }
 
   modifier pendingRecord(bytes32 hash) {
