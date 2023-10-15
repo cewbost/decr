@@ -72,7 +72,7 @@ contract Aspect is AspectImpl {
         id:              ids[n],
         begin_timestamp: gens[n].begin_timestamp,
         end_timestamp:   gens[n].end_timestamp,
-        approvers:       getApproversMasked(gens[n].approvers_mask)
+        approvers:       maskToApproverList(gens[n].approvers_mask)
       });
     }
     return res;
@@ -80,8 +80,8 @@ contract Aspect is AspectImpl {
 
   function getPendingRecordsByGeneration(
     bytes32 gen_id
-  ) public view generationExists(gen_id) returns(RecordResponse[] memory) {
-    return getRecs(generations[gen_id].records);
+  ) public view returns(RecordResponse[] memory) {
+    return getRecs(getGeneration_(gen_id).records);
   }
 
   function getPendingRecordsByRecipient(
@@ -90,7 +90,7 @@ contract Aspect is AspectImpl {
     return getRecs(records_by_recipient[account]);
   }
 
-  function getRecs(bytes32[] storage recs) internal view returns(RecordResponse[] memory) {
+  function getRecs(bytes32[] memory recs) internal view returns(RecordResponse[] memory) {
     uint len           = recs.length;
     uint approvers_len = approvers.length;
     uint num_recs      = 0;
@@ -119,7 +119,7 @@ contract Aspect is AspectImpl {
     return truncate(res, num_recs);
   }
 
-  function getApproversMasked(bytes memory mask) internal view returns(address[] memory) {
+  function maskToApproverList(bytes memory mask) internal view returns(address[] memory) {
     uint alen = approvers.length;
     address[] memory apps = new address[](alen);
     uint acount = 0;
@@ -144,10 +144,5 @@ contract Aspect is AspectImpl {
     RecordResponse[] memory res = new RecordResponse[](elems);
     for (uint n = 0; n < elems; n++) res[n] = arr[n];
     return res;
-  }
-
-  modifier generationExists(bytes32 id) {
-    require(generations[id].end_timestamp != 0, "generation does not exist");
-    _;
   }
 }

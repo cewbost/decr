@@ -52,7 +52,7 @@ contract AspectImpl is Owned {
   bytes32 immutable                      tag;
 
   bytes32[]                      private generation_ids;
-  mapping(bytes32 => Generation)         generations;
+  mapping(bytes32 => Generation) private generations;
   mapping(bytes32 => bool)               record_hashes;
   mapping(bytes32 => Record)             pending_records;
   mapping(address => bytes32[])          records_by_recipient;
@@ -158,6 +158,17 @@ contract AspectImpl is Owned {
     generation_ids.push(id);
   }
 
+  function insertPendingRecord_(bytes32 hash, Record memory rec) internal {
+    // Hash must match record.
+    // Generation must be active.
+    // Timestamp must be now.
+    // Approvers must be empty.
+    record_hashes[hash]   = true;
+    pending_records[hash] = rec;
+    generations[rec.generation].records.push(hash);
+    records_by_recipient[rec.recipient].push(hash);
+  }
+
   function addPendingRecord(Record memory rec, bytes32 hash) internal uniqueRecord(hash) {
     pending_records[hash] = rec;
     generations[rec.generation].records.push(hash);
@@ -197,6 +208,10 @@ contract AspectImpl is Owned {
       gens[n] = generations[ids[n]];
     }
     return (ids, gens);
+  }
+
+  function getGeneration_(bytes32 id) internal view returns(Generation memory) {
+    return generations[id];
   }
 
   modifier pendingRecord(bytes32 hash) {

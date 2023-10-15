@@ -3,14 +3,25 @@ pragma solidity >=0.4.22 <0.9.0;
 
 import "./Aspect.sol";
 
-using { setBitStorage } for bytes;
+function setBit(bytes memory bts, uint idx) pure {
+  uint   byte_idx = idx / 8;
+  assert(byte_idx < bts.length);
+  bts[byte_idx] = bts[byte_idx] | toBit(idx % 8);
+}
+
+using { setBit, setBitStorage } for bytes;
 
 contract AspectBare is Aspect {
 
   constructor(bytes32 n, address owner) Aspect(n, owner) {}
 
-  function insertGeneration(bytes32 id, uint64 begin, uint64 end) external {
-    insertGeneration_(id, begin, end, "");
+  function insertGeneration(
+    bytes32 id,
+    uint64 begin,
+    uint64 end,
+    address[] calldata apprs
+  ) external {
+    insertGeneration_(id, begin, end, approverListToMask(apprs));
   }
 
   function insertPendingRecord(
@@ -34,13 +45,6 @@ contract AspectBare is Aspect {
     }
   }
 
-  function setGenerationApprovers(address[] calldata accs, bytes32 gen_id) external {
-    Generation storage gen = generations[gen_id];
-    for (uint n = 0; n < accs.length; n++) {
-      gen.approvers_mask.setBitStorage(approvers_idx[accs[n]] - 1);
-    }
-  }
-
   function addRecordImpl(
     address            recipient,
     bytes32            gen_id,
@@ -55,22 +59,24 @@ contract AspectBare is Aspect {
       details:    details,
       content:    content,
       timestamp:  timestamp,
-      approvers:  ""
+      approvers:  approverListToMask(apprs)
     });
     bytes32 hash = hashRecord(rec);
-    record_hashes[hash] = true;
-    pending_records[hash] = rec;
-    bytes storage bts = pending_records[hash].approvers;
-    for (uint n = 0; n < apprs.length; n++) {
-      for (uint m = 0; m < approvers.length; m++) {
-        if (approvers[m] == apprs[n]) {
-          bts.setBitStorage(m);
+    insertPendingRecord_(hash, rec);
+  }
+
+  function approverListToMask(address[] memory list) internal view returns(bytes memory) {
+    address[] memory apprs = approvers;
+    bytes memory res = new bytes((apprs.length + 7) / 8);
+    for (uint n = 0; n < list.length; n++) {
+      for (uint m = 0; m < apprs.length; m++) {
+        if (list[n] == apprs[m]) {
+          res.setBit(m);
           break;
         }
       }
     }
-    generations[gen_id].records.push(hash);
-    records_by_recipient[recipient].push(hash);
+    return res;
   }
 
   modifier assertOnlyOwner() override {_;}
