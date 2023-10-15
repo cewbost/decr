@@ -2,7 +2,7 @@ const Console = artifacts.require("Console")
 const Aspect = artifacts.require("Aspect")
 const { asEthWord } = require("../../utils/ethword.js")
 const { awaitException } = require("../utils/exception.js")
-const { expect, matchList, matchFields, beInstanceOf } = require("../matchers/matchers.js")
+const { expect, equal, matchList, matchFields, beInstanceOf } = require("../matchers/matchers.js")
 
 contract("Console", accounts => {
 
@@ -44,14 +44,10 @@ contract("Console", accounts => {
         aspects.push(await Aspect.at(log.args.addr))
       }
 
-      await aspects[0].authorized({ from: accounts[1] })
-      expect(await awaitException(() => {
-        return aspects[0].authorized({ from: accounts[2] })
-      })).to(beInstanceOf(Error))
-      await aspects[1].authorized({ from: accounts[2] })
-      expect(await awaitException(() => {
-        return aspects[1].authorized({ from: accounts[1] })
-      })).to(beInstanceOf(Error))
+      expect(await aspects[0].amIOwner({ from: accounts[1] })).to(equal(true))
+      expect(await aspects[0].amIOwner({ from: accounts[2] })).to(equal(false))
+      expect(await aspects[1].amIOwner({ from: accounts[2] })).to(equal(true))
+      expect(await aspects[1].amIOwner({ from: accounts[1] })).to(equal(false))
     })
     it("should not allow creating multiple aspects with the same tag", async () => {
       const tag = newTag()

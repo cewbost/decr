@@ -3,26 +3,23 @@ pragma solidity >=0.4.22 <0.9.0;
 
 contract Owned {
 
-  address owner;
+  address private owner;
 
   constructor(address own) {
     owner = own;
   }
 
-  function authorized() public view {
-    require(msg.sender == owner, "only owner can perform this action");
+  function setOwner(address new_owner) internal {
+    assert(authorized());
+    owner = new_owner;
+  }
+
+  function authorized() internal view returns(bool) {
+    return msg.sender == owner;
   }
 
   modifier onlyOwner {
-    authorized();
+    require(authorized(), "only owner can perform this action");
     _;
-  }
-
-  function changeOwnership(address new_owner) public onlyOwner {
-    setOwner(new_owner);
-  }
-
-  function setOwner(address new_owner) internal {
-    owner = new_owner;
   }
 }

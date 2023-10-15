@@ -3,11 +3,11 @@ pragma solidity >=0.4.22 <0.9.0;
 
 import "./Owned.sol";
 
-function getBit(bytes storage bts, uint idx) view returns(bool) {
+function getBitStorage(bytes storage bts, uint idx) view returns(bool) {
   return bts.length > idx / 8? (bts[idx / 8] & toBit(idx % 8)) != 0 : false;
 }
 
-function setBit(bytes storage bts, uint idx) {
+function setBitStorage(bytes storage bts, uint idx) {
   uint byte_idx = idx / 8;
   bytes1 bit    = toBit(idx % 8);
   uint len      = bts.length;
@@ -19,7 +19,7 @@ function setBit(bytes storage bts, uint idx) {
   }
 }
 
-function unsetBit(bytes storage bts, uint idx) {
+function unsetBitStorage(bytes storage bts, uint idx) {
   uint byte_idx = idx / 8;
   if (byte_idx >= bts.length) return;
   bts[byte_idx] = bts[byte_idx] & ~toBit(idx % 8);
@@ -29,7 +29,7 @@ function toBit(uint bit_idx) pure returns(bytes1) {
   return bytes1(uint8(1 << bit_idx));
 }
 
-using { getBit, setBit, unsetBit } for bytes;
+using { getBitStorage, setBitStorage, unsetBitStorage } for bytes;
 
 contract AspectImpl is Owned {
 
@@ -49,38 +49,16 @@ contract AspectImpl is Owned {
     bytes32[] records;
   }
 
-  struct RecordResponse {
-    bytes32   hash;
-    address   recipient;
-    bytes32   generation;
-    uint64    timestamp;
-    bytes24   details;
-    bytes32   content;
-    address[] approvers;
-  }
+  bytes32 immutable                      tag;
 
-  struct GenerationResponse {
-    bytes32   id;
-    uint64    begin_timestamp;
-    uint64    end_timestamp;
-    address[] approvers;
-  }
-
-  struct ApproverResponse {
-    address approver;
-    bool    enabled;
-  }
-
-  bytes32 immutable              tag;
-
-  bytes32[]                      generation_ids;
-  mapping(bytes32 => Generation) generations;
-  mapping(bytes32 => bool)       record_hashes;
-  mapping(bytes32 => Record)     pending_records;
-  mapping(address => bytes32[])  records_by_recipient;
-  address[]                      approvers;
-  mapping(address => uint)       approvers_idx;
-  bytes                          approvers_mask;
+  bytes32[]                      private generation_ids;
+  mapping(bytes32 => Generation)         generations;
+  mapping(bytes32 => bool)               record_hashes;
+  mapping(bytes32 => Record)             pending_records;
+  mapping(address => bytes32[])          records_by_recipient;
+  address[]                              approvers;
+  mapping(address => uint)               approvers_idx;
+  bytes                                  approvers_mask;
 
   event AspectGranted (
     address recipient,
@@ -127,20 +105,6 @@ contract AspectImpl is Owned {
     addApproval(pending_record.generation, hash);
   }
 
-  function newGeneration(
-    bytes32 id,
-    uint64  begin,
-    uint64  end
-  ) external onlyOwner uniqueGeneration(id) {
-    require(id != "",                           "generation ID must be provided");
-    require(begin < end,                        "ending must be before beginning");
-    Generation storage generation = generations[id];
-    generation.begin_timestamp = begin;
-    generation.end_timestamp   = end;
-    generation.approvers_mask  = approvers_mask;
-    generation_ids.push(id);
-  }
-
   function clearGeneration(bytes32 gen) external onlyOwner expiredGeneration(gen) {
     bytes32[] storage records = generations[gen].records;
     uint len = records.length;
@@ -149,20 +113,20 @@ contract AspectImpl is Owned {
   }
 
   function enableApprover(address approver) external onlyOwner {
-    approvers_mask.setBit(getApproverIdx(approver));
+    approvers_mask.setBitStorage(getApproverIdx(approver));
   }
 
   function enableApproverForGeneration(
     address approver,
     bytes32 gen_id
   ) external notExpiredGeneration(gen_id) onlyOwner {
-    generations[gen_id].approvers_mask.setBit(getApproverIdx(approver));
+    generations[gen_id].approvers_mask.setBitStorage(getApproverIdx(approver));
   }
 
   function disableApprover(address approver) external onlyOwner {
     uint idx = approvers_idx[approver];
     if (idx > 0) {
-      approvers_mask.unsetBit(idx - 1);
+      approvers_mask.unsetBitStorage(idx - 1);
     }
   }
 
@@ -172,8 +136,47 @@ contract AspectImpl is Owned {
   ) external notExpiredGeneration(gen_id) onlyOwner {
     uint idx = approvers_idx[approver];
     if (idx > 0) {
-      generations[gen_id].approvers_mask.unsetBit(idx - 1);
+      generations[gen_id].approvers_mask.unsetBitStorage(idx - 1);
     }
+  }
+
+  function insertGeneration_(
+    bytes32        id,
+    uint64         begin,
+    uint64         end,
+    bytes   memory mask
+  ) internal assertOnlyOwner {
+    // Generation id must be unique.
+    // Generation must end after beginning.
+    // Generation must be listed in generation_ids. TODO remove generation_ids.
+    // Generation must not be expired.
+    // Generation approvers_mask must not be longer than total approvers list.
+    Generation storage generation = generations[id];
+    generation.begin_timestamp = begin;
+    generation.end_timestamp   = end;
+    generation.approvers_mask  = mask;
+    generation_ids.push(id);
+  }
+
+  function addPendingRecord(Record memory rec, bytes32 hash) internal uniqueRecord(hash) {
+    pending_records[hash] = rec;
+    generations[rec.generation].records.push(hash);
+    records_by_recipient[rec.recipient].push(hash);
+    record_hashes[hash] = true;
+  }
+
+  function addApproval(bytes32 generation, bytes32 hash) internal onlyApprover(generation) {
+    pending_records[hash].approvers.setBitStorage(approvers_idx[msg.sender] - 1);
+  }
+
+  function getApproverIdx(address approver) internal returns (uint) {
+    uint idx = approvers_idx[approver];
+    if (idx == 0) {
+      approvers.push(approver);
+      idx = approvers.length;
+      approvers_idx[approver] = idx;
+    }
+    return idx - 1;
   }
 
   function hashRecord(Record memory rec) internal pure returns(bytes32) {
@@ -185,25 +188,15 @@ contract AspectImpl is Owned {
     ));
   }
 
-  function addPendingRecord(Record memory rec, bytes32 hash) internal uniqueRecord(hash) {
-    pending_records[hash] = rec;
-    generations[rec.generation].records.push(hash);
-    records_by_recipient[rec.recipient].push(hash);
-    record_hashes[hash] = true;
-  }
-
-  function addApproval(bytes32 generation, bytes32 hash) internal onlyApprover(generation) {
-    pending_records[hash].approvers.setBit(approvers_idx[msg.sender] - 1);
-  }
-
-  function getApproverIdx(address approver) internal returns (uint) {
-    uint idx = approvers_idx[approver];
-    if (idx == 0) {
-      approvers.push(approver);
-      idx = approvers.length;
-      approvers_idx[approver] = idx;
+  function getGenerations_() internal view returns(bytes32[] memory, Generation[] memory) {
+    uint len = generation_ids.length;
+    bytes32[]    memory ids  = new bytes32[](len);
+    Generation[] memory gens = new Generation[](len);
+    for (uint n = 0; n < len; n++) {
+      ids[n] = generation_ids[n];
+      gens[n] = generations[ids[n]];
     }
-    return idx - 1;
+    return (ids, gens);
   }
 
   modifier pendingRecord(bytes32 hash) {
@@ -256,8 +249,13 @@ contract AspectImpl is Owned {
 
   modifier onlyApprover(bytes32 generation) {
     uint idx = approvers_idx[msg.sender];
-    require(idx > 0 && generations[generation].approvers_mask.getBit(idx - 1),
+    require(idx > 0 && generations[generation].approvers_mask.getBitStorage(idx - 1),
       "only approver can perform this action");
+    _;
+  }
+
+  modifier assertOnlyOwner() virtual {
+    assert(authorized());
     _;
   }
 }

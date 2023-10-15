@@ -3,40 +3,14 @@ pragma solidity >=0.4.22 <0.9.0;
 
 import "./Aspect.sol";
 
-using { setBit } for bytes;
+using { setBitStorage } for bytes;
 
 contract AspectBare is Aspect {
 
   constructor(bytes32 n, address owner) Aspect(n, owner) {}
 
-  function clear() external {
-    uint gens = generation_ids.length;
-    for (uint g = gens; g > 0; g--) {
-      bytes32 gen_id = generation_ids[g - 1];
-      Generation storage generation = generations[gen_id];
-      bytes32[] storage hashes = generation.records;
-      uint              recs   = hashes.length;
-      for (uint n = 0; n < recs; n++) {
-        bytes32 hash = hashes[n];
-        delete records_by_recipient[pending_records[hash].recipient];
-        delete pending_records[hash];
-      }
-      delete generations[gen_id];
-      generation_ids.pop();
-    }
-    uint len = approvers.length;
-    for (uint n = len; n > 0; n--) {
-      delete approvers_idx[approvers[n - 1]];
-      approvers.pop();
-    }
-    approvers_mask = "";
-  }
-
-  function insertGeneration(uint begin, uint end, bytes32 id) external {
-    Generation storage gen = generations[id];
-    gen.begin_timestamp = uint64(begin);
-    gen.end_timestamp   = uint64(end);
-    generation_ids.push(id);
+  function insertGeneration(bytes32 id, uint64 begin, uint64 end) external {
+    insertGeneration_(id, begin, end, "");
   }
 
   function insertPendingRecord(
@@ -55,7 +29,7 @@ contract AspectBare is Aspect {
       approvers.push(accs[n]);
       approvers_idx[accs[n]] = n + 1;
       for (uint m = 0; m < enable.length; m++) {
-        if (accs[n] == enable[m]) approvers_mask.setBit(n);
+        if (accs[n] == enable[m]) approvers_mask.setBitStorage(n);
       }
     }
   }
@@ -63,7 +37,7 @@ contract AspectBare is Aspect {
   function setGenerationApprovers(address[] calldata accs, bytes32 gen_id) external {
     Generation storage gen = generations[gen_id];
     for (uint n = 0; n < accs.length; n++) {
-      gen.approvers_mask.setBit(approvers_idx[accs[n]] - 1);
+      gen.approvers_mask.setBitStorage(approvers_idx[accs[n]] - 1);
     }
   }
 
@@ -90,7 +64,7 @@ contract AspectBare is Aspect {
     for (uint n = 0; n < apprs.length; n++) {
       for (uint m = 0; m < approvers.length; m++) {
         if (approvers[m] == apprs[n]) {
-          bts.setBit(m);
+          bts.setBitStorage(m);
           break;
         }
       }
@@ -98,4 +72,6 @@ contract AspectBare is Aspect {
     generations[gen_id].records.push(hash);
     records_by_recipient[recipient].push(hash);
   }
+
+  modifier assertOnlyOwner() override {_;}
 }

@@ -3,11 +3,55 @@ pragma solidity >=0.4.22 <0.9.0;
 
 import "./AspectImpl.sol";
 
+function getBit(bytes memory bts, uint idx) pure returns(bool) {
+  return bts.length > idx / 8? (bts[idx / 8] & toBit(idx % 8)) != 0 : false;
+}
+
 using { getBit } for bytes;
 
 contract Aspect is AspectImpl {
 
+  struct RecordResponse {
+    bytes32   hash;
+    address   recipient;
+    bytes32   generation;
+    uint64    timestamp;
+    bytes24   details;
+    bytes32   content;
+    address[] approvers;
+  }
+
+  struct GenerationResponse {
+    bytes32   id;
+    uint64    begin_timestamp;
+    uint64    end_timestamp;
+    address[] approvers;
+  }
+
+  struct ApproverResponse {
+    address approver;
+    bool    enabled;
+  }
+
   constructor(bytes32 t, address owner) AspectImpl(t, owner) {}
+
+  function changeOwnership(address new_owner) external onlyOwner {
+    setOwner(new_owner);
+  }
+
+  function newGeneration(
+    bytes32 id,
+    uint64  begin,
+    uint64  end
+  ) external onlyOwner uniqueGeneration(id) {
+    require(id != "",    "generation ID must be provided");
+    require(begin < end, "ending must be before beginning");
+    insertGeneration_(id, begin, end, approvers_mask);
+  }
+
+  function amIOwner() external view returns(bool) {
+    return authorized();
+  }
 
   function getApprovers() public view returns(ApproverResponse[] memory) {
     uint num = approvers.length;
@@ -21,24 +65,14 @@ contract Aspect is AspectImpl {
   }
 
   function getGenerations() public view returns(GenerationResponse[] memory) {
-    uint len = generation_ids.length;
-    uint alen = approvers.length;
-    GenerationResponse[] memory res = new GenerationResponse[](len);
-    for (uint n = 0; n < len; n++) {
-      bytes32 gen_id = generation_ids[n];
-      Generation storage generation = generations[gen_id];
-      address[] memory apps = new address[](alen);
-      uint acount = 0;
-      for (uint a = 0; a < alen; a++) {
-        if (generation.approvers_mask.getBit(a)) apps[acount++] = approvers[a];
-      }
-      address[] memory napps = new address[](acount);
-      for (uint a = 0; a < acount; a++) napps[a] = apps[a];
+    (bytes32[] memory ids, Generation[] memory gens) = getGenerations_();
+    GenerationResponse[] memory res = new GenerationResponse[](gens.length);
+    for (uint n = 0; n < gens.length; n++) {
       res[n] = GenerationResponse({
-        id:              gen_id,
-        begin_timestamp: generation.begin_timestamp,
-        end_timestamp:   generation.end_timestamp,
-        approvers:       napps
+        id:              ids[n],
+        begin_timestamp: gens[n].begin_timestamp,
+        end_timestamp:   gens[n].end_timestamp,
+        approvers:       getApproversMasked(gens[n].approvers_mask)
       });
     }
     return res;
@@ -83,6 +117,18 @@ contract Aspect is AspectImpl {
       }
     }
     return truncate(res, num_recs);
+  }
+
+  function getApproversMasked(bytes memory mask) internal view returns(address[] memory) {
+    uint alen = approvers.length;
+    address[] memory apps = new address[](alen);
+    uint acount = 0;
+    for (uint a = 0; a < alen; a++) {
+      if (mask.getBit(a)) apps[acount++] = approvers[a];
+    }
+    address[] memory res = new address[](acount);
+    for (uint a = 0; a < acount; a++) res[a] = apps[a];
+    return res;
   }
 
   function truncate(address[] memory arr, uint elems) internal pure returns(address[] memory) {
