@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.4.22 <0.9.0;
 
-import "./AspectImpl.sol";
+import "./AspectState.sol";
 
 function getBit(bytes memory bts, uint idx) pure returns(bool) {
   return bts.length > idx / 8? (bts[idx / 8] & toBit(idx % 8)) != 0 : false;
@@ -9,7 +9,7 @@ function getBit(bytes memory bts, uint idx) pure returns(bool) {
 
 using { getBit } for bytes;
 
-contract Aspect is AspectImpl {
+contract Aspect is AspectState {
 
   struct RecordResponse {
     bytes32   hash;
@@ -33,7 +33,7 @@ contract Aspect is AspectImpl {
     bool    enabled;
   }
 
-  constructor(bytes32 t, address owner) AspectImpl(t, owner) {}
+  constructor(bytes32 t, address owner) AspectState(t, owner) {}
 
   function changeOwnership(address new_owner) external onlyOwner {
     setOwner(new_owner);
