@@ -53,7 +53,7 @@ contract AspectState is Owned {
 
   bytes32[]                      private generation_ids;
   mapping(bytes32 => Generation) private generations;
-  mapping(bytes32 => bool)               record_hashes;
+  mapping(bytes32 => bool)       private record_hashes;
   mapping(bytes32 => Record)             pending_records;
   mapping(address => bytes32[])          records_by_recipient;
   address[]                              approvers;
