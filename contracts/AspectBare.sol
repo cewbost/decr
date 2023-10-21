@@ -9,7 +9,7 @@ function setBit(bytes memory bts, uint idx) pure {
   bts[byte_idx] = bts[byte_idx] | toBit(idx % 8);
 }
 
-using { setBit, setBitStorage } for bytes;
+using { setBit } for bytes;
 
 contract AspectBare is Aspect {
 
@@ -36,13 +36,8 @@ contract AspectBare is Aspect {
   }
 
   function setApprovers(address[] calldata accs, address[] calldata enable) external {
-    for (uint n = 0; n < accs.length; n++) {
-      approvers.push(accs[n]);
-      approvers_idx[accs[n]] = n + 1;
-      for (uint m = 0; m < enable.length; m++) {
-        if (accs[n] == enable[m]) approvers_mask.setBitStorage(n);
-      }
-    }
+    for (uint n = 0; n < accs.length; n++) getsertApprover_(accs[n]);
+    for (uint n = 0; n < enable.length; n++) setApproverState_(enable[n], true);
   }
 
   function addRecordImpl(
@@ -66,7 +61,7 @@ contract AspectBare is Aspect {
   }
 
   function approverListToMask(address[] memory list) internal view returns(bytes memory) {
-    address[] memory apprs = approvers;
+    address[] memory apprs = getApprovers_();
     bytes memory res = new bytes((apprs.length + 7) / 8);
     for (uint n = 0; n < list.length; n++) {
       for (uint m = 0; m < apprs.length; m++) {

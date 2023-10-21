@@ -3,6 +3,10 @@ pragma solidity >=0.4.22 <0.9.0;
 
 import "./Owned.sol";
 
+function getBit(bytes memory bts, uint idx) pure returns(bool) {
+  return bts.length > idx / 8? (bts[idx / 8] & toBit(idx % 8)) != 0 : false;
+}
+
 function getBitStorage(bytes storage bts, uint idx) view returns(bool) {
   return bts.length > idx / 8? (bts[idx / 8] & toBit(idx % 8)) != 0 : false;
 }
@@ -29,7 +33,7 @@ function toBit(uint bit_idx) pure returns(bytes1) {
   return bytes1(uint8(1 << bit_idx));
 }
 
-using { getBitStorage, setBitStorage, unsetBitStorage } for bytes;
+using { getBit, getBitStorage, setBitStorage, unsetBitStorage } for bytes;
 
 contract AspectState is Owned {
 
@@ -56,8 +60,8 @@ contract AspectState is Owned {
   mapping(bytes32 => bool)       private record_hashes;
   mapping(bytes32 => Record)     private pending_records;
   mapping(address => bytes32[])  private records_by_recipient;
-  address[]                              approvers;
-  mapping(address => uint)               approvers_idx;
+  address[]                      private approvers;
+  mapping(address => uint)       private approvers_idx;
   bytes                                  approvers_mask;
 
   event AspectGranted (
@@ -113,21 +117,18 @@ contract AspectState is Owned {
   }
 
   function enableApprover(address approver) external onlyOwner {
-    approvers_mask.setBitStorage(getApproverIdx(approver));
+    setApproverState_(approver, true);
   }
 
   function enableApproverForGeneration(
     address approver,
     bytes32 gen_id
   ) external notExpiredGeneration(gen_id) onlyOwner {
-    generations[gen_id].approvers_mask.setBitStorage(getApproverIdx(approver));
+    generations[gen_id].approvers_mask.setBitStorage(getsertApprover_(approver));
   }
 
   function disableApprover(address approver) external onlyOwner {
-    uint idx = approvers_idx[approver];
-    if (idx > 0) {
-      approvers_mask.unsetBitStorage(idx - 1);
-    }
+    setApproverState_(approver, false);
   }
 
   function disableApproverForGeneration(
@@ -180,7 +181,18 @@ contract AspectState is Owned {
     pending_records[hash].approvers.setBitStorage(approvers_idx[msg.sender] - 1);
   }
 
-  function getApproverIdx(address approver) internal returns (uint) {
+  function setApproverState_(address approver, bool enable) internal {
+    if (enable) {
+      approvers_mask.setBitStorage(getsertApprover_(approver));
+    } else {
+      uint idx = approvers_idx[approver];
+      if (idx > 0) {
+        approvers_mask.unsetBitStorage(idx - 1);
+      }
+    }
+  }
+
+  function getsertApprover_(address approver) internal returns(uint) {
     uint idx = approvers_idx[approver];
     if (idx == 0) {
       approvers.push(approver);
@@ -232,6 +244,20 @@ contract AspectState is Owned {
     Record[] memory recs = new Record[](ids.length);
     for (uint n = 0; n < ids.length; n++) recs[n] = pending_records[ids[n]];
     return recs;
+  }
+
+  function getApprovers_() internal view returns(address[] memory) {
+    return approvers;
+  }
+
+  function getApprovers_(bytes memory mask) internal view returns(address[] memory) {
+    uint alen = approvers.length;
+    address[] memory apps = new address[](alen);
+    uint acount = 0;
+    for (uint n = 0; n < alen; n++) if (mask.getBit(n)) apps[acount++] = approvers[n];
+    address[] memory res = new address[](acount);
+    for (uint n = 0; n < acount; n++) res[n] = apps[n];
+    return res;
   }
 
   modifier pendingRecord(bytes32 hash) {

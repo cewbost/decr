@@ -3,12 +3,6 @@ pragma solidity >=0.4.22 <0.9.0;
 
 import "./AspectState.sol";
 
-function getBit(bytes memory bts, uint idx) pure returns(bool) {
-  return bts.length > idx / 8? (bts[idx / 8] & toBit(idx % 8)) != 0 : false;
-}
-
-using { getBit } for bytes;
-
 contract Aspect is AspectState {
 
   struct RecordResponse {
@@ -54,12 +48,14 @@ contract Aspect is AspectState {
   }
 
   function getApprovers() external view returns(ApproverResponse[] memory) {
-    uint num = approvers.length;
-    ApproverResponse[] memory res = new ApproverResponse[](num);
-    for (uint n = 0; n < num; n++) {
-      address approver = approvers[n];
-      res[n].approver  = approver;
-      res[n].enabled   = approvers_mask.getBit(approvers_idx[approver] - 1);
+    address[] memory apprs = getApprovers_();
+    address[] memory enabled = getApprovers_(approvers_mask);
+    ApproverResponse[] memory res = new ApproverResponse[](apprs.length);
+    for (uint n = 0; n < apprs.length; n++) res[n].approver = apprs[n];
+    uint stepper = 0;
+    for (uint n = 0; n < enabled.length; n++) {
+      while (apprs[stepper] != enabled[n]) stepper++;
+      res[stepper].enabled = true;
     }
     return res;
   }
@@ -72,7 +68,7 @@ contract Aspect is AspectState {
         id:              ids[n],
         begin_timestamp: gens[n].begin_timestamp,
         end_timestamp:   gens[n].end_timestamp,
-        approvers:       maskToApproverList(gens[n].approvers_mask)
+        approvers:       getApprovers_(gens[n].approvers_mask)
       });
     }
     return res;
@@ -101,20 +97,8 @@ contract Aspect is AspectState {
       res[n].timestamp = recs[n].timestamp;
       res[n].details = recs[n].details;
       res[n].content = recs[n].content;
-      res[n].approvers = maskToApproverList(recs[n].approvers);
+      res[n].approvers = getApprovers_(recs[n].approvers);
     }
-    return res;
-  }
-
-  function maskToApproverList(bytes memory mask) internal view returns(address[] memory) {
-    uint alen = approvers.length;
-    address[] memory apps = new address[](alen);
-    uint acount = 0;
-    for (uint a = 0; a < alen; a++) {
-      if (mask.getBit(a)) apps[acount++] = approvers[a];
-    }
-    address[] memory res = new address[](acount);
-    for (uint a = 0; a < acount; a++) res[a] = apps[a];
     return res;
   }
 }
