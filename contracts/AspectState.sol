@@ -62,7 +62,7 @@ contract AspectState is Owned {
   mapping(address => bytes32[])  private records_by_recipient;
   address[]                      private approvers;
   mapping(address => uint)       private approvers_idx;
-  bytes                                  approvers_mask;
+  bytes                          private approvers_mask;
 
   event AspectGranted (
     address recipient,
@@ -258,6 +258,10 @@ contract AspectState is Owned {
     address[] memory res = new address[](acount);
     for (uint n = 0; n < acount; n++) res[n] = apps[n];
     return res;
+  }
+
+  function getApproversMask_() internal view returns(bytes memory) {
+    return approvers_mask;
   }
 
   modifier pendingRecord(bytes32 hash) {

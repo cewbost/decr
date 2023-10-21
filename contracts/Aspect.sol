@@ -40,7 +40,7 @@ contract Aspect is AspectState {
   ) external onlyOwner uniqueGeneration(id) {
     require(id != "",    "generation ID must be provided");
     require(begin < end, "ending must be before beginning");
-    insertGeneration_(id, begin, end, approvers_mask);
+    insertGeneration_(id, begin, end, getApproversMask_());
   }
 
   function amIOwner() external view returns(bool) {
@@ -49,7 +49,7 @@ contract Aspect is AspectState {
 
   function getApprovers() external view returns(ApproverResponse[] memory) {
     address[] memory apprs = getApprovers_();
-    address[] memory enabled = getApprovers_(approvers_mask);
+    address[] memory enabled = getApprovers_(getApproversMask_());
     ApproverResponse[] memory res = new ApproverResponse[](apprs.length);
     for (uint n = 0; n < apprs.length; n++) res[n].approver = apprs[n];
     uint stepper = 0;
