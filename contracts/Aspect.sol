@@ -85,9 +85,9 @@ contract Aspect is AspectState {
   }
 
   function getPendingRecordsByRecipient(
-    address account
+    address recipient
   ) external view returns(RecordResponse[] memory) {
-    return getPendingRecords(records_by_recipient[account]);
+    return getPendingRecords(getRecipientRecordIds_(recipient));
   }
 
   function getPendingRecords(bytes32[] memory ids) internal view returns(RecordResponse[] memory) {
