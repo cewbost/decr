@@ -32,22 +32,6 @@ contract AspectBare is Aspect {
     bytes32            content,
     address[] calldata apprs
   ) external {
-    addRecordImpl(recipient, gen_id, timestamp, details, content, apprs);
-  }
-
-  function setApprovers(address[] calldata accs, address[] calldata enable) external {
-    for (uint n = 0; n < accs.length; n++) getsertApprover_(accs[n]);
-    for (uint n = 0; n < enable.length; n++) setApproverState_(enable[n], true);
-  }
-
-  function addRecordImpl(
-    address            recipient,
-    bytes32            gen_id,
-    uint64             timestamp,
-    bytes24            details,
-    bytes32            content,
-    address[] calldata apprs
-  ) internal {
     Record memory rec = Record({
       recipient:  recipient,
       generation: gen_id,
@@ -58,6 +42,11 @@ contract AspectBare is Aspect {
     });
     bytes32 hash = hashRecord(rec);
     insertPendingRecord_(hash, rec);
+  }
+
+  function setApprovers(address[] calldata accs, address[] calldata enable) external {
+    for (uint n = 0; n < accs.length; n++) getsertApprover_(accs[n]);
+    for (uint n = 0; n < enable.length; n++) setApproverState_(enable[n], true);
   }
 
   function approverListToMask(address[] memory list) internal view returns(bytes memory) {
