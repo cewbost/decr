@@ -3,7 +3,7 @@ pragma solidity >=0.4.22 <0.9.0;
 
 import "./AspectState.sol";
 
-contract Aspect is AspectState {
+contract Aspect is AspectModel {
 
   struct RecordResponse {
     bytes32   hash;

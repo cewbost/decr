@@ -35,7 +35,7 @@ function toBit(uint bit_idx) pure returns(bytes1) {
 
 using { getBit, getBitStorage, setBitStorage, unsetBitStorage } for bytes;
 
-contract AspectState is Owned {
+contract AspectModel is Owned {
 
   struct Record {
     address recipient;
