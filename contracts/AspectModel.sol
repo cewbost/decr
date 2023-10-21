@@ -76,55 +76,6 @@ contract AspectModel is Owned {
     tag = t;
   }
 
-  function grant(bytes32 hash) external onlyOwner pendingRecord(hash) {
-    Record storage record = pending_records[hash];
-    emit AspectGranted(
-      record.recipient,
-      record.generation,
-      record.details,
-      record.content,
-      record.approvers
-    );
-    delete pending_records[hash];
-  }
-
-  function approve(bytes32 hash) external pendingRecord(hash) {
-    Record storage pending_record = pending_records[hash];
-    addApproval(pending_record.generation, hash);
-  }
-
-  function clearGeneration(bytes32 gen) external onlyOwner expiredGeneration(gen) {
-    bytes32[] storage records = generations[gen].records;
-    uint len = records.length;
-    for (uint n = 0; n < len; n++) delete pending_records[records[n]];
-    delete generations[gen].records;
-  }
-
-  function enableApprover(address approver) external onlyOwner {
-    setApproverState_(approver, true);
-  }
-
-  function enableApproverForGeneration(
-    address approver,
-    bytes32 gen_id
-  ) external notExpiredGeneration(gen_id) onlyOwner {
-    generations[gen_id].approvers_mask.setBitStorage(getsertApprover_(approver));
-  }
-
-  function disableApprover(address approver) external onlyOwner {
-    setApproverState_(approver, false);
-  }
-
-  function disableApproverForGeneration(
-    address approver,
-    bytes32 gen_id
-  ) external notExpiredGeneration(gen_id) onlyOwner {
-    uint idx = approvers_idx[approver];
-    if (idx > 0) {
-      generations[gen_id].approvers_mask.unsetBitStorage(idx - 1);
-    }
-  }
-
   function insertGeneration_(
     bytes32        id,
     uint64         begin,
@@ -156,8 +107,41 @@ contract AspectModel is Owned {
     records_by_recipient[rec.recipient].push(hash);
   }
 
-  function addApproval(bytes32 generation, bytes32 hash) internal onlyApprover(generation) {
-    pending_records[hash].approvers.setBitStorage(approvers_idx[msg.sender] - 1);
+  function grant_(bytes32 hash) internal assertOnlyOwner {
+    // Record must be pending.
+    // Generation must be active.
+    Record storage record = pending_records[hash];
+    emit AspectGranted(
+      record.recipient,
+      record.generation,
+      record.details,
+      record.content,
+      record.approvers
+    );
+    delete pending_records[hash];
+  }
+
+  function approve_(bytes32 hash) internal {
+    // Record must be pending.
+    // Generation must be active.
+    // Sender must be approver of generation.
+    Record storage pending_record = pending_records[hash];
+    uint idx = approvers_idx[msg.sender];
+    require(idx > 0 &&
+      generations[pending_record.generation].approvers_mask.getBitStorage(idx - 1),
+      "only approver can perform this action");
+    pending_record.approvers.setBitStorage(approvers_idx[msg.sender] - 1);
+  }
+
+  function clearGeneration_(bytes32 gen) internal assertOnlyOwner {
+    // Generation must be expired.
+    Generation storage generation = generations[gen];
+    require(generation.end_timestamp != 0, "generation does not exist");
+    require(generation.end_timestamp < block.timestamp, "generation must be expired");
+    bytes32[] storage records = generation.records;
+    uint len = records.length;
+    for (uint n = 0; n < len; n++) delete pending_records[records[n]];
+    delete generations[gen].records;
   }
 
   function setApproverState_(address approver, bool enable) internal {
@@ -167,6 +151,20 @@ contract AspectModel is Owned {
       uint idx = approvers_idx[approver];
       if (idx > 0) {
         approvers_mask.unsetBitStorage(idx - 1);
+      }
+    }
+  }
+
+  function setGenerationApproverState_(address approver, bytes32 gen_id, bool enable) internal {
+    Generation storage generation = generations[gen_id];
+    require(generation.end_timestamp != 0, "generation does not exist");
+    require(generation.end_timestamp >= block.timestamp, "generation is expired");
+    if (enable) {
+      generation.approvers_mask.setBitStorage(getsertApprover_(approver));
+    } else {
+      uint idx = approvers_idx[approver];
+      if (idx > 0) {
+        generation.approvers_mask.unsetBitStorage(idx - 1);
       }
     }
   }
@@ -272,20 +270,6 @@ contract AspectModel is Owned {
     _;
   }
 
-  modifier expiredGeneration(bytes32 id) {
-    Generation storage generation = generations[id];
-    require(generation.end_timestamp != 0, "generation does not exist");
-    require(generation.end_timestamp < block.timestamp, "generation must be expired");
-    _;
-  }
-
-  modifier notExpiredGeneration(bytes32 id) {
-    Generation storage generation = generations[id];
-    require(generation.end_timestamp != 0, "generation does not exist");
-    require(generation.end_timestamp > block.timestamp, "generation is expired");
-    _;
-  }
-
   modifier uniqueGeneration(bytes32 id) {
     require(generations[id].end_timestamp == 0, "already exists");
     _;
@@ -293,13 +277,6 @@ contract AspectModel is Owned {
 
   modifier uniqueRecord(bytes32 hash) {
     require(!record_hashes[hash], "already exists");
-    _;
-  }
-
-  modifier onlyApprover(bytes32 generation) {
-    uint idx = approvers_idx[msg.sender];
-    require(idx > 0 && generations[generation].approvers_mask.getBitStorage(idx - 1),
-      "only approver can perform this action");
     _;
   }
 

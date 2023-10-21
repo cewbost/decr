@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.4.22 <0.9.0;
 
-import "./AspectState.sol";
+import "./AspectModel.sol";
 
 contract Aspect is AspectModel {
 
@@ -27,7 +27,7 @@ contract Aspect is AspectModel {
     bool    enabled;
   }
 
-  constructor(bytes32 t, address owner) AspectState(t, owner) {}
+  constructor(bytes32 t, address owner) AspectModel(t, owner) {}
 
   function changeOwnership(address new_owner) external onlyOwner {
     setOwner(new_owner);
@@ -58,6 +58,40 @@ contract Aspect is AspectModel {
     require(id != "",    "generation ID must be provided");
     require(begin < end, "ending must be before beginning");
     insertGeneration_(id, begin, end, getApproversMask_());
+  }
+
+  function grant(bytes32 hash) external onlyOwner pendingRecord(hash) {
+    grant_(hash);
+  }
+
+  function approve(bytes32 hash) external pendingRecord(hash) {
+    approve_(hash);
+  }
+
+  function clearGeneration(bytes32 gen) external onlyOwner {
+    clearGeneration_(gen);
+  }
+
+  function enableApprover(address approver) external onlyOwner {
+    setApproverState_(approver, true);
+  }
+
+  function enableApproverForGeneration(
+    address approver,
+    bytes32 gen_id
+  ) external onlyOwner {
+    setGenerationApproverState_(approver, gen_id, true);
+  }
+
+  function disableApprover(address approver) external onlyOwner {
+    setApproverState_(approver, false);
+  }
+
+  function disableApproverForGeneration(
+    address approver,
+    bytes32 gen_id
+  ) external onlyOwner {
+    setGenerationApproverState_(approver, gen_id, false);
   }
 
   function amIOwner() external view returns(bool) {
