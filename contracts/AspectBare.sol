@@ -40,8 +40,7 @@ contract AspectBare is Aspect {
       timestamp:  timestamp,
       approvers:  approverListToMask(apprs)
     });
-    bytes32 hash = hashRecord(rec);
-    insertPendingRecord_(hash, rec);
+    insertPendingRecord_(rec);
   }
 
   function setApprovers(address[] calldata accs, address[] calldata enable) external {

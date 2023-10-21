@@ -76,22 +76,6 @@ contract AspectState is Owned {
     tag = t;
   }
 
-  function request(
-    bytes32 gen_id,
-    bytes24 details,
-    bytes32 content
-  ) external activeGeneration(gen_id) {
-    Record memory rec = Record({
-      recipient:  msg.sender,
-      generation: gen_id,
-      details:    details,
-      content:    content,
-      timestamp:  uint64(block.timestamp),
-      approvers:  ""
-    });
-    addPendingRecord(rec, hashRecord(rec));
-  }
-
   function grant(bytes32 hash) external onlyOwner pendingRecord(hash) {
     Record storage record = pending_records[hash];
     emit AspectGranted(
@@ -159,22 +143,17 @@ contract AspectState is Owned {
     generation_ids.push(id);
   }
 
-  function insertPendingRecord_(bytes32 hash, Record memory rec) internal {
+  function insertPendingRecord_(Record memory rec) internal {
+    // Record must not exist.
     // Hash must match record.
     // Generation must be active.
     // Timestamp must be now.
     // Approvers must be empty.
+    bytes32 hash = hashRecord_(rec);
     record_hashes[hash]   = true;
     pending_records[hash] = rec;
     generations[rec.generation].records.push(hash);
     records_by_recipient[rec.recipient].push(hash);
-  }
-
-  function addPendingRecord(Record memory rec, bytes32 hash) internal uniqueRecord(hash) {
-    pending_records[hash] = rec;
-    generations[rec.generation].records.push(hash);
-    records_by_recipient[rec.recipient].push(hash);
-    record_hashes[hash] = true;
   }
 
   function addApproval(bytes32 generation, bytes32 hash) internal onlyApprover(generation) {
@@ -200,15 +179,6 @@ contract AspectState is Owned {
       approvers_idx[approver] = idx;
     }
     return idx - 1;
-  }
-
-  function hashRecord(Record memory rec) internal pure returns(bytes32) {
-    return keccak256(bytes.concat(
-      bytes20(rec.recipient),
-      bytes32(rec.generation),
-      rec.details,
-      rec.content
-    ));
   }
 
   function getGenerations_() internal view returns(bytes32[] memory, Generation[] memory) {
@@ -262,6 +232,20 @@ contract AspectState is Owned {
 
   function getApproversMask_() internal view returns(bytes memory) {
     return approvers_mask;
+  }
+
+  function isNewRecord_(Record memory rec) internal view returns(bool) {
+    bytes32 hash = hashRecord_(rec);
+    return !record_hashes[hash];
+  }
+
+  function hashRecord_(Record memory rec) private pure returns(bytes32) {
+    return keccak256(bytes.concat(
+      bytes20(rec.recipient),
+      bytes32(rec.generation),
+      rec.details,
+      rec.content
+    ));
   }
 
   modifier pendingRecord(bytes32 hash) {

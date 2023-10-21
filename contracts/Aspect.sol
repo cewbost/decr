@@ -33,6 +33,23 @@ contract Aspect is AspectState {
     setOwner(new_owner);
   }
 
+  function request(
+    bytes32 gen_id,
+    bytes24 details,
+    bytes32 content
+  ) external activeGeneration(gen_id) {
+    Record memory rec = Record({
+      recipient:  msg.sender,
+      generation: gen_id,
+      details:    details,
+      content:    content,
+      timestamp:  uint64(block.timestamp),
+      approvers:  ""
+    });
+    require(isNewRecord_(rec), "already exists");
+    insertPendingRecord_(rec);
+  }
+
   function newGeneration(
     bytes32 id,
     uint64  begin,
