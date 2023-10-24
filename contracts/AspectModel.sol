@@ -64,6 +64,10 @@ contract AspectModel is Owned {
   mapping(address => uint)       private approvers_idx;
   bytes                          private approvers_mask;
 
+  event NewGeneration (
+    bytes32 id
+  );
+
   event AspectGranted (
     address recipient,
     bytes32 generation,
@@ -84,7 +88,7 @@ contract AspectModel is Owned {
   ) internal assertOnlyOwner {
     // Generation id must be unique.
     // Generation must end after beginning.
-    // Generation must be listed in generation_ids. TODO remove generation_ids.
+    // Generation must be listed in generation_ids.
     // Generation must not be expired.
     // Generation approvers_mask must not be longer than total approvers list.
     Generation storage generation = generations[id];
@@ -92,6 +96,7 @@ contract AspectModel is Owned {
     generation.end_timestamp   = end;
     generation.approvers_mask  = mask;
     generation_ids.push(id);
+    emit NewGeneration(id);
   }
 
   function insertPendingRecord_(Record memory rec) internal {

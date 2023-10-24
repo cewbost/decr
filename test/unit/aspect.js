@@ -261,7 +261,7 @@ contract("Aspect", accounts => {
     })
   })
   describe("newGeneration", () => {
-    it("should add a new generation", async () => {
+    it("should emit new generation event and add a new generation", async () => {
       await testAspect.setApprovers([
         accounts[2],
         accounts[3],
@@ -273,7 +273,15 @@ contract("Aspect", accounts => {
         accounts[4],
         accounts[6]
       ])
-      await testAspect.newGeneration(asEthWord(1), now, now + 10 * day, fromOwner)
+      let logs = (await testAspect.newGeneration(asEthWord(1), now, now + 10 * day, fromOwner)).logs
+      expect(logs).to(consistOf([
+        matchFields({
+          "event": "NewGeneration",
+          "args": matchFields({
+            "id": asEthWord(1),
+          })
+        })
+      ]))
       let gens = await testAspect.getGenerations(fromOwner)
       expect(gens.map(objectify)).to(consistOf([matchFields({
         "id":              asEthWord(1),

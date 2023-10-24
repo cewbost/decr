@@ -25,6 +25,13 @@ contract("Full", accounts => {
     }),
   }))
 
+  matchNewGenerationEvent = (id) => matchFields({
+    "event": "NewGeneration",
+    "args": matchFields({
+      "id": asEthWord(id),
+    })
+  })
+
   matchGrantEvent = (acc, gen, details, content, approvers) => matchFields({
     "event": "AspectGranted",
     "args": matchFields({
@@ -58,18 +65,20 @@ contract("Full", accounts => {
 
   describe("Management", () => {
     it("should allow setting approvers by generation", async () => {
-      await testAspect.newGeneration(
+      var logs = []
+      logs.push(...(await testAspect.newGeneration(
         asEthWord(1),
         unixTime,
         unixTime + 30 * day,
         fromOwner
-      )
-      await testAspect.newGeneration(
+      )).logs)
+      logs.push(...(await testAspect.newGeneration(
         asEthWord(2),
         unixTime + 15 * day,
         unixTime + 45 * day,
         fromOwner
-      )
+      )).logs)
+      expect(logs).to(matchElements([matchNewGenerationEvent(1), matchNewGenerationEvent(2)]))
 
       await testAspect.enableApproverForGeneration(accounts[1], asEthWord(1), fromOwner)
       await testAspect.enableApproverForGeneration(accounts[2], asEthWord(1), fromOwner)
@@ -113,32 +122,32 @@ contract("Full", accounts => {
     it("should set generation approvers by contract approvers", async () => {
       await testAspect.enableApprover(accounts[1], fromOwner)
       await testAspect.enableApprover(accounts[2], fromOwner)
-      await testAspect.newGeneration(
+      expect((await testAspect.newGeneration(
         asEthWord(1),
         unixTime,
         unixTime + 30 * day,
         fromOwner
-      )
+      )).logs).to(matchElements([matchNewGenerationEvent(1)]))
 
       await testAspect.disableApprover(accounts[1], fromOwner)
       await testAspect.enableApprover(accounts[3], fromOwner)
       await testAspect.enableApprover(accounts[4], fromOwner)
-      await testAspect.newGeneration(
+      expect((await testAspect.newGeneration(
         asEthWord(2),
         unixTime + 15 * day,
         unixTime + 45 * day,
         fromOwner
-      )
+      )).logs).to(matchElements([matchNewGenerationEvent(2)]))
 
       await testAspect.disableApprover(accounts[2], fromOwner)
       await testAspect.enableApprover(accounts[5], fromOwner)
       await testAspect.enableApprover(accounts[6], fromOwner)
-      await testAspect.newGeneration(
+      expect((await testAspect.newGeneration(
         asEthWord(3),
         unixTime + 30 * day,
         unixTime + 60 * day,
         fromOwner
-      )
+      )).logs).to(matchElements([matchNewGenerationEvent(3)]))
 
       let resp = await testAspect.getGenerations(fromOwner)
       expect(resp.map(objectify)).to(consistOf([
@@ -168,12 +177,12 @@ contract("Full", accounts => {
       await testAspect.enableApprover(accounts[2], { from: accounts[1] })
       await testAspect.enableApprover(accounts[3], { from: accounts[1] })
       await testAspect.disableApprover(accounts[2], { from: accounts[1] })
-      await testAspect.newGeneration(
+      expect((await testAspect.newGeneration(
         asEthWord(1),
         unixTime,
         unixTime + 30 * day,
         { from: accounts[1] }
-      )
+      )).logs).to(matchElements([matchNewGenerationEvent(1)]))
 
       expect(await awaitException(() => {
         return testAspect.newGeneration(
@@ -208,12 +217,12 @@ contract("Full", accounts => {
 
       await testAspect.enableApprover(accounts[4], { from: accounts[0] })
       await testAspect.disableApprover(accounts[3], { from: accounts[0] })
-      await testAspect.newGeneration(
+      expect((await testAspect.newGeneration(
         asEthWord(2),
         unixTime,
         unixTime + 30 * day,
         { from: accounts[0] }
-      )
+      )).logs).to(matchElements([matchNewGenerationEvent(2)]))
 
       expect(await awaitException(() => {
         return testAspect.enableApprover(accounts[5], { from: accounts[1] })
