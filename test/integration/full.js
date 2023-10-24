@@ -255,7 +255,7 @@ contract("Full", accounts => {
         "details":   asEthBytes(`details ${num}`,  24),
         "content":   asEthWord(`content ${num}`), 
       })
-      let records = (await testAspect.getPendingRecordsByGeneration(asEthWord(1))).map(objectify)
+      let records = (await testAspect.getRecordsByGeneration(asEthWord(1))).map(objectify)
       expect(records).to(consistOf([
         matchRecord(0),
         matchRecord(1),
@@ -275,7 +275,7 @@ contract("Full", accounts => {
         matchGrantEvent(accounts[1], 1, "details 4", "content 4"),
       ]))
       let matchPending = consistOf([matchRecord(1), matchRecord(3)])
-      expect((await testAspect.getPendingRecordsByGeneration(asEthWord(1))).map(objectify))
+      expect((await testAspect.getRecordsByGeneration(asEthWord(1))).map(objectify))
         .to(matchPending)
     })
     it("should allow granting requested aspects, multiple users and generations", async () => {
@@ -305,7 +305,7 @@ contract("Full", accounts => {
         return res
       }
       let getPendingRecordsByGenerations = () =>
-        getRecords(n => testAspect.getPendingRecordsByGeneration(asEthWord(n)), numGenerations)
+        getRecords(n => testAspect.getRecordsByGeneration(asEthWord(n)), numGenerations)
 
       let gensRecs = await getPendingRecordsByGenerations()
       expect(gensRecs).to(matchElements([
@@ -356,7 +356,7 @@ contract("Full", accounts => {
         asEthWord("content"),
         { from: accounts[2] }
       )
-      let hash = (await testAspect.getPendingRecordsByGeneration(asEthWord(1)))
+      let hash = (await testAspect.getRecordsByGeneration(asEthWord(1)))
         .map(objectify)[0].hash
 
       for (let acc of accounts.slice(1, 4)) {
@@ -378,7 +378,7 @@ contract("Full", accounts => {
         asEthWord("content"),
         { from: accounts[2] }
       )
-      let hash = (await testAspect.getPendingRecordsByGeneration(asEthWord(1)))
+      let hash = (await testAspect.getRecordsByGeneration(asEthWord(1)))
         .map(objectify)[0].hash
       await testAspect.grant(hash, fromOwner)
 
@@ -413,14 +413,14 @@ contract("Full", accounts => {
         asEthWord("content"),
         { from: acc }
       )
-      let recs = (await testAspect.getPendingRecordsByGeneration(asEthWord(1))).map(objectify)
+      let recs = (await testAspect.getRecordsByGeneration(asEthWord(1))).map(objectify)
       let hashes = accounts.slice(4, 7)
         .map(acc => recs.filter(rec => rec.recipient == acc)[0].hash)
 
       for (let [idx, hash] of hashes.entries()) for (let app of approvers.slice(0, idx + 1))
         await testAspect.approve(hash, { from: app })
 
-      recs = (await testAspect.getPendingRecordsByGeneration(asEthWord(1))).map(objectify)
+      recs = (await testAspect.getRecordsByGeneration(asEthWord(1))).map(objectify)
       expect(recs).to(consistOf([
         matchFields({
           "hash":      hashes[0],
@@ -451,7 +451,7 @@ contract("Full", accounts => {
         asEthWord("content"),
         { from: accounts[4] }
       )
-      let hash = (await testAspect.getPendingRecordsByGeneration(asEthWord(1)))
+      let hash = (await testAspect.getRecordsByGeneration(asEthWord(1)))
         .map(objectify)[0].hash
       await testAspect.grant(hash, fromOwner)
 

@@ -63,9 +63,9 @@ contract("Aspect", accounts => {
       let match7 = await requestAndMatcher(accounts[2], asEthWord(1), "det 7", "con 7")
       let match8 = await requestAndMatcher(accounts[2], asEthWord(2), "det 8", "con 8")
 
-      recs = await testAspect.getPendingRecordsByGeneration(asEthWord(1))
+      recs = await testAspect.getRecordsByGeneration(asEthWord(1))
       expect(recs.map(objectify)).to(consistOf([match1, match3, match5, match7]))
-      recs = await testAspect.getPendingRecordsByGeneration(asEthWord(2))
+      recs = await testAspect.getRecordsByGeneration(asEthWord(2))
       expect(recs.map(objectify)).to(consistOf([match2, match4, match6, match8]))
     })
     it("should not allow requesting from a generation which does not exist", async () => {
@@ -136,7 +136,7 @@ contract("Aspect", accounts => {
         asEthWord("content"),
         [accounts[2], accounts[4], accounts[6]]
       )
-      hash = (await testAspect.getPendingRecordsByGeneration(asEthWord(1)))[0].hash
+      hash = (await testAspect.getRecordsByGeneration(asEthWord(1)))[0].hash
     })
     it("should emit grant event and remove the record from pending", async () => {
       expect((await testAspect.grant(hash, fromOwner)).logs).to(consistOf([
@@ -160,7 +160,7 @@ contract("Aspect", accounts => {
         "approvers":  consistOf([accounts[2], accounts[4], accounts[6]]),
         "timestamp":  beApprox(now, 5),
       })])
-      expect(await testAspect.getPendingRecordsByGeneration(asEthWord(1))).to(beEmpty())
+      expect(await testAspect.getRecordsByGeneration(asEthWord(1))).to(beEmpty())
     })
     it("should only allow owner to grant", async () => {
       expect(await awaitException(() => {
@@ -189,7 +189,7 @@ contract("Aspect", accounts => {
         asEthWord("content"),
         []
       )
-      hash = (await testAspect.getPendingRecordsByGeneration(asEthWord(2)))[0].hash
+      hash = (await testAspect.getRecordsByGeneration(asEthWord(2)))[0].hash
 
       expect(await awaitException(() => {
         return testAspect.grant(hash, fromOwner)
@@ -211,13 +211,13 @@ contract("Aspect", accounts => {
         asEthWord("content 1"),
         []
       )
-      hash = (await testAspect.getPendingRecordsByGeneration(asEthWord(1)))[0].hash
+      hash = (await testAspect.getRecordsByGeneration(asEthWord(1)))[0].hash
     })
     it("should add approvals to the record", async () => {
       await testAspect.approve(hash, { from: accounts[4] })
       await testAspect.approve(hash, { from: accounts[5] })
 
-      let resp = (await testAspect.getPendingRecordsByGeneration(asEthWord(1))).map(objectify)
+      let resp = (await testAspect.getRecordsByGeneration(asEthWord(1))).map(objectify)
       expect(resp.length).to(equal(1))
       expect(resp[0]).to(matchFields({
         "hash":      hash,
@@ -248,7 +248,7 @@ contract("Aspect", accounts => {
         asEthWord("content 1"),
         []
       )
-      hash = (await testAspect.getPendingRecordsByGeneration(asEthWord(2)))[0].hash
+      hash = (await testAspect.getRecordsByGeneration(asEthWord(2)))[0].hash
 
       expect(await awaitException(() => {
         return testAspect.approve(hash, { from: accounts[2] })
@@ -338,9 +338,9 @@ contract("Aspect", accounts => {
 
       await testAspect.clearGeneration(asEthWord(1))
 
-      let resp = (await testAspect.getPendingRecordsByGeneration(asEthWord(1))).map(objectify)
+      let resp = (await testAspect.getRecordsByGeneration(asEthWord(1))).map(objectify)
       expect(resp).to(beEmpty())
-      resp = (await testAspect.getPendingRecordsByGeneration(asEthWord(2))).map(objectify)
+      resp = (await testAspect.getRecordsByGeneration(asEthWord(2))).map(objectify)
       expect(resp).to(consistOf([matchRecord(2, "det 2"), matchRecord(2, "det 4")]))
     })
     it("should only allow owner to clear generations", async () => {

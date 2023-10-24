@@ -122,7 +122,7 @@ contract Aspect is AspectModel {
     return res;
   }
 
-  function getPendingRecordsByGeneration(
+  function getRecordsByGeneration(
     bytes32 gen_id
   ) external view returns(RecordResponse[] memory) {
     bytes32[] memory ids = filterRecordIdsPending_(getGeneration_(gen_id).records);
