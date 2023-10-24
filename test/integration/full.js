@@ -277,8 +277,6 @@ contract("Full", accounts => {
       let matchPending = consistOf([matchRecord(1), matchRecord(3)])
       expect((await testAspect.getPendingRecordsByGeneration(asEthWord(1))).map(objectify))
         .to(matchPending)
-      expect((await testAspect.getPendingRecordsByRecipient(accounts[1])).map(objectify))
-        .to(matchPending)
     })
     it("should allow granting requested aspects, multiple users and generations", async () => {
       const numGenerations = 5
@@ -300,7 +298,6 @@ contract("Full", accounts => {
         "content":    asEthWord("content"), 
       })
       let matchGenWithAccs = (gen, accs) => consistOf(accs.map(arg => matchRecord(arg, gen)))
-      let matchAccWithGens = (acc, gens) => consistOf(gens.map(arg => matchRecord(acc, arg)))
 
       let getRecords = async (fn, num) => {
         let res = new Array(num)
@@ -309,8 +306,6 @@ contract("Full", accounts => {
       }
       let getPendingRecordsByGenerations = () =>
         getRecords(n => testAspect.getPendingRecordsByGeneration(asEthWord(n)), numGenerations)
-      let getPendingRecordsByRecipients = () =>
-        getRecords(n => testAspect.getPendingRecordsByRecipient(accounts[n]), numGenerations)
 
       let gensRecs = await getPendingRecordsByGenerations()
       expect(gensRecs).to(matchElements([
@@ -319,13 +314,6 @@ contract("Full", accounts => {
         matchGenWithAccs(3, [1, 2, 3, 4, 5]),
         matchGenWithAccs(4, [1, 2, 3, 4, 5]),
         matchGenWithAccs(5, [1, 2, 3, 4, 5]),
-      ]))
-      expect(await getPendingRecordsByRecipients()).to(matchElements([
-        matchAccWithGens(1, [1, 2, 3, 4, 5]),
-        matchAccWithGens(2, [1, 2, 3, 4, 5]),
-        matchAccWithGens(3, [1, 2, 3, 4, 5]),
-        matchAccWithGens(4, [1, 2, 3, 4, 5]),
-        matchAccWithGens(5, [1, 2, 3, 4, 5]),
       ]))
 
       let logs = []
@@ -352,13 +340,6 @@ contract("Full", accounts => {
         matchGenWithAccs(3, [4, 5]),
         matchGenWithAccs(4, [3, 4, 5]),
         matchGenWithAccs(5, [2, 3, 4, 5]),
-      ]))
-      expect(await getPendingRecordsByRecipients()).to(matchElements([
-        beEmpty(),
-        matchAccWithGens(2, [5]),
-        matchAccWithGens(3, [4, 5]),
-        matchAccWithGens(4, [3, 4, 5]),
-        matchAccWithGens(5, [2, 3, 4, 5]),
       ]))
     })
     it("should not allow non-owners to grant requests", async () => {

@@ -125,17 +125,7 @@ contract Aspect is AspectModel {
   function getPendingRecordsByGeneration(
     bytes32 gen_id
   ) external view returns(RecordResponse[] memory) {
-    return getPendingRecords(getGeneration_(gen_id).records);
-  }
-
-  function getPendingRecordsByRecipient(
-    address recipient
-  ) external view returns(RecordResponse[] memory) {
-    return getPendingRecords(getRecipientRecordIds_(recipient));
-  }
-
-  function getPendingRecords(bytes32[] memory ids) internal view returns(RecordResponse[] memory) {
-    ids = filterRecordIdsPending_(ids);
+    bytes32[] memory ids = filterRecordIdsPending_(getGeneration_(gen_id).records);
     Record[] memory recs = getPendingRecords_(ids);
     RecordResponse[] memory res = new RecordResponse[](recs.length);
     for (uint n = 0; n < recs.length; n++) {

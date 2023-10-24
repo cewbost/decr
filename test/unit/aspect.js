@@ -63,10 +63,6 @@ contract("Aspect", accounts => {
       let match7 = await requestAndMatcher(accounts[2], asEthWord(1), "det 7", "con 7")
       let match8 = await requestAndMatcher(accounts[2], asEthWord(2), "det 8", "con 8")
 
-      let recs = await testAspect.getPendingRecordsByRecipient(accounts[1])
-      expect(recs.map(objectify)).to(consistOf([match1, match2, match5, match6]))
-      recs = await testAspect.getPendingRecordsByRecipient(accounts[2])
-      expect(recs.map(objectify)).to(consistOf([match3, match4, match7, match8]))
       recs = await testAspect.getPendingRecordsByGeneration(asEthWord(1))
       expect(recs.map(objectify)).to(consistOf([match1, match3, match5, match7]))
       recs = await testAspect.getPendingRecordsByGeneration(asEthWord(2))
@@ -140,7 +136,7 @@ contract("Aspect", accounts => {
         asEthWord("content"),
         [accounts[2], accounts[4], accounts[6]]
       )
-      hash = (await testAspect.getPendingRecordsByRecipient(accounts[1]))[0].hash
+      hash = (await testAspect.getPendingRecordsByGeneration(asEthWord(1)))[0].hash
     })
     it("should emit grant event and remove the record from pending", async () => {
       expect((await testAspect.grant(hash, fromOwner)).logs).to(consistOf([
@@ -164,7 +160,6 @@ contract("Aspect", accounts => {
         "approvers":  consistOf([accounts[2], accounts[4], accounts[6]]),
         "timestamp":  beApprox(now, 5),
       })])
-      expect(await testAspect.getPendingRecordsByRecipient(accounts[1])).to(beEmpty())
       expect(await testAspect.getPendingRecordsByGeneration(asEthWord(1))).to(beEmpty())
     })
     it("should only allow owner to grant", async () => {
@@ -216,7 +211,7 @@ contract("Aspect", accounts => {
         asEthWord("content 1"),
         []
       )
-      hash = (await testAspect.getPendingRecordsByRecipient(accounts[1]))[0].hash
+      hash = (await testAspect.getPendingRecordsByGeneration(asEthWord(1)))[0].hash
     })
     it("should add approvals to the record", async () => {
       await testAspect.approve(hash, { from: accounts[4] })
@@ -345,7 +340,7 @@ contract("Aspect", accounts => {
 
       let resp = (await testAspect.getPendingRecordsByGeneration(asEthWord(1))).map(objectify)
       expect(resp).to(beEmpty())
-      resp = (await testAspect.getPendingRecordsByRecipient(accounts[1])).map(objectify)
+      resp = (await testAspect.getPendingRecordsByGeneration(asEthWord(2))).map(objectify)
       expect(resp).to(consistOf([matchRecord(2, "det 2"), matchRecord(2, "det 4")]))
     })
     it("should only allow owner to clear generations", async () => {
@@ -502,8 +497,8 @@ contract("Aspect", accounts => {
         }),
       ]))
       expect(objectify(await testAspect.getGeneration(asEthWord(1), fromOwner))).to(matchFields({
-          "id":        asEthWord(1),
-          "approvers": consistOf([accounts[2]]),
+        "id":        asEthWord(1),
+        "approvers": consistOf([accounts[2]]),
       }))
     })
     it("should only allow owner to disable approvers for a generation", async () => {

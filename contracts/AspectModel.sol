@@ -58,7 +58,6 @@ contract AspectModel is Owned {
   mapping(bytes32 => Generation) private generations;
   mapping(bytes32 => bool)       private record_hashes;
   mapping(bytes32 => Record)     private pending_records;
-  mapping(address => bytes32[])  private records_by_recipient;
   address[]                      private approvers;
   mapping(address => uint)       private approvers_idx;
   bytes                          private approvers_mask;
@@ -106,7 +105,6 @@ contract AspectModel is Owned {
     record_hashes[hash]   = true;
     pending_records[hash] = rec;
     generations[rec.generation].records.push(hash);
-    records_by_recipient[rec.recipient].push(hash);
   }
 
   function grant_(bytes32 hash) internal assertOnlyOwner {
@@ -183,10 +181,6 @@ contract AspectModel is Owned {
 
   function getGeneration_(bytes32 id) internal view returns(Generation memory) {
     return generations[id];
-  }
-
-  function getRecipientRecordIds_(address recipient) internal view returns(bytes32[] memory) {
-    return records_by_recipient[recipient];
   }
 
   function filterRecordIdsPending_(bytes32[] memory ids) internal view returns(bytes32[] memory) {
