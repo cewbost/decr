@@ -14,21 +14,25 @@ class MatchElementsMatcher extends Matcher {
   }
 
   match(obj) {
+    let matchers = this.#matchers.slice()
     let messages = []
-    for (let [key, elem] of obj.entries()) {
-      let res = this.#matchers[key].match(elem)
-      if (res.length > 0) messages.push([`${key}:`, res])
+    if (!Array.isArray(obj)) messages = ["expected array"]
+    else if (obj.length != this.#matchers.length) messages = ["unequal length"]
+    else {
+      for (const idx in obj) {
+        const match = this.#matchers[idx].match(obj[idx])
+        if (match.length != 0) messages.push([String(idx), match])
+      }
     }
-    if (messages.length > 0) return [
+    if (obj.length != matchers.length) return [
       ["expected", JSON.stringify(obj)],
       ["to match elements", this.#matchers.map(m => [m.description()])],
-      ["failed with errors:", messages]
-    ]
+    ].concat(messages)
     return []
   }
 
   description() {
-    return "consist of " + this.#matchers.map(m => m.description()).join(", ")
+    return "match elements " + this.#matchers.map(m => m.description()).join(", ")
   }
 }
 

@@ -2,7 +2,13 @@ const Console = artifacts.require("Console")
 const Aspect = artifacts.require("Aspect")
 const { asEthWord } = require("../../utils/ethword.js")
 const { awaitException } = require("../utils/exception.js")
-const { expect, equal, matchList, matchFields, beInstanceOf } = require("../matchers/matchers.js")
+const {
+  expect,
+  equal,
+  matchElements,
+  matchFields,
+  beInstanceOf
+} = require("../matchers/matchers.js")
 
 contract("Console", accounts => {
 
@@ -34,7 +40,7 @@ contract("Console", accounts => {
       let logs = []
       logs.push(...(await testConsole.createAspect(asEthWord(tag1), { from: accounts[1] })).logs)
       logs.push(...(await testConsole.createAspect(asEthWord(tag2), { from: accounts[2] })).logs)
-      expect(logs).to(matchList([
+      expect(logs).to(matchElements([
         matchCreateEvent(tag1),
         matchCreateEvent(tag2),
       ]))
