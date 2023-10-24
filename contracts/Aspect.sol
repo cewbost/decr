@@ -33,6 +33,16 @@ contract Aspect is AspectModel {
     setOwner(new_owner);
   }
 
+  function newGeneration(
+    bytes32 id,
+    uint64  begin,
+    uint64  end
+  ) external onlyOwner uniqueGeneration(id) {
+    require(id != "",    "generation ID must be provided");
+    require(begin < end, "ending must be before beginning");
+    insertGeneration_(id, begin, end, getApproversMask_());
+  }
+
   function request(
     bytes32 gen_id,
     bytes24 details,
@@ -48,16 +58,6 @@ contract Aspect is AspectModel {
     });
     require(isNewRecord_(rec), "already exists");
     insertPendingRecord_(rec);
-  }
-
-  function newGeneration(
-    bytes32 id,
-    uint64  begin,
-    uint64  end
-  ) external onlyOwner uniqueGeneration(id) {
-    require(id != "",    "generation ID must be provided");
-    require(begin < end, "ending must be before beginning");
-    insertGeneration_(id, begin, end, getApproversMask_());
   }
 
   function grant(bytes32 hash) external onlyOwner pendingRecord(hash) {
