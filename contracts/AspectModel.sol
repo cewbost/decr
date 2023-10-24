@@ -55,7 +55,6 @@ contract AspectModel is Owned {
 
   bytes32 immutable                      tag;
 
-  bytes32[]                      private generation_ids;
   mapping(bytes32 => Generation) private generations;
   mapping(bytes32 => bool)       private record_hashes;
   mapping(bytes32 => Record)     private pending_records;
@@ -88,14 +87,12 @@ contract AspectModel is Owned {
   ) internal assertOnlyOwner {
     // Generation id must be unique.
     // Generation must end after beginning.
-    // Generation must be listed in generation_ids.
     // Generation must not be expired.
     // Generation approvers_mask must not be longer than total approvers list.
     Generation storage generation = generations[id];
     generation.begin_timestamp = begin;
     generation.end_timestamp   = end;
     generation.approvers_mask  = mask;
-    generation_ids.push(id);
     emit NewGeneration(id);
   }
 
@@ -182,17 +179,6 @@ contract AspectModel is Owned {
       approvers_idx[approver] = idx;
     }
     return idx - 1;
-  }
-
-  function getGenerations_() internal view returns(bytes32[] memory, Generation[] memory) {
-    uint len = generation_ids.length;
-    bytes32[]    memory ids  = new bytes32[](len);
-    Generation[] memory gens = new Generation[](len);
-    for (uint n = 0; n < len; n++) {
-      ids[n] = generation_ids[n];
-      gens[n] = generations[ids[n]];
-    }
-    return (ids, gens);
   }
 
   function getGeneration_(bytes32 id) internal view returns(Generation memory) {

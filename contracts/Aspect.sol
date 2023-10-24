@@ -111,17 +111,14 @@ contract Aspect is AspectModel {
     return res;
   }
 
-  function getGenerations() external view returns(GenerationResponse[] memory) {
-    (bytes32[] memory ids, Generation[] memory gens) = getGenerations_();
-    GenerationResponse[] memory res = new GenerationResponse[](gens.length);
-    for (uint n = 0; n < gens.length; n++) {
-      res[n] = GenerationResponse({
-        id:              ids[n],
-        begin_timestamp: gens[n].begin_timestamp,
-        end_timestamp:   gens[n].end_timestamp,
-        approvers:       getApprovers_(gens[n].approvers_mask)
-      });
-    }
+  function getGeneration(bytes32 id) external view returns(GenerationResponse memory) {
+    Generation memory gen = getGeneration_(id);
+    GenerationResponse memory res = GenerationResponse({
+      id:              id,
+      begin_timestamp: gen.begin_timestamp,
+      end_timestamp:   gen.end_timestamp,
+      approvers:       getApprovers_(gen.approvers_mask)
+    });
     return res;
   }
 

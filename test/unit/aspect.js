@@ -282,13 +282,12 @@ contract("Aspect", accounts => {
           })
         })
       ]))
-      let gens = await testAspect.getGenerations(fromOwner)
-      expect(gens.map(objectify)).to(consistOf([matchFields({
+      expect(objectify(await testAspect.getGeneration(asEthWord(1), fromOwner))).to(matchFields({
         "id":              asEthWord(1),
         "begin_timestamp": beNumber(now),
         "end_timestamp":   beNumber(now + 10 * day),
         "approvers":       consistOf([accounts[2], accounts[4], accounts[6]]),
-      })]))
+      }))
     })
     it("should not allow creating multiple generations with same id", async () => {
       await testAspect.newGeneration(asEthWord(1), now, now + 10 * day, fromOwner)
@@ -424,13 +423,10 @@ contract("Aspect", accounts => {
           "enabled":  false,
         }),
       ]))
-      resp = (await testAspect.getGenerations()).map(objectify)
-      expect(resp).to(consistOf([
-        matchFields({
-          "id":        asEthWord(1),
-          "approvers": consistOf(accounts.slice(2, 4)),
-        }),
-      ]))
+      expect(objectify(await testAspect.getGeneration(asEthWord(1), fromOwner))).to(matchFields({
+        "id":        asEthWord(1),
+        "approvers": consistOf(accounts.slice(2, 4)),
+      }))
     })
     it("should only allow owner to enable approvers for a generation", async () => {
       expect(await awaitException(() => {
@@ -505,13 +501,10 @@ contract("Aspect", accounts => {
           "enabled":  false,
         }),
       ]))
-      resp = (await testAspect.getGenerations()).map(objectify)
-      expect(resp).to(consistOf([
-        matchFields({
+      expect(objectify(await testAspect.getGeneration(asEthWord(1), fromOwner))).to(matchFields({
           "id":        asEthWord(1),
           "approvers": consistOf([accounts[2]]),
-        }),
-      ]))
+      }))
     })
     it("should only allow owner to disable approvers for a generation", async () => {
       expect(await awaitException(() => {

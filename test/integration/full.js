@@ -84,40 +84,34 @@ contract("Full", accounts => {
       await testAspect.enableApproverForGeneration(accounts[2], asEthWord(1), fromOwner)
       await testAspect.enableApproverForGeneration(accounts[1], asEthWord(2), fromOwner)
 
-      let resp = await testAspect.getGenerations(fromOwner)
-      expect(resp.map(objectify)).to(consistOf([
-        matchFields({
-          "id":              beNumber(1),
-          "begin_timestamp": beNumber(unixTime),
-          "end_timestamp":   beNumber(unixTime + 30 * day),
-          "approvers":       consistOf([accounts[1], accounts[2]]),
-        }),
-        matchFields({
-          "id":              beNumber(2),
-          "begin_timestamp": beNumber(unixTime + 15 * day),
-          "end_timestamp":   beNumber(unixTime + 45 * day),
-          "approvers":       consistOf([accounts[1]]),
-        }),
-      ]))
+      expect(objectify(await testAspect.getGeneration(asEthWord(1), fromOwner))).to(matchFields({
+        "id":              beNumber(1),
+        "begin_timestamp": beNumber(unixTime),
+        "end_timestamp":   beNumber(unixTime + 30 * day),
+        "approvers":       consistOf([accounts[1], accounts[2]]),
+      }))
+      expect(objectify(await testAspect.getGeneration(asEthWord(2), fromOwner))).to(matchFields({
+        "id":              beNumber(2),
+        "begin_timestamp": beNumber(unixTime + 15 * day),
+        "end_timestamp":   beNumber(unixTime + 45 * day),
+        "approvers":       consistOf([accounts[1]]),
+      }))
 
       await testAspect.disableApproverForGeneration(accounts[1], asEthWord(1), fromOwner)
       await testAspect.disableApproverForGeneration(accounts[1], asEthWord(2), fromOwner)
 
-      resp = await testAspect.getGenerations(fromOwner)
-      expect(resp.map(objectify)).to(consistOf([
-        matchFields({
-          "id":              beNumber(1),
-          "begin_timestamp": beNumber(unixTime),
-          "end_timestamp":   beNumber(unixTime + 30 * day),
-          "approvers":       consistOf([accounts[2]]),
-        }),
-        matchFields({
-          "id":              beNumber(2),
-          "begin_timestamp": beNumber(unixTime + 15 * day),
-          "end_timestamp":   beNumber(unixTime + 45 * day),
-          "approvers":       beEmpty(),
-        }),
-      ]))
+      expect(objectify(await testAspect.getGeneration(asEthWord(1), fromOwner))).to(matchFields({
+        "id":              beNumber(1),
+        "begin_timestamp": beNumber(unixTime),
+        "end_timestamp":   beNumber(unixTime + 30 * day),
+        "approvers":       consistOf([accounts[2]]),
+      }))
+      expect(objectify(await testAspect.getGeneration(asEthWord(2), fromOwner))).to(matchFields({
+        "id":              beNumber(2),
+        "begin_timestamp": beNumber(unixTime + 15 * day),
+        "end_timestamp":   beNumber(unixTime + 45 * day),
+        "approvers":       beEmpty(),
+      }))
     })
     it("should set generation approvers by contract approvers", async () => {
       await testAspect.enableApprover(accounts[1], fromOwner)
@@ -149,27 +143,24 @@ contract("Full", accounts => {
         fromOwner
       )).logs).to(matchElements([matchNewGenerationEvent(3)]))
 
-      let resp = await testAspect.getGenerations(fromOwner)
-      expect(resp.map(objectify)).to(consistOf([
-        matchFields({
-          "id":              beNumber(1),
-          "begin_timestamp": beNumber(unixTime),
-          "end_timestamp":   beNumber(unixTime + 30 * day),
-          "approvers":       consistOf([accounts[1], accounts[2]]),
-        }),
-        matchFields({
-          "id":              beNumber(2),
-          "begin_timestamp": beNumber(unixTime + 15 * day),
-          "end_timestamp":   beNumber(unixTime + 45 * day),
-          "approvers":       consistOf([accounts[2], accounts[3], accounts[4]]),
-        }),
-        matchFields({
-          "id":              beNumber(3),
-          "begin_timestamp": beNumber(unixTime + 30 * day),
-          "end_timestamp":   beNumber(unixTime + 60 * day),
-          "approvers":       consistOf([accounts[3], accounts[4], accounts[5], accounts[6]]),
-        }),
-      ]))
+      expect(objectify(await testAspect.getGeneration(asEthWord(1), fromOwner))).to(matchFields({
+        "id":              beNumber(1),
+        "begin_timestamp": beNumber(unixTime),
+        "end_timestamp":   beNumber(unixTime + 30 * day),
+        "approvers":       consistOf([accounts[1], accounts[2]]),
+      }))
+      expect(objectify(await testAspect.getGeneration(asEthWord(2), fromOwner))).to(matchFields({
+        "id":              beNumber(2),
+        "begin_timestamp": beNumber(unixTime + 15 * day),
+        "end_timestamp":   beNumber(unixTime + 45 * day),
+        "approvers":       consistOf([accounts[2], accounts[3], accounts[4]]),
+      }))
+      expect(objectify(await testAspect.getGeneration(asEthWord(3), fromOwner))).to(matchFields({
+        "id":              beNumber(3),
+        "begin_timestamp": beNumber(unixTime + 30 * day),
+        "end_timestamp":   beNumber(unixTime + 60 * day),
+        "approvers":       consistOf([accounts[3], accounts[4], accounts[5], accounts[6]]),
+      }))
     })
     it("should allow changing ownership", async () => {
       await testAspect.changeOwnership(accounts[1], { from: accounts[0] })
@@ -228,21 +219,18 @@ contract("Full", accounts => {
         return testAspect.enableApprover(accounts[5], { from: accounts[1] })
       })).to(beVMException("only owner can perform this action"))
 
-      let resp = await testAspect.getGenerations({ from: accounts[0] })
-      expect(resp.map(objectify)).to(consistOf([
-        matchFields({
-          "id":              beNumber(1),
-          "begin_timestamp": beNumber(unixTime),
-          "end_timestamp":   beNumber(unixTime + 30 * day),
-          "approvers":       consistOf([accounts[3]]),
-        }),
-        matchFields({
-          "id":              beNumber(2),
-          "begin_timestamp": beNumber(unixTime),
-          "end_timestamp":   beNumber(unixTime + 30 * day),
-          "approvers":       consistOf([accounts[4]]),
-        }),
-      ]))
+      expect(objectify(await testAspect.getGeneration(asEthWord(1), fromOwner))).to(matchFields({
+        "id":              beNumber(1),
+        "begin_timestamp": beNumber(unixTime),
+        "end_timestamp":   beNumber(unixTime + 30 * day),
+        "approvers":       consistOf([accounts[3]]),
+      }))
+      expect(objectify(await testAspect.getGeneration(asEthWord(2), fromOwner))).to(matchFields({
+        "id":              beNumber(2),
+        "begin_timestamp": beNumber(unixTime),
+        "end_timestamp":   beNumber(unixTime + 30 * day),
+        "approvers":       consistOf([accounts[4]]),
+      }))
     })
   })
   describe("Requests", () => {
