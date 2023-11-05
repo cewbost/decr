@@ -189,8 +189,14 @@ contract Aspect is AspectModel {
   function getRecordsByGeneration(
     bytes32 gen_id
   ) external view returns(RecordResponse[] memory) {
-    bytes32[] memory ids = filterRecordIdsPending_(generations[gen_id].records);
-    Record[] memory recs = getPendingRecords_(ids);
+    bytes32[] memory ids = generations[gen_id].records;
+    uint num_ids = 0;
+    for (uint n = 0; n < ids.length; n++) {
+      if (pending_records[ids[n]].timestamp != 0) ids[num_ids++] = ids[n];
+    }
+    bytes32[] memory pending_ids = new bytes32[](num_ids);
+    for (uint n = 0; n < num_ids; n++) pending_ids[n] = ids[n];
+    Record[] memory recs = getPendingRecords_(pending_ids);
     RecordResponse[] memory res = new RecordResponse[](recs.length);
     for (uint n = 0; n < recs.length; n++) {
       res[n].hash = ids[n];

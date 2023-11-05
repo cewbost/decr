@@ -42,16 +42,6 @@ contract AspectModel is Owned {
     tag = t;
   }
 
-  function filterRecordIdsPending_(bytes32[] memory ids) internal view returns(bytes32[] memory) {
-    uint keep = 0;
-    for (uint n = 0; n < ids.length; n++) {
-      if (pending_records[ids[n]].timestamp != 0) ids[keep++] = ids[n];
-    }
-    bytes32[] memory res = new bytes32[](keep);
-    for (uint n = 0; n < keep; n++) res[n] = ids[n];
-    return res;
-  }
-
   function getPendingRecords_(bytes32[] memory ids) internal view returns(Record[] memory) {
     Record[] memory recs = new Record[](ids.length);
     for (uint n = 0; n < ids.length; n++) recs[n] = pending_records[ids[n]];
