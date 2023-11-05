@@ -36,7 +36,7 @@ contract Aspect is AspectModel {
   function newGeneration(bytes32 id, uint64 begin, uint64 end) external onlyOwner {
     require(generations[id].end_timestamp == 0, "already exists");
     require(end > block.timestamp,              "generation must not be expired");
-    insertGeneration_(id, Generation({
+    insertGeneration(id, Generation({
       begin_timestamp: begin,
       end_timestamp:   end,
       approvers_mask:  approvers_mask,
@@ -48,17 +48,22 @@ contract Aspect is AspectModel {
     bytes32 gen_id,
     bytes24 details,
     bytes32 content
-  ) external activeGeneration(gen_id) {
-    Record memory rec = Record({
+  ) external {
+    Generation storage generation = generations[gen_id];
+    require(generation.end_timestamp != 0, "generation does not exist");
+    require(
+      generation.begin_timestamp <= block.timestamp &&
+      generation.end_timestamp > block.timestamp,
+      "generation inactive"
+    );
+    insertPendingRecord(Record({
       recipient:  msg.sender,
       generation: gen_id,
       details:    details,
       content:    content,
       timestamp:  uint64(block.timestamp),
       approvers:  ""
-    });
-    require(isNewRecord_(rec), "already exists");
-    insertPendingRecord_(rec);
+    }));
   }
 
   function grant(bytes32 hash) external onlyOwner pendingRecord(hash) {
@@ -141,10 +146,18 @@ contract Aspect is AspectModel {
     return res;
   }
 
-  function insertGeneration_(bytes32 id, Generation memory generation) internal {
+  function insertGeneration(bytes32 id, Generation memory generation) internal {
     require(generation.begin_timestamp < generation.end_timestamp,
       "ending must be before beginning");
     generations[id] = generation;
     emit NewGeneration(id);
+  }
+
+  function insertPendingRecord(Record memory rec) internal {
+    bytes32 hash = hashRecord_(rec);
+    require(!record_hashes[hash], "already exists");
+    pending_records[hash] = rec;
+    record_hashes[hash]   = true;
+    generations[rec.generation].records.push(hash);
   }
 }

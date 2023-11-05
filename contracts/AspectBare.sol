@@ -15,13 +15,13 @@ contract AspectBare is Aspect {
 
   constructor(bytes32 n, address owner) Aspect(n, owner) {}
 
-  function insertGeneration(
+  function addGeneration(
     bytes32 id,
     uint64 begin,
     uint64 end,
     address[] calldata apprs
   ) external {
-    insertGeneration_(id, Generation({
+    insertGeneration(id, Generation({
       begin_timestamp: begin,
       end_timestamp:   end,
       approvers_mask:  approverListToMask(apprs),
@@ -29,7 +29,7 @@ contract AspectBare is Aspect {
     }));
   }
 
-  function insertPendingRecord(
+  function addPendingRecord(
     address            recipient,
     bytes32            gen_id,
     uint64             timestamp,
@@ -37,15 +37,14 @@ contract AspectBare is Aspect {
     bytes32            content,
     address[] calldata apprs
   ) external {
-    Record memory rec = Record({
+    insertPendingRecord(Record({
       recipient:  recipient,
       generation: gen_id,
       details:    details,
       content:    content,
       timestamp:  timestamp,
       approvers:  approverListToMask(apprs)
-    });
-    insertPendingRecord_(rec);
+    }));
   }
 
   function setApprovers(address[] calldata accs, address[] calldata enable) external {

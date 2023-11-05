@@ -56,8 +56,8 @@ contract AspectModel is Owned {
   bytes32 immutable                      tag;
 
   mapping(bytes32 => Generation)         generations;
-  mapping(bytes32 => bool)       private record_hashes;
-  mapping(bytes32 => Record)     private pending_records;
+  mapping(bytes32 => bool)               record_hashes;
+  mapping(bytes32 => Record)             pending_records;
   address[]                      private approvers;
   mapping(address => uint)       private approvers_idx;
   bytes                                  approvers_mask;
@@ -76,18 +76,6 @@ contract AspectModel is Owned {
 
   constructor(bytes32 t, address owner) Owned(owner) {
     tag = t;
-  }
-
-  function insertPendingRecord_(Record memory rec) internal {
-    // Record must not exist.
-    // Hash must match record.
-    // Generation must be active.
-    // Timestamp must be now.
-    // Approvers must be empty.
-    bytes32 hash = hashRecord_(rec);
-    record_hashes[hash]   = true;
-    pending_records[hash] = rec;
-    generations[rec.generation].records.push(hash);
   }
 
   function grant_(bytes32 hash) internal {
@@ -205,7 +193,7 @@ contract AspectModel is Owned {
     return !record_hashes[hash];
   }
 
-  function hashRecord_(Record memory rec) private pure returns(bytes32) {
+  function hashRecord_(Record memory rec) internal pure returns(bytes32) {
     return keccak256(bytes.concat(
       bytes20(rec.recipient),
       bytes32(rec.generation),
@@ -219,17 +207,6 @@ contract AspectModel is Owned {
     Record storage record = pending_records[hash];
     require(record.timestamp != 0, "record not pending");
     Generation storage generation = generations[record.generation];
-    require(
-      generation.begin_timestamp <= block.timestamp &&
-      generation.end_timestamp > block.timestamp,
-      "generation inactive"
-    );
-    _;
-  }
-
-  modifier activeGeneration(bytes32 id) {
-    Generation storage generation = generations[id];
-    require(generation.end_timestamp != 0, "generation does not exist");
     require(
       generation.begin_timestamp <= block.timestamp &&
       generation.end_timestamp > block.timestamp,
