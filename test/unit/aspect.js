@@ -33,10 +33,10 @@ contract("Aspect", accounts => {
   })
   describe("request", () => {
     beforeEach(async () => {
-      await testAspect.insertGeneration(asEthWord(1), now, now + 10 * day, [])
-      await testAspect.insertGeneration(asEthWord(2), now, now + 10 * day, [])
-      await testAspect.insertGeneration(asEthWord(3), now - 10 * day, now - 5 * day, [])
-      await testAspect.insertGeneration(asEthWord(4), now + 5 * day, now + 10 * day, [])
+      await testAspect.insertGeneration(asEthWord(1), now, now + day, [])
+      await testAspect.insertGeneration(asEthWord(2), now, now + day, [])
+      await testAspect.insertGeneration(asEthWord(3), now - 2 * day, now - day, [])
+      await testAspect.insertGeneration(asEthWord(4), now + day, now + 2 * day, [])
     })
     it("should store multiple distinct records", async () => {
       let requestAndMatcher = async (account, gen, details, content) => {
@@ -120,7 +120,7 @@ contract("Aspect", accounts => {
     let hash
 
     beforeEach(async () => {
-      await testAspect.insertGeneration(asEthWord(1), now - 10 * day, now + 10 * day, [])
+      await testAspect.insertGeneration(asEthWord(1), now - day, now + day, [])
       await testAspect.setApprovers([
         accounts[2],
         accounts[3],
@@ -180,7 +180,7 @@ contract("Aspect", accounts => {
       })).to(beVMException("record does not exist"))
     })
     it("should not allow granting after generation is expired", async () => {
-      await testAspect.insertGeneration(asEthWord(2), now - 20 * day, now - 10 * day, [])
+      await testAspect.insertGeneration(asEthWord(2), now - 2 * day, now - day, [])
       await testAspect.insertPendingRecord(
         accounts[1],
         asEthWord(2),
@@ -202,7 +202,7 @@ contract("Aspect", accounts => {
 
     beforeEach(async () => {
       await testAspect.setApprovers(accounts.slice(2, 6), [accounts[3], accounts[5]])
-      await testAspect.insertGeneration(asEthWord(1), now, now + 10 * day, accounts.slice(4, 6))
+      await testAspect.insertGeneration(asEthWord(1), now, now + day, accounts.slice(4, 6))
       await testAspect.insertPendingRecord(
         accounts[1],
         asEthWord(1),
@@ -238,7 +238,7 @@ contract("Aspect", accounts => {
       })).to(beVMException("record does not exist"))
     })
     it("should not allow approving after generation is expired", async () => {
-      await testAspect.insertGeneration(asEthWord(2), now - 20 * day, now - 10 * day, [accounts[2]])
+      await testAspect.insertGeneration(asEthWord(2), now - 2 * day, now - day, [accounts[2]])
       await testAspect.setApprovers([accounts[2]], [])
       await testAspect.insertPendingRecord(
         accounts[1],
@@ -292,8 +292,13 @@ contract("Aspect", accounts => {
     })
     it("should not allow creating generations with end timestamp before beginning", async () => {
       expect(await awaitException(() => {
-        return testAspect.newGeneration(asEthWord(1), now + 10 * day, now, fromOwner)
+        return testAspect.newGeneration(asEthWord(1), now + 2 * day, now + day, fromOwner)
       })).to(beVMException("ending must be before beginning"))
+    })
+    it("should not allow creating expired generations", async () => {
+      expect(await awaitException(() => {
+        return testAspect.newGeneration(asEthWord(1), now - day, now, fromOwner)
+      })).to(beVMException("generation must not be expired"))
     })
     it("should only allow owner to create generations", async () => {
       expect(await awaitException(() => {
@@ -303,9 +308,9 @@ contract("Aspect", accounts => {
   })
   describe("clearGeneration", () => {
     beforeEach(async () => {
-      await testAspect.insertGeneration(asEthWord(1), now - 10 * day, now - day, [])
-      await testAspect.insertGeneration(asEthWord(2), now - 10 * day, now - day, [])
-      await testAspect.insertGeneration(asEthWord(3), now - 10 * day, now + 10 * day, [])
+      await testAspect.insertGeneration(asEthWord(1), now - 2 * day, now - day, [])
+      await testAspect.insertGeneration(asEthWord(2), now - 2 * day, now - day, [])
+      await testAspect.insertGeneration(asEthWord(3), now - day, now + day, [])
       await testAspect.insertPendingRecord(
         accounts[1],
         asEthWord(1),
@@ -395,7 +400,7 @@ contract("Aspect", accounts => {
   })
   describe("enableApproverForGeneration", async () => {
     beforeEach(async () => {
-      await testAspect.insertGeneration(asEthWord(1), now, now + 10 * day, [])
+      await testAspect.insertGeneration(asEthWord(1), now, now + day, [])
     })
     it("should enable approvers for a generation", async () => {
       await testAspect.setApprovers(accounts.slice(1, 3), [])
@@ -437,8 +442,8 @@ contract("Aspect", accounts => {
         return testAspect.enableApproverForGeneration(accounts[1], asEthWord(2))
       })).to(beVMException("generation does not exist"))
     })
-    it("should only allow owner to enable approvers for a generation", async () => {
-      await testAspect.insertGeneration(asEthWord(2), now - 10 * day, now - day, [])
+    it("should fail if generation expired", async () => {
+      await testAspect.insertGeneration(asEthWord(2), now - 2 * day, now - day, [])
       expect(await awaitException(() => {
         return testAspect.enableApproverForGeneration(accounts[1], asEthWord(2))
       })).to(beVMException("generation is expired"))
@@ -475,9 +480,9 @@ contract("Aspect", accounts => {
   describe("disableApproverForGeneration", async () => {
     beforeEach(async () => {
       await testAspect.setApprovers(accounts.slice(1, 4), [])
-      await testAspect.insertGeneration(asEthWord(1), now, now + 10 * day, accounts.slice(1, 4))
+      await testAspect.insertGeneration(asEthWord(1), now, now + day, accounts.slice(1, 4))
     })
-    it("should enable approvers for a generation", async () => {
+    it("should disable approvers for a generation", async () => {
       await testAspect.disableApproverForGeneration(accounts[1], asEthWord(1))
       await testAspect.disableApproverForGeneration(accounts[3], asEthWord(1))
 
@@ -515,8 +520,8 @@ contract("Aspect", accounts => {
         return testAspect.disableApproverForGeneration(accounts[1], asEthWord(2))
       })).to(beVMException("generation does not exist"))
     })
-    it("should only allow owner to disable approvers for a generation", async () => {
-      await testAspect.insertGeneration(asEthWord(2), now - 10 * day, now - day, [])
+    it("should fail if generation expired", async () => {
+      await testAspect.insertGeneration(asEthWord(2), now - 2 * day, now - day, [])
       expect(await awaitException(() => {
         return testAspect.disableApproverForGeneration(accounts[1], asEthWord(2))
       })).to(beVMException("generation is expired"))
