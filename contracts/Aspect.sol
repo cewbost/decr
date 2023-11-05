@@ -44,6 +44,15 @@ contract Aspect is AspectModel {
     bytes32[] records;
   }
 
+  struct Record {
+    address recipient;
+    bytes32 generation;
+    uint64  timestamp;
+    bytes24 details;
+    bytes32 content;
+    bytes   approvers;
+  }
+
   struct RecordResponse {
     bytes32   hash;
     address   recipient;
@@ -68,6 +77,7 @@ contract Aspect is AspectModel {
 
   mapping(bytes32 => Generation) generations;
   mapping(bytes32 => Record)     pending_records;
+  mapping(bytes32 => bool)       record_hashes;
   address[]                      approvers;
   mapping(address => uint)       approvers_idx;
   bytes                          approvers_mask;
@@ -234,7 +244,7 @@ contract Aspect is AspectModel {
   }
 
   function insertPendingRecord(Record memory rec) internal {
-    bytes32 hash = hashRecord_(rec);
+    bytes32 hash = hashRecord(rec);
     require(!record_hashes[hash], "already exists");
     pending_records[hash] = rec;
     record_hashes[hash]   = true;
@@ -284,6 +294,15 @@ contract Aspect is AspectModel {
     address[] memory res = new address[](acount);
     for (uint n = 0; n < acount; n++) res[n] = apps[n];
     return res;
+  }
+
+  function hashRecord(Record memory rec) internal pure returns(bytes32) {
+    return keccak256(bytes.concat(
+      bytes20(rec.recipient),
+      bytes32(rec.generation),
+      rec.details,
+      rec.content
+    ));
   }
 
   modifier pendingRecord(bytes32 hash) {
