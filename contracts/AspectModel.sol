@@ -62,17 +62,6 @@ contract AspectModel is Owned {
     tag = t;
   }
 
-  function clearGeneration_(bytes32 gen) internal {
-    // Generation must be expired.
-    Generation storage generation = generations[gen];
-    require(generation.end_timestamp != 0, "generation does not exist");
-    require(generation.end_timestamp < block.timestamp, "generation must be expired");
-    bytes32[] storage records = generation.records;
-    uint len = records.length;
-    for (uint n = 0; n < len; n++) delete pending_records[records[n]];
-    delete generations[gen].records;
-  }
-
   function setApproverState_(address approver, bool enable) internal {
     if (enable) {
       approvers_mask.setBitStorage(getsertApprover_(approver));

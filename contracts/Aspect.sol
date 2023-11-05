@@ -106,7 +106,13 @@ contract Aspect is AspectModel {
   }
 
   function clearGeneration(bytes32 gen) external onlyOwner {
-    clearGeneration_(gen);
+    Generation storage generation = generations[gen];
+    require(generation.end_timestamp != 0, "generation does not exist");
+    require(generation.end_timestamp < block.timestamp, "generation must be expired");
+    bytes32[] storage records = generation.records;
+    uint len = records.length;
+    for (uint n = 0; n < len; n++) delete pending_records[records[n]];
+    delete generations[gen].records;
   }
 
   function enableApprover(address approver) external onlyOwner {
