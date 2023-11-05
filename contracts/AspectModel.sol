@@ -22,11 +22,6 @@ contract AspectModel is Owned {
     tag = t;
   }
 
-  function isNewRecord_(Record memory rec) internal view returns(bool) {
-    bytes32 hash = hashRecord_(rec);
-    return !record_hashes[hash];
-  }
-
   function hashRecord_(Record memory rec) internal pure returns(bytes32) {
     return keccak256(bytes.concat(
       bytes20(rec.recipient),
