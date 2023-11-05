@@ -53,28 +53,6 @@ contract Aspect is Owned {
     bytes   approvers;
   }
 
-  struct RecordResponse {
-    bytes32   hash;
-    address   recipient;
-    bytes32   generation;
-    uint64    timestamp;
-    bytes24   details;
-    bytes32   content;
-    address[] approvers;
-  }
-
-  struct GenerationResponse {
-    bytes32   id;
-    uint64    begin_timestamp;
-    uint64    end_timestamp;
-    address[] approvers;
-  }
-
-  struct ApproverResponse {
-    address approver;
-    bool    enabled;
-  }
-
   event NewGeneration (
     bytes32 id
   );
@@ -188,6 +166,28 @@ contract Aspect is Owned {
     bytes32 gen_id
   ) external onlyOwner {
     setGenerationApproverState(approver, gen_id, false);
+  }
+
+  struct RecordResponse {
+    bytes32   hash;
+    address   recipient;
+    bytes32   generation;
+    uint64    timestamp;
+    bytes24   details;
+    bytes32   content;
+    address[] approvers;
+  }
+
+  struct GenerationResponse {
+    bytes32   id;
+    uint64    begin_timestamp;
+    uint64    end_timestamp;
+    address[] approvers;
+  }
+
+  struct ApproverResponse {
+    address approver;
+    bool    enabled;
   }
 
   function amIOwner() external view returns(bool) {
