@@ -29,6 +29,13 @@ using { getBitStorage, setBitStorage, unsetBitStorage } for bytes;
 
 contract Aspect is AspectModel {
 
+  struct Generation {
+    uint64    begin_timestamp;
+    uint64    end_timestamp;
+    bytes     approvers_mask;
+    bytes32[] records;
+  }
+
   struct RecordResponse {
     bytes32   hash;
     address   recipient;
@@ -52,6 +59,7 @@ contract Aspect is AspectModel {
   }
 
   mapping(bytes32 => Generation) generations;
+  mapping(bytes32 => Record)     pending_records;
   mapping(address => uint)       approvers_idx;
 
   event NewGeneration (
@@ -194,18 +202,16 @@ contract Aspect is AspectModel {
     for (uint n = 0; n < ids.length; n++) {
       if (pending_records[ids[n]].timestamp != 0) ids[num_ids++] = ids[n];
     }
-    bytes32[] memory pending_ids = new bytes32[](num_ids);
-    for (uint n = 0; n < num_ids; n++) pending_ids[n] = ids[n];
-    Record[] memory recs = getPendingRecords_(pending_ids);
-    RecordResponse[] memory res = new RecordResponse[](recs.length);
-    for (uint n = 0; n < recs.length; n++) {
+    RecordResponse[] memory res = new RecordResponse[](num_ids);
+    for (uint n = 0; n < num_ids; n++) {
+      Record storage rec = pending_records[ids[n]];
       res[n].hash = ids[n];
-      res[n].recipient = recs[n].recipient;
-      res[n].generation = recs[n].generation;
-      res[n].timestamp = recs[n].timestamp;
-      res[n].details = recs[n].details;
-      res[n].content = recs[n].content;
-      res[n].approvers = getApprovers_(recs[n].approvers);
+      res[n].recipient = rec.recipient;
+      res[n].generation = rec.generation;
+      res[n].timestamp = rec.timestamp;
+      res[n].details = rec.details;
+      res[n].content = rec.content;
+      res[n].approvers = getApprovers_(rec.approvers);
     }
     return res;
   }

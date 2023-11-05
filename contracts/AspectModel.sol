@@ -24,28 +24,14 @@ contract AspectModel is Owned {
     bytes   approvers;
   }
 
-  struct Generation {
-    uint64    begin_timestamp;
-    uint64    end_timestamp;
-    bytes     approvers_mask;
-    bytes32[] records;
-  }
+  bytes32 immutable        tag;
 
-  bytes32 immutable                      tag;
-
-  mapping(bytes32 => bool)               record_hashes;
-  mapping(bytes32 => Record)             pending_records;
-  address[]                              approvers;
-  bytes                                  approvers_mask;
+  mapping(bytes32 => bool) record_hashes;
+  address[]                approvers;
+  bytes                    approvers_mask;
 
   constructor(bytes32 t, address owner) Owned(owner) {
     tag = t;
-  }
-
-  function getPendingRecords_(bytes32[] memory ids) internal view returns(Record[] memory) {
-    Record[] memory recs = new Record[](ids.length);
-    for (uint n = 0; n < ids.length; n++) recs[n] = pending_records[ids[n]];
-    return recs;
   }
 
   function getApprovers_() internal view returns(address[] memory) {
