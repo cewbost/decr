@@ -3,16 +3,6 @@ pragma solidity >=0.4.22 <0.9.0;
 
 import "./Owned.sol";
 
-function getBit(bytes memory bts, uint idx) pure returns(bool) {
-  return bts.length > idx / 8? (bts[idx / 8] & toBit(idx % 8)) != 0 : false;
-}
-
-function toBit(uint bit_idx) pure returns(bytes1) {
-  return bytes1(uint8(1 << bit_idx));
-}
-
-using { getBit } for bytes;
-
 contract AspectModel is Owned {
 
   struct Record {
@@ -27,14 +17,9 @@ contract AspectModel is Owned {
   bytes32 immutable        tag;
 
   mapping(bytes32 => bool) record_hashes;
-  bytes                    approvers_mask;
 
   constructor(bytes32 t, address owner) Owned(owner) {
     tag = t;
-  }
-
-  function getApproversMask_() internal view returns(bytes memory) {
-    return approvers_mask;
   }
 
   function isNewRecord_(Record memory rec) internal view returns(bool) {

@@ -3,6 +3,14 @@ pragma solidity >=0.4.22 <0.9.0;
 
 import "./AspectModel.sol";
 
+function toBit(uint bit_idx) pure returns(bytes1) {
+  return bytes1(uint8(1 << bit_idx));
+}
+
+function getBit(bytes memory bts, uint idx) pure returns(bool) {
+  return bts.length > idx / 8? (bts[idx / 8] & toBit(idx % 8)) != 0 : false;
+}
+
 function getBitStorage(bytes storage bts, uint idx) view returns(bool) {
   return bts.length > idx / 8? (bts[idx / 8] & toBit(idx % 8)) != 0 : false;
 }
@@ -25,7 +33,7 @@ function unsetBitStorage(bytes storage bts, uint idx) {
   bts[byte_idx] = bts[byte_idx] & ~toBit(idx % 8);
 }
 
-using { getBitStorage, setBitStorage, unsetBitStorage } for bytes;
+using { getBit, getBitStorage, setBitStorage, unsetBitStorage } for bytes;
 
 contract Aspect is AspectModel {
 
@@ -62,6 +70,7 @@ contract Aspect is AspectModel {
   mapping(bytes32 => Record)     pending_records;
   address[]                      approvers;
   mapping(address => uint)       approvers_idx;
+  bytes                          approvers_mask;
 
   event NewGeneration (
     bytes32 id
@@ -173,7 +182,7 @@ contract Aspect is AspectModel {
 
   function getApprovers() external view returns(ApproverResponse[] memory) {
     address[] memory apprs = approvers;
-    address[] memory enabled = getApprovers(getApproversMask_());
+    address[] memory enabled = getApprovers(approvers_mask);
     ApproverResponse[] memory res = new ApproverResponse[](apprs.length);
     for (uint n = 0; n < apprs.length; n++) res[n].approver = apprs[n];
     uint stepper = 0;
