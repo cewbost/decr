@@ -30,9 +30,4 @@ contract AspectModel is Owned {
       rec.content
     ));
   }
-
-  modifier uniqueRecord(bytes32 hash) {
-    require(!record_hashes[hash], "already exists");
-    _;
-  }
 }
