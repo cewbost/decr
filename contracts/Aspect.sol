@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.4.22 <0.9.0;
 
-import "./AspectModel.sol";
+import "./Owned.sol";
 
 function toBit(uint bit_idx) pure returns(bytes1) {
   return bytes1(uint8(1 << bit_idx));
@@ -35,7 +35,7 @@ function unsetBitStorage(bytes storage bts, uint idx) {
 
 using { getBit, getBitStorage, setBitStorage, unsetBitStorage } for bytes;
 
-contract Aspect is AspectModel {
+contract Aspect is Owned {
 
   struct Generation {
     uint64    begin_timestamp;
@@ -75,13 +75,6 @@ contract Aspect is AspectModel {
     bool    enabled;
   }
 
-  mapping(bytes32 => Generation) generations;
-  mapping(bytes32 => Record)     pending_records;
-  mapping(bytes32 => bool)       record_hashes;
-  address[]                      approvers;
-  mapping(address => uint)       approvers_idx;
-  bytes                          approvers_mask;
-
   event NewGeneration (
     bytes32 id
   );
@@ -94,7 +87,18 @@ contract Aspect is AspectModel {
     bytes   approvers
   );
 
-  constructor(bytes32 t, address owner) AspectModel(t, owner) {}
+  bytes32 immutable              tag;
+
+  mapping(bytes32 => Generation) generations;
+  mapping(bytes32 => Record)     pending_records;
+  mapping(bytes32 => bool)       record_hashes;
+  address[]                      approvers;
+  mapping(address => uint)       approvers_idx;
+  bytes                          approvers_mask;
+
+  constructor(bytes32 t, address owner) Owned(owner) {
+    tag = t;
+  }
 
   function changeOwnership(address new_owner) external onlyOwner {
     setOwner(new_owner);
