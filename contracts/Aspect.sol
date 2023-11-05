@@ -51,7 +51,8 @@ contract Aspect is AspectModel {
     bool    enabled;
   }
 
-  mapping(address => uint) approvers_idx;
+  mapping(bytes32 => Generation) generations;
+  mapping(address => uint)       approvers_idx;
 
   event NewGeneration (
     bytes32 id
@@ -175,7 +176,7 @@ contract Aspect is AspectModel {
   }
 
   function getGeneration(bytes32 id) external view returns(GenerationResponse memory) {
-    Generation memory gen = getGeneration_(id);
+    Generation memory gen = generations[id];
     GenerationResponse memory res = GenerationResponse({
       id:              id,
       begin_timestamp: gen.begin_timestamp,
@@ -188,7 +189,7 @@ contract Aspect is AspectModel {
   function getRecordsByGeneration(
     bytes32 gen_id
   ) external view returns(RecordResponse[] memory) {
-    bytes32[] memory ids = filterRecordIdsPending_(getGeneration_(gen_id).records);
+    bytes32[] memory ids = filterRecordIdsPending_(generations[gen_id].records);
     Record[] memory recs = getPendingRecords_(ids);
     RecordResponse[] memory res = new RecordResponse[](recs.length);
     for (uint n = 0; n < recs.length; n++) {

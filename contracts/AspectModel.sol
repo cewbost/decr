@@ -33,7 +33,6 @@ contract AspectModel is Owned {
 
   bytes32 immutable                      tag;
 
-  mapping(bytes32 => Generation)         generations;
   mapping(bytes32 => bool)               record_hashes;
   mapping(bytes32 => Record)             pending_records;
   address[]                              approvers;
@@ -41,10 +40,6 @@ contract AspectModel is Owned {
 
   constructor(bytes32 t, address owner) Owned(owner) {
     tag = t;
-  }
-
-  function getGeneration_(bytes32 id) internal view returns(Generation memory) {
-    return generations[id];
   }
 
   function filterRecordIdsPending_(bytes32[] memory ids) internal view returns(bytes32[] memory) {
@@ -93,11 +88,6 @@ contract AspectModel is Owned {
       rec.details,
       rec.content
     ));
-  }
-
-  modifier uniqueGeneration(bytes32 id) {
-    require(generations[id].end_timestamp == 0, "already exists");
-    _;
   }
 
   modifier uniqueRecord(bytes32 hash) {
