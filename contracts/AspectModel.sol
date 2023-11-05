@@ -55,12 +55,12 @@ contract AspectModel is Owned {
 
   bytes32 immutable                      tag;
 
-  mapping(bytes32 => Generation) private generations;
+  mapping(bytes32 => Generation)         generations;
   mapping(bytes32 => bool)       private record_hashes;
   mapping(bytes32 => Record)     private pending_records;
   address[]                      private approvers;
   mapping(address => uint)       private approvers_idx;
-  bytes                          private approvers_mask;
+  bytes                                  approvers_mask;
 
   event NewGeneration (
     bytes32 id
@@ -78,23 +78,6 @@ contract AspectModel is Owned {
     tag = t;
   }
 
-  function insertGeneration_(
-    bytes32        id,
-    uint64         begin,
-    uint64         end,
-    bytes   memory mask
-  ) internal assertOnlyOwner {
-    // Generation id must be unique.
-    // Generation must end after beginning.
-    // Generation must not be expired.
-    // Generation approvers_mask must not be longer than total approvers list.
-    Generation storage generation = generations[id];
-    generation.begin_timestamp = begin;
-    generation.end_timestamp   = end;
-    generation.approvers_mask  = mask;
-    emit NewGeneration(id);
-  }
-
   function insertPendingRecord_(Record memory rec) internal {
     // Record must not exist.
     // Hash must match record.
@@ -107,7 +90,7 @@ contract AspectModel is Owned {
     generations[rec.generation].records.push(hash);
   }
 
-  function grant_(bytes32 hash) internal assertOnlyOwner {
+  function grant_(bytes32 hash) internal {
     // Record must be pending.
     // Generation must be active.
     Record storage record = pending_records[hash];
@@ -133,7 +116,7 @@ contract AspectModel is Owned {
     pending_record.approvers.setBitStorage(approvers_idx[msg.sender] - 1);
   }
 
-  function clearGeneration_(bytes32 gen) internal assertOnlyOwner {
+  function clearGeneration_(bytes32 gen) internal {
     // Generation must be expired.
     Generation storage generation = generations[gen];
     require(generation.end_timestamp != 0, "generation does not exist");
@@ -262,11 +245,6 @@ contract AspectModel is Owned {
 
   modifier uniqueRecord(bytes32 hash) {
     require(!record_hashes[hash], "already exists");
-    _;
-  }
-
-  modifier assertOnlyOwner() virtual {
-    assert(authorized());
     _;
   }
 }

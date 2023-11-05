@@ -33,14 +33,15 @@ contract Aspect is AspectModel {
     setOwner(new_owner);
   }
 
-  function newGeneration(
-    bytes32 id,
-    uint64  begin,
-    uint64  end
-  ) external onlyOwner uniqueGeneration(id) {
-    require(id != "",    "generation ID must be provided");
-    require(begin < end, "ending must be before beginning");
-    insertGeneration_(id, begin, end, getApproversMask_());
+  function newGeneration(bytes32 id, uint64 begin, uint64 end) external onlyOwner {
+    require(generations[id].end_timestamp == 0, "already exists");
+    require(end > block.timestamp,              "generation must not be expired");
+    insertGeneration_(id, Generation({
+      begin_timestamp: begin,
+      end_timestamp:   end,
+      approvers_mask:  approvers_mask,
+      records:         new bytes32[](0)
+    }));
   }
 
   function request(
@@ -138,5 +139,12 @@ contract Aspect is AspectModel {
       res[n].approvers = getApprovers_(recs[n].approvers);
     }
     return res;
+  }
+
+  function insertGeneration_(bytes32 id, Generation memory generation) internal {
+    require(generation.begin_timestamp < generation.end_timestamp,
+      "ending must be before beginning");
+    generations[id] = generation;
+    emit NewGeneration(id);
   }
 }

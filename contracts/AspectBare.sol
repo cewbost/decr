@@ -21,7 +21,12 @@ contract AspectBare is Aspect {
     uint64 end,
     address[] calldata apprs
   ) external {
-    insertGeneration_(id, begin, end, approverListToMask(apprs));
+    insertGeneration_(id, Generation({
+      begin_timestamp: begin,
+      end_timestamp:   end,
+      approvers_mask:  approverListToMask(apprs),
+      records:         new bytes32[](0)
+    }));
   }
 
   function insertPendingRecord(
@@ -61,6 +66,4 @@ contract AspectBare is Aspect {
     }
     return res;
   }
-
-  modifier assertOnlyOwner() override {_;}
 }
