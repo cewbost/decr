@@ -60,6 +60,7 @@ contract Aspect is AspectModel {
 
   mapping(bytes32 => Generation) generations;
   mapping(bytes32 => Record)     pending_records;
+  address[]                      approvers;
   mapping(address => uint)       approvers_idx;
 
   event NewGeneration (
@@ -171,8 +172,8 @@ contract Aspect is AspectModel {
   }
 
   function getApprovers() external view returns(ApproverResponse[] memory) {
-    address[] memory apprs = getApprovers_();
-    address[] memory enabled = getApprovers_(getApproversMask_());
+    address[] memory apprs = approvers;
+    address[] memory enabled = getApprovers(getApproversMask_());
     ApproverResponse[] memory res = new ApproverResponse[](apprs.length);
     for (uint n = 0; n < apprs.length; n++) res[n].approver = apprs[n];
     uint stepper = 0;
@@ -189,7 +190,7 @@ contract Aspect is AspectModel {
       id:              id,
       begin_timestamp: gen.begin_timestamp,
       end_timestamp:   gen.end_timestamp,
-      approvers:       getApprovers_(gen.approvers_mask)
+      approvers:       getApprovers(gen.approvers_mask)
     });
     return res;
   }
@@ -211,7 +212,7 @@ contract Aspect is AspectModel {
       res[n].timestamp = rec.timestamp;
       res[n].details = rec.details;
       res[n].content = rec.content;
-      res[n].approvers = getApprovers_(rec.approvers);
+      res[n].approvers = getApprovers(rec.approvers);
     }
     return res;
   }
@@ -264,6 +265,16 @@ contract Aspect is AspectModel {
       approvers_idx[approver] = idx;
     }
     return idx - 1;
+  }
+
+  function getApprovers(bytes memory mask) internal view returns(address[] memory) {
+    uint alen = approvers.length;
+    address[] memory apps = new address[](alen);
+    uint acount = 0;
+    for (uint n = 0; n < alen; n++) if (mask.getBit(n)) apps[acount++] = approvers[n];
+    address[] memory res = new address[](acount);
+    for (uint n = 0; n < acount; n++) res[n] = apps[n];
+    return res;
   }
 
   modifier pendingRecord(bytes32 hash) {

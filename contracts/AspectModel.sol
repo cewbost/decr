@@ -27,25 +27,10 @@ contract AspectModel is Owned {
   bytes32 immutable        tag;
 
   mapping(bytes32 => bool) record_hashes;
-  address[]                approvers;
   bytes                    approvers_mask;
 
   constructor(bytes32 t, address owner) Owned(owner) {
     tag = t;
-  }
-
-  function getApprovers_() internal view returns(address[] memory) {
-    return approvers;
-  }
-
-  function getApprovers_(bytes memory mask) internal view returns(address[] memory) {
-    uint alen = approvers.length;
-    address[] memory apps = new address[](alen);
-    uint acount = 0;
-    for (uint n = 0; n < alen; n++) if (mask.getBit(n)) apps[acount++] = approvers[n];
-    address[] memory res = new address[](acount);
-    for (uint n = 0; n < acount; n++) res[n] = apps[n];
-    return res;
   }
 
   function getApproversMask_() internal view returns(bytes memory) {

@@ -53,7 +53,7 @@ contract AspectBare is Aspect {
   }
 
   function approverListToMask(address[] memory list) internal view returns(bytes memory) {
-    address[] memory apprs = getApprovers_();
+    address[] memory apprs = approvers;
     bytes memory res = new bytes((apprs.length + 7) / 8);
     for (uint n = 0; n < list.length; n++) {
       for (uint m = 0; m < apprs.length; m++) {
