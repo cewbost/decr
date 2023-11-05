@@ -51,6 +51,8 @@ contract Aspect is AspectModel {
     bool    enabled;
   }
 
+  mapping(address => uint) approvers_idx;
+
   event NewGeneration (
     bytes32 id
   );
@@ -218,7 +220,7 @@ contract Aspect is AspectModel {
 
   function setApproverState(address approver, bool enable) internal {
     if (enable) {
-      approvers_mask.setBitStorage(getsertApprover_(approver));
+      approvers_mask.setBitStorage(getsertApprover(approver));
     } else {
       uint idx = approvers_idx[approver];
       if (idx > 0) {
@@ -232,13 +234,23 @@ contract Aspect is AspectModel {
     require(generation.end_timestamp != 0, "generation does not exist");
     require(generation.end_timestamp >= block.timestamp, "generation is expired");
     if (enable) {
-      generation.approvers_mask.setBitStorage(getsertApprover_(approver));
+      generation.approvers_mask.setBitStorage(getsertApprover(approver));
     } else {
       uint idx = approvers_idx[approver];
       if (idx > 0) {
         generation.approvers_mask.unsetBitStorage(idx - 1);
       }
     }
+  }
+
+  function getsertApprover(address approver) internal returns(uint) {
+    uint idx = approvers_idx[approver];
+    if (idx == 0) {
+      approvers.push(approver);
+      idx = approvers.length;
+      approvers_idx[approver] = idx;
+    }
+    return idx - 1;
   }
 
   modifier pendingRecord(bytes32 hash) {

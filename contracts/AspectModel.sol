@@ -36,22 +36,11 @@ contract AspectModel is Owned {
   mapping(bytes32 => Generation)         generations;
   mapping(bytes32 => bool)               record_hashes;
   mapping(bytes32 => Record)             pending_records;
-  address[]                      private approvers;
-  mapping(address => uint)               approvers_idx;
+  address[]                              approvers;
   bytes                                  approvers_mask;
 
   constructor(bytes32 t, address owner) Owned(owner) {
     tag = t;
-  }
-
-  function getsertApprover_(address approver) internal returns(uint) {
-    uint idx = approvers_idx[approver];
-    if (idx == 0) {
-      approvers.push(approver);
-      idx = approvers.length;
-      approvers_idx[approver] = idx;
-    }
-    return idx - 1;
   }
 
   function getGeneration_(bytes32 id) internal view returns(Generation memory) {

@@ -48,7 +48,7 @@ contract AspectBare is Aspect {
   }
 
   function setApprovers(address[] calldata accs, address[] calldata enable) external {
-    for (uint n = 0; n < accs.length; n++) getsertApprover_(accs[n]);
+    for (uint n = 0; n < accs.length; n++) getsertApprover(accs[n]);
     for (uint n = 0; n < enable.length; n++) setApproverState(enable[n], true);
   }
 
