@@ -3,6 +3,12 @@ pragma solidity >=0.4.22 <0.9.0;
 
 import "./AspectModel.sol";
 
+function getBitStorage(bytes storage bts, uint idx) view returns(bool) {
+  return bts.length > idx / 8? (bts[idx / 8] & toBit(idx % 8)) != 0 : false;
+}
+
+using { getBitStorage, setBitStorage } for bytes;
+
 contract Aspect is AspectModel {
 
   struct RecordResponse {
@@ -26,6 +32,18 @@ contract Aspect is AspectModel {
     address approver;
     bool    enabled;
   }
+
+  event NewGeneration (
+    bytes32 id
+  );
+
+  event AspectGranted (
+    address recipient,
+    bytes32 generation,
+    bytes24 details,
+    bytes32 content,
+    bytes   approvers
+  );
 
   constructor(bytes32 t, address owner) AspectModel(t, owner) {}
 
@@ -67,11 +85,24 @@ contract Aspect is AspectModel {
   }
 
   function grant(bytes32 hash) external onlyOwner pendingRecord(hash) {
-    grant_(hash);
+    Record storage record = pending_records[hash];
+    emit AspectGranted(
+      record.recipient,
+      record.generation,
+      record.details,
+      record.content,
+      record.approvers
+    );
+    delete pending_records[hash];
   }
 
   function approve(bytes32 hash) external pendingRecord(hash) {
-    approve_(hash);
+    Record storage pending_record = pending_records[hash];
+    uint idx = approvers_idx[msg.sender];
+    require(idx > 0 &&
+      generations[pending_record.generation].approvers_mask.getBitStorage(idx - 1),
+      "only approver can perform this action");
+    pending_record.approvers.setBitStorage(approvers_idx[msg.sender] - 1);
   }
 
   function clearGeneration(bytes32 gen) external onlyOwner {
@@ -159,5 +190,18 @@ contract Aspect is AspectModel {
     pending_records[hash] = rec;
     record_hashes[hash]   = true;
     generations[rec.generation].records.push(hash);
+  }
+
+  modifier pendingRecord(bytes32 hash) {
+    require(record_hashes[hash], "record does not exist");
+    Record storage record = pending_records[hash];
+    require(record.timestamp != 0, "record not pending");
+    Generation storage generation = generations[record.generation];
+    require(
+      generation.begin_timestamp <= block.timestamp &&
+      generation.end_timestamp > block.timestamp,
+      "generation inactive"
+    );
+    _;
   }
 }

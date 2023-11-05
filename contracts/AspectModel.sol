@@ -7,10 +7,6 @@ function getBit(bytes memory bts, uint idx) pure returns(bool) {
   return bts.length > idx / 8? (bts[idx / 8] & toBit(idx % 8)) != 0 : false;
 }
 
-function getBitStorage(bytes storage bts, uint idx) view returns(bool) {
-  return bts.length > idx / 8? (bts[idx / 8] & toBit(idx % 8)) != 0 : false;
-}
-
 function setBitStorage(bytes storage bts, uint idx) {
   uint byte_idx = idx / 8;
   bytes1 bit    = toBit(idx % 8);
@@ -33,7 +29,7 @@ function toBit(uint bit_idx) pure returns(bytes1) {
   return bytes1(uint8(1 << bit_idx));
 }
 
-using { getBit, getBitStorage, setBitStorage, unsetBitStorage } for bytes;
+using { getBit, setBitStorage, unsetBitStorage } for bytes;
 
 contract AspectModel is Owned {
 
@@ -59,49 +55,11 @@ contract AspectModel is Owned {
   mapping(bytes32 => bool)               record_hashes;
   mapping(bytes32 => Record)             pending_records;
   address[]                      private approvers;
-  mapping(address => uint)       private approvers_idx;
+  mapping(address => uint)               approvers_idx;
   bytes                                  approvers_mask;
-
-  event NewGeneration (
-    bytes32 id
-  );
-
-  event AspectGranted (
-    address recipient,
-    bytes32 generation,
-    bytes24 details,
-    bytes32 content,
-    bytes   approvers
-  );
 
   constructor(bytes32 t, address owner) Owned(owner) {
     tag = t;
-  }
-
-  function grant_(bytes32 hash) internal {
-    // Record must be pending.
-    // Generation must be active.
-    Record storage record = pending_records[hash];
-    emit AspectGranted(
-      record.recipient,
-      record.generation,
-      record.details,
-      record.content,
-      record.approvers
-    );
-    delete pending_records[hash];
-  }
-
-  function approve_(bytes32 hash) internal {
-    // Record must be pending.
-    // Generation must be active.
-    // Sender must be approver of generation.
-    Record storage pending_record = pending_records[hash];
-    uint idx = approvers_idx[msg.sender];
-    require(idx > 0 &&
-      generations[pending_record.generation].approvers_mask.getBitStorage(idx - 1),
-      "only approver can perform this action");
-    pending_record.approvers.setBitStorage(approvers_idx[msg.sender] - 1);
   }
 
   function clearGeneration_(bytes32 gen) internal {
@@ -200,19 +158,6 @@ contract AspectModel is Owned {
       rec.details,
       rec.content
     ));
-  }
-
-  modifier pendingRecord(bytes32 hash) {
-    require(record_hashes[hash], "record does not exist");
-    Record storage record = pending_records[hash];
-    require(record.timestamp != 0, "record not pending");
-    Generation storage generation = generations[record.generation];
-    require(
-      generation.begin_timestamp <= block.timestamp &&
-      generation.end_timestamp > block.timestamp,
-      "generation inactive"
-    );
-    _;
   }
 
   modifier uniqueGeneration(bytes32 id) {
