@@ -7,29 +7,11 @@ function getBit(bytes memory bts, uint idx) pure returns(bool) {
   return bts.length > idx / 8? (bts[idx / 8] & toBit(idx % 8)) != 0 : false;
 }
 
-function setBitStorage(bytes storage bts, uint idx) {
-  uint byte_idx = idx / 8;
-  bytes1 bit    = toBit(idx % 8);
-  uint len      = bts.length;
-  if (byte_idx < len) {
-    bts[byte_idx] = bts[byte_idx] | bit;
-  } else {
-    for (; len < byte_idx; len++) bts.push();
-    bts.push() = bit;
-  }
-}
-
-function unsetBitStorage(bytes storage bts, uint idx) {
-  uint byte_idx = idx / 8;
-  if (byte_idx >= bts.length) return;
-  bts[byte_idx] = bts[byte_idx] & ~toBit(idx % 8);
-}
-
 function toBit(uint bit_idx) pure returns(bytes1) {
   return bytes1(uint8(1 << bit_idx));
 }
 
-using { getBit, setBitStorage, unsetBitStorage } for bytes;
+using { getBit } for bytes;
 
 contract AspectModel is Owned {
 
@@ -60,20 +42,6 @@ contract AspectModel is Owned {
 
   constructor(bytes32 t, address owner) Owned(owner) {
     tag = t;
-  }
-
-  function setGenerationApproverState_(address approver, bytes32 gen_id, bool enable) internal {
-    Generation storage generation = generations[gen_id];
-    require(generation.end_timestamp != 0, "generation does not exist");
-    require(generation.end_timestamp >= block.timestamp, "generation is expired");
-    if (enable) {
-      generation.approvers_mask.setBitStorage(getsertApprover_(approver));
-    } else {
-      uint idx = approvers_idx[approver];
-      if (idx > 0) {
-        generation.approvers_mask.unsetBitStorage(idx - 1);
-      }
-    }
   }
 
   function getsertApprover_(address approver) internal returns(uint) {

@@ -7,6 +7,24 @@ function getBitStorage(bytes storage bts, uint idx) view returns(bool) {
   return bts.length > idx / 8? (bts[idx / 8] & toBit(idx % 8)) != 0 : false;
 }
 
+function setBitStorage(bytes storage bts, uint idx) {
+  uint byte_idx = idx / 8;
+  bytes1 bit    = toBit(idx % 8);
+  uint len      = bts.length;
+  if (byte_idx < len) {
+    bts[byte_idx] = bts[byte_idx] | bit;
+  } else {
+    for (; len < byte_idx; len++) bts.push();
+    bts.push() = bit;
+  }
+}
+
+function unsetBitStorage(bytes storage bts, uint idx) {
+  uint byte_idx = idx / 8;
+  if (byte_idx >= bts.length) return;
+  bts[byte_idx] = bts[byte_idx] & ~toBit(idx % 8);
+}
+
 using { getBitStorage, setBitStorage, unsetBitStorage } for bytes;
 
 contract Aspect is AspectModel {
@@ -123,7 +141,7 @@ contract Aspect is AspectModel {
     address approver,
     bytes32 gen_id
   ) external onlyOwner {
-    setGenerationApproverState_(approver, gen_id, true);
+    setGenerationApproverState(approver, gen_id, true);
   }
 
   function disableApprover(address approver) external onlyOwner {
@@ -134,7 +152,7 @@ contract Aspect is AspectModel {
     address approver,
     bytes32 gen_id
   ) external onlyOwner {
-    setGenerationApproverState_(approver, gen_id, false);
+    setGenerationApproverState(approver, gen_id, false);
   }
 
   function amIOwner() external view returns(bool) {
@@ -205,6 +223,20 @@ contract Aspect is AspectModel {
       uint idx = approvers_idx[approver];
       if (idx > 0) {
         approvers_mask.unsetBitStorage(idx - 1);
+      }
+    }
+  }
+
+  function setGenerationApproverState(address approver, bytes32 gen_id, bool enable) internal {
+    Generation storage generation = generations[gen_id];
+    require(generation.end_timestamp != 0, "generation does not exist");
+    require(generation.end_timestamp >= block.timestamp, "generation is expired");
+    if (enable) {
+      generation.approvers_mask.setBitStorage(getsertApprover_(approver));
+    } else {
+      uint idx = approvers_idx[approver];
+      if (idx > 0) {
+        generation.approvers_mask.unsetBitStorage(idx - 1);
       }
     }
   }
