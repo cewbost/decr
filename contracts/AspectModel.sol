@@ -62,17 +62,6 @@ contract AspectModel is Owned {
     tag = t;
   }
 
-  function setApproverState_(address approver, bool enable) internal {
-    if (enable) {
-      approvers_mask.setBitStorage(getsertApprover_(approver));
-    } else {
-      uint idx = approvers_idx[approver];
-      if (idx > 0) {
-        approvers_mask.unsetBitStorage(idx - 1);
-      }
-    }
-  }
-
   function setGenerationApproverState_(address approver, bytes32 gen_id, bool enable) internal {
     Generation storage generation = generations[gen_id];
     require(generation.end_timestamp != 0, "generation does not exist");

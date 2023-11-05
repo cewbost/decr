@@ -7,7 +7,7 @@ function getBitStorage(bytes storage bts, uint idx) view returns(bool) {
   return bts.length > idx / 8? (bts[idx / 8] & toBit(idx % 8)) != 0 : false;
 }
 
-using { getBitStorage, setBitStorage } for bytes;
+using { getBitStorage, setBitStorage, unsetBitStorage } for bytes;
 
 contract Aspect is AspectModel {
 
@@ -116,7 +116,7 @@ contract Aspect is AspectModel {
   }
 
   function enableApprover(address approver) external onlyOwner {
-    setApproverState_(approver, true);
+    setApproverState(approver, true);
   }
 
   function enableApproverForGeneration(
@@ -127,7 +127,7 @@ contract Aspect is AspectModel {
   }
 
   function disableApprover(address approver) external onlyOwner {
-    setApproverState_(approver, false);
+    setApproverState(approver, false);
   }
 
   function disableApproverForGeneration(
@@ -196,6 +196,17 @@ contract Aspect is AspectModel {
     pending_records[hash] = rec;
     record_hashes[hash]   = true;
     generations[rec.generation].records.push(hash);
+  }
+
+  function setApproverState(address approver, bool enable) internal {
+    if (enable) {
+      approvers_mask.setBitStorage(getsertApprover_(approver));
+    } else {
+      uint idx = approvers_idx[approver];
+      if (idx > 0) {
+        approvers_mask.unsetBitStorage(idx - 1);
+      }
+    }
   }
 
   modifier pendingRecord(bytes32 hash) {
